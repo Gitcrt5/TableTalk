@@ -261,4 +261,156 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+import { db } from "./db";
+import { eq, desc, like, and, sql } from "drizzle-orm";
+
+export class DatabaseStorage implements IStorage {
+  async createGame(insertGame: InsertGame): Promise<Game> {
+    const [game] = await db
+      .insert(games)
+      .values(insertGame)
+      .returning();
+    return game;
+  }
+
+  async getGame(id: number): Promise<Game | undefined> {
+    const [game] = await db.select().from(games).where(eq(games.id, id));
+    return game || undefined;
+  }
+
+  async getAllGames(): Promise<Game[]> {
+    return await db.select().from(games).orderBy(desc(games.uploadedAt));
+  }
+
+  async searchGames(query: string): Promise<Game[]> {
+    return await db.select().from(games)
+      .where(like(games.title, `%${query}%`))
+      .orderBy(desc(games.uploadedAt));
+  }
+
+  async createHand(insertHand: InsertHand): Promise<Hand> {
+    const [hand] = await db
+      .insert(hands)
+      .values(insertHand)
+      .returning();
+    return hand;
+  }
+
+  async getHand(id: number): Promise<Hand | undefined> {
+    const [hand] = await db.select().from(hands).where(eq(hands.id, id));
+    return hand || undefined;
+  }
+
+  async getHandsByGame(gameId: number): Promise<Hand[]> {
+    return await db.select().from(hands)
+      .where(eq(hands.gameId, gameId))
+      .orderBy(hands.boardNumber);
+  }
+
+  async getHandsWithFilters(filters: {
+    vulnerability?: string;
+    dealer?: string;
+    convention?: string;
+  }): Promise<Hand[]> {
+    const conditions = [];
+    
+    if (filters.vulnerability) {
+      conditions.push(eq(hands.vulnerability, filters.vulnerability));
+    }
+    if (filters.dealer) {
+      conditions.push(eq(hands.dealer, filters.dealer));
+    }
+    
+    if (conditions.length === 0) {
+      return await db.select().from(hands).orderBy(hands.boardNumber);
+    }
+    
+    return await db.select().from(hands)
+      .where(and(...conditions))
+      .orderBy(hands.boardNumber);
+  }
+
+  async createUserBidding(insertUserBidding: InsertUserBidding): Promise<UserBidding> {
+    const [bidding] = await db
+      .insert(userBidding)
+      .values(insertUserBidding)
+      .returning();
+    return bidding;
+  }
+
+  async getUserBidding(handId: number, userId: string): Promise<UserBidding | undefined> {
+    const [bidding] = await db.select().from(userBidding)
+      .where(and(eq(userBidding.handId, handId), eq(userBidding.userId, userId)));
+    return bidding || undefined;
+  }
+
+  async getUserBiddingStats(userId: string): Promise<{
+    totalHands: number;
+    averageAccuracy: number;
+  }> {
+    const userBiddings = await db.select().from(userBidding)
+      .where(eq(userBidding.userId, userId));
+    
+    const totalHands = userBiddings.length;
+    const averageAccuracy = totalHands > 0 
+      ? userBiddings.reduce((sum, b) => sum + (b.accuracy || 0), 0) / totalHands 
+      : 0;
+    
+    return { totalHands, averageAccuracy };
+  }
+
+  async createComment(insertComment: InsertComment): Promise<Comment> {
+    const [comment] = await db
+      .insert(comments)
+      .values(insertComment)
+      .returning();
+    return comment;
+  }
+
+  async getCommentsByHand(handId: number): Promise<Comment[]> {
+    return await db.select().from(comments)
+      .where(eq(comments.handId, handId))
+      .orderBy(desc(comments.createdAt));
+  }
+
+  async likeComment(commentId: number): Promise<void> {
+    await db.update(comments)
+      .set({ likes: sql`${comments.likes} + 1` })
+      .where(eq(comments.id, commentId));
+  }
+
+  async getUserCommentCount(userId: string): Promise<number> {
+    const userComments = await db.select().from(comments)
+      .where(eq(comments.userId, userId));
+    return userComments.length;
+  }
+
+  async getUserStats(userId: string): Promise<{
+    gamesUploaded: number;
+    handsReviewed: number;
+    averageBiddingAccuracy: number;
+    commentsMade: number;
+  }> {
+    const userGames = await db.select().from(games)
+      .where(eq(games.uploadedBy, userId));
+    
+    const userBiddings = await db.select().from(userBidding)
+      .where(eq(userBidding.userId, userId));
+    
+    const userComments = await db.select().from(comments)
+      .where(eq(comments.userId, userId));
+    
+    const averageBiddingAccuracy = userBiddings.length > 0
+      ? userBiddings.reduce((sum, b) => sum + (b.accuracy || 0), 0) / userBiddings.length
+      : 0;
+    
+    return {
+      gamesUploaded: userGames.length,
+      handsReviewed: userBiddings.length,
+      averageBiddingAccuracy,
+      commentsMade: userComments.length,
+    };
+  }
+}
+
+export const storage = new DatabaseStorage();
