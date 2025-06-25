@@ -7,7 +7,11 @@ interface HandDisplayProps {
 }
 
 export default function HandDisplay({ hand }: HandDisplayProps) {
-  const formatHand = (handString: string) => {
+  const formatHand = (handString: string | null | undefined) => {
+    if (!handString || typeof handString !== 'string') {
+      return <div className="text-sm text-gray-500">No hand data</div>;
+    }
+    
     const suits = handString.split('.');
     const suitSymbols = ['♠', '♥', '♦', '♣'];
     const suitColors = ['text-black', 'text-red-500', 'text-red-500', 'text-black'];

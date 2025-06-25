@@ -17,7 +17,7 @@ export default function GameDetail() {
   });
 
   const { data: hands, isLoading: handsLoading } = useQuery<Hand[]>({
-    queryKey: ["/api/games", gameId, "hands"],
+    queryKey: [`/api/games/${gameId}/hands`],
     enabled: !!gameId,
   });
 

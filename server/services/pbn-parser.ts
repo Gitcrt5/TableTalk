@@ -145,16 +145,25 @@ function getHandPositions(dealer: string): string[] {
 }
 
 function formatHand(handString: string): string {
-  // Convert PBN format "KJ432.A98.T987.2" to display format "♠KJ432 ♥A98 ♦T987 ♣2"
-  const suits = handString.split('.');
-  const symbols = ['♠', '♥', '♦', '♣'];
+  if (!handString || handString === '-') {
+    return '-.-.-.';
+  }
   
-  return suits.map((suit, index) => {
+  // Convert PBN format "KJ432.A98.T987.2" to display format with suit dots
+  const suits = handString.split('.');
+  
+  // Ensure we have exactly 4 suits, pad with empty if needed
+  while (suits.length < 4) {
+    suits.push('');
+  }
+  
+  // Replace T with 10 and format each suit
+  const formattedSuits = suits.slice(0, 4).map(suit => {
     if (!suit || suit === '-') return '';
-    // Replace T with 10 for display
-    const displaySuit = suit.replace(/T/g, '10');
-    return `${symbols[index]}${displaySuit}`;
-  }).filter(s => s).join(' ');
+    return suit.replace(/T/g, '10');
+  });
+  
+  return formattedSuits.join('.');
 }
 
 function parseAuction(auctionString: string): string[] {
