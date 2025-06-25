@@ -22,7 +22,7 @@ export default function HandDisplay({ hand }: HandDisplayProps) {
         <span className={`font-bold text-lg ${suitColors[index]} min-w-[20px]`}>
           {suitSymbols[index]}
         </span>
-        <span className="font-mono text-sm flex-1 leading-relaxed">
+        <span className="font-mono text-xs flex-1 leading-relaxed">
           {suit || '—'}
         </span>
       </div>
@@ -40,64 +40,64 @@ export default function HandDisplay({ hand }: HandDisplayProps) {
   };
 
   return (
-    <div className="relative min-h-[400px] w-full">
-      {/* North */}
-      <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-48">
-        <Card className="shadow-md">
-          <CardContent className="p-4">
-            <div className="text-center mb-3">
-              <Badge className={getPositionBadgeColor('North')}>North</Badge>
-            </div>
-            <div className="space-y-1">
-              {formatHand(hand.northHand)}
-            </div>
-          </CardContent>
-        </Card>
+    <div className="flex justify-center">
+      <div className="relative w-[600px] h-[400px]">
+        {/* North */}
+        <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-44">
+          <Card className="shadow-md">
+            <CardContent className="p-3">
+              <div className="text-center mb-2">
+                <Badge className={getPositionBadgeColor('North')}>North</Badge>
+              </div>
+              <div className="space-y-1 text-xs">
+                {formatHand(hand.northHand)}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* West */}
+        <div className="absolute left-0 top-1/2 transform -translate-y-1/2 w-44">
+          <Card className="shadow-md">
+            <CardContent className="p-3">
+              <div className="text-center mb-2">
+                <Badge className={getPositionBadgeColor('West')}>West</Badge>
+              </div>
+              <div className="space-y-1 text-xs">
+                {formatHand(hand.westHand)}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* East */}
+        <div className="absolute right-0 top-1/2 transform -translate-y-1/2 w-44">
+          <Card className="shadow-md">
+            <CardContent className="p-3">
+              <div className="text-center mb-2">
+                <Badge className={getPositionBadgeColor('East')}>East</Badge>
+              </div>
+              <div className="space-y-1 text-xs">
+                {formatHand(hand.eastHand)}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* South */}
+        <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-44">
+          <Card className="shadow-md">
+            <CardContent className="p-3">
+              <div className="text-center mb-2">
+                <Badge className={getPositionBadgeColor('South')}>South</Badge>
+              </div>
+              <div className="space-y-1 text-xs">
+                {formatHand(hand.southHand)}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
-
-      {/* West */}
-      <div className="absolute left-0 top-1/2 transform -translate-y-1/2 w-48">
-        <Card className="shadow-md">
-          <CardContent className="p-4">
-            <div className="text-center mb-3">
-              <Badge className={getPositionBadgeColor('West')}>West</Badge>
-            </div>
-            <div className="space-y-1">
-              {formatHand(hand.westHand)}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* East */}
-      <div className="absolute right-0 top-1/2 transform -translate-y-1/2 w-48">
-        <Card className="shadow-md">
-          <CardContent className="p-4">
-            <div className="text-center mb-3">
-              <Badge className={getPositionBadgeColor('East')}>East</Badge>
-            </div>
-            <div className="space-y-1">
-              {formatHand(hand.eastHand)}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* South */}
-      <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-48">
-        <Card className="shadow-md">
-          <CardContent className="p-4">
-            <div className="text-center mb-3">
-              <Badge className={getPositionBadgeColor('South')}>South</Badge>
-            </div>
-            <div className="space-y-1">
-              {formatHand(hand.southHand)}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-
     </div>
   );
 }
