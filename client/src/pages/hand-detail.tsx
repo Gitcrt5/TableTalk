@@ -92,7 +92,7 @@ export default function HandDetail() {
             <p className="text-text-secondary mb-4">
               The requested hand could not be found.
             </p>
-            <Link href="/">
+            <Link to="/">
               <Button>
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Back to Games
@@ -111,7 +111,7 @@ export default function HandDetail() {
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center space-x-4 mb-4">
-          <Link href={`/games/${hand.gameId}`}>
+          <Link to={`/games/${hand.gameId}`}>
             <Button variant="ghost" size="sm">
               <ArrowLeft className="mr-2 h-4 w-4" />
               Back to Game
