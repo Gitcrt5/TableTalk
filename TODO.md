@@ -8,6 +8,7 @@
 ## Core Feature Backlog
 - [ ] Add tags to hands and games for better organization and filtering
 - [ ] Add users with varying levels of ability (Admin, Teacher, Player, Kibbitzer)
+- [ ] Add way for users to manually enter a game and/or hand (form-based input)
 - [ ] User authentication system
 - [ ] Advanced hand filtering and search
 - [ ] Comment system enhancements (likes, replies)

@@ -114,6 +114,7 @@ The application uses four main entities:
 ### Core Features to Add
 - [ ] Add tags to hands and games for better organization and filtering
 - [ ] Add users with varying levels of ability (Admin, Teacher, Player, Kibbitzer)
+- [ ] Add way for users to manually enter a game and/or hand (form-based input)
 - [ ] Bidding sequence input functionality (partially implemented, needs completion)
 - [ ] Comment system improvements (likes, replies, user levels)
 - [ ] Search and filter hands by criteria (dealer, vulnerability, convention)
