@@ -104,10 +104,15 @@ export default function GameDetail() {
       {/* Hands List */}
       {hands && hands.length > 0 ? (
         <div className="space-y-4">
-          <h2 className="text-xl font-semibold mb-4">Hands ({hands.length})</h2>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-semibold">Hands ({hands.length})</h2>
+            <Badge variant="outline" className="text-xs">
+              {hands.filter(h => h.actualBidding && h.actualBidding.length > 0).length} with bidding
+            </Badge>
+          </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
             {hands.map((hand) => (
-              <Card key={hand.id} className="hover:shadow-lg transition-shadow">
+              <Card key={hand.id} className="hover:shadow-lg transition-all duration-200 hover:border-primary/20">
                 <CardContent className="p-6">
                   <div className="flex justify-between items-start mb-4">
                     <div>
@@ -116,6 +121,11 @@ export default function GameDetail() {
                         Dealer: {hand.dealer} • {hand.vulnerability}
                       </p>
                     </div>
+                    {hand.actualBidding && hand.actualBidding.length > 0 ? (
+                      <Badge variant="default" className="text-xs">Has bidding</Badge>
+                    ) : (
+                      <Badge variant="secondary" className="text-xs">No bidding</Badge>
+                    )}
                   </div>
                   
                   <div className="space-y-2 text-sm">
@@ -132,11 +142,17 @@ export default function GameDetail() {
                         <span className="font-medium">{hand.result}</span>
                       </div>
                     )}
+
+                    {!hand.finalContract && !hand.result && (
+                      <p className="text-text-secondary text-xs italic">
+                        Click to view hand layout and add bidding
+                      </p>
+                    )}
                   </div>
                   
                   <div className="mt-4 pt-4 border-t border-gray-200">
                     <Link href={`/hands/${hand.id}`}>
-                      <Button className="w-full">
+                      <Button className="w-full hover:bg-primary/90 transition-colors">
                         <Eye className="mr-2 h-4 w-4" />
                         View Hand
                       </Button>

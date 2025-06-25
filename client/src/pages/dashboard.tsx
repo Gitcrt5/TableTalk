@@ -37,19 +37,17 @@ export default function Dashboard() {
       {/* Action Bar */}
       <Card className="mb-6">
         <CardContent className="p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4 flex-1">
-              <div className="flex-1 relative max-w-md">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                <Input
-                  placeholder="Search games..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+            <div className="flex-1 relative max-w-md">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <Input
+                placeholder="Search games, tournaments, or uploaders..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
             </div>
-            <Button onClick={() => setShowUpload(true)} className="flex items-center space-x-2">
+            <Button onClick={() => setShowUpload(true)} className="flex items-center space-x-2 whitespace-nowrap">
               <Upload className="h-4 w-4" />
               <span>Upload PBN</span>
             </Button>
@@ -70,18 +68,20 @@ export default function Dashboard() {
             </Card>
           ))
         ) : filteredGames?.length === 0 ? (
-          <Card>
+          <Card className="border-2 border-dashed border-gray-300">
             <CardContent className="p-12 text-center">
               <div className="text-text-secondary">
-                <Upload className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <h3 className="text-lg font-semibold mb-2">No games found</h3>
-                <p className="mb-4">
+                <Upload className="h-16 w-16 mx-auto mb-4 opacity-50" />
+                <h3 className="text-xl font-semibold mb-2">
+                  {searchQuery ? "No games match your search" : "No games yet"}
+                </h3>
+                <p className="mb-6 text-sm max-w-md mx-auto">
                   {searchQuery 
-                    ? `No games match "${searchQuery}"`
-                    : "Upload your first PBN file to get started"
+                    ? `Try adjusting your search for "${searchQuery}" or upload a new game`
+                    : "Upload your first PBN file to start reviewing bridge games. PBN files contain bridge hand data and can be uploaded from various bridge software."
                   }
                 </p>
-                <Button onClick={() => setShowUpload(true)}>
+                <Button onClick={() => setShowUpload(true)} size="lg">
                   <Upload className="mr-2 h-4 w-4" />
                   Upload PBN File
                 </Button>
@@ -90,11 +90,11 @@ export default function Dashboard() {
           </Card>
         ) : (
           filteredGames?.map((game) => (
-            <Card key={game.id} className="hover:shadow-lg transition-shadow">
+            <Card key={game.id} className="hover:shadow-lg transition-all duration-200 hover:border-primary/20">
               <CardContent className="p-6">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <h3 className="text-xl font-semibold text-text-primary mb-2">
+                    <h3 className="text-xl font-semibold text-text-primary mb-2 hover:text-primary transition-colors">
                       {game.title}
                     </h3>
                     
@@ -117,16 +117,21 @@ export default function Dashboard() {
                       </div>
                     </div>
 
-                    {game.round && (
-                      <Badge variant="outline" className="mb-4">
-                        {game.round}
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {game.round && (
+                        <Badge variant="outline">
+                          {game.round}
+                        </Badge>
+                      )}
+                      <Badge variant="secondary" className="text-xs">
+                        Bridge Game
                       </Badge>
-                    )}
+                    </div>
                   </div>
                   
                   <div className="flex space-x-2">
                     <Link href={`/games/${game.id}`}>
-                      <Button>
+                      <Button className="hover:bg-primary/90 transition-colors">
                         View Hands
                       </Button>
                     </Link>

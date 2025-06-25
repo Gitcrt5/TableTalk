@@ -185,7 +185,6 @@ function isValidHand(hand: Partial<ParsedHand>): hand is ParsedHand {
     hand.northHand &&
     hand.southHand &&
     hand.eastHand &&
-    hand.westHand &&
-    hand.actualBidding
+    hand.westHand
   );
 }
