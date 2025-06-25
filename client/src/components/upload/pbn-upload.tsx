@@ -25,7 +25,7 @@ export default function PBNUpload({ open, onOpenChange }: PBNUploadProps) {
   const uploadMutation = useMutation({
     mutationFn: async (file: File) => {
       const formData = new FormData();
-      formData.append('pbnFile', file);
+      formData.append('file', file);
       formData.append('userId', 'current-user'); // In real app, get from auth
 
       // Simulate progress

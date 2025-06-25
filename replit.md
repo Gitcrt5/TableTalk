@@ -101,6 +101,8 @@ The application uses four main entities:
 - June 25, 2025. Initial setup with full-featured bridge platform
 - June 25, 2025. Simplified to MVP focusing on core features: games list, hands view, bidding input, and comments
 - June 25, 2025. Enhanced UI with better hand display, improved search, and visual polish for better user experience
+- June 25, 2025. Added PostgreSQL database integration with proper schema and migrations
+- June 25, 2025. Fixed PBN parser validation to ensure actualBidding field is properly initialized for all hands
 
 ## User Preferences
 

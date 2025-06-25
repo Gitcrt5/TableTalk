@@ -56,6 +56,8 @@ export const insertGameSchema = createInsertSchema(games).omit({
 
 export const insertHandSchema = createInsertSchema(hands).omit({
   id: true,
+}).extend({
+  actualBidding: z.array(z.string()).default([]),
 });
 
 export const insertUserBiddingSchema = createInsertSchema(userBidding).omit({

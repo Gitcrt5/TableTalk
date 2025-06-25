@@ -109,6 +109,11 @@ function parseHands(dealString: string, hand: Partial<ParsedHand>) {
   
   if (handStrings.length !== 4) return;
   
+  // Initialize actualBidding if not already set
+  if (!hand.actualBidding) {
+    hand.actualBidding = [];
+  }
+  
   // Determine hand positions based on dealer
   const positions = getHandPositions(dealer);
   
@@ -178,6 +183,11 @@ function normalizeVulnerability(vul: string): string {
 }
 
 function isValidHand(hand: Partial<ParsedHand>): hand is ParsedHand {
+  // Ensure actualBidding is always initialized
+  if (!hand.actualBidding) {
+    hand.actualBidding = [];
+  }
+  
   return !!(
     hand.boardNumber &&
     hand.dealer &&
@@ -185,6 +195,7 @@ function isValidHand(hand: Partial<ParsedHand>): hand is ParsedHand {
     hand.northHand &&
     hand.southHand &&
     hand.eastHand &&
-    hand.westHand
+    hand.westHand &&
+    Array.isArray(hand.actualBidding)
   );
 }

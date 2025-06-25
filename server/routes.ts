@@ -43,7 +43,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/games/upload", upload.single('pbnFile'), async (req, res) => {
+  app.post("/api/games/upload", upload.single('file'), async (req, res) => {
     try {
       if (!req.file) {
         return res.status(400).json({ error: "No PBN file provided" });
