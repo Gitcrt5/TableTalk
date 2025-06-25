@@ -7,7 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import HandDisplay from "@/components/bridge/hand-display";
 import BiddingTable from "@/components/bridge/bidding-table";
 import CommentsSection from "@/components/comments/comments-section";
-import { ArrowLeft, Edit } from "lucide-react";
+import { ArrowLeft, Edit, ChevronLeft, ChevronRight } from "lucide-react";
 import { Link, useParams } from "wouter";
 import { apiRequest } from "@/lib/queryClient";
 import type { Hand } from "@shared/schema";
