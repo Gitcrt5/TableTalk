@@ -3,11 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import HandDisplay from "@/components/bridge/hand-display";
-import BiddingTable from "@/components/bridge/bidding-table";
-import BiddingPractice from "@/components/bridge/bidding-practice";
-import CommentsSection from "@/components/comments/comments-section";
-import { ArrowLeft, Bookmark, Share2, Calendar, User } from "lucide-react";
+import { ArrowLeft, Calendar, User, Eye } from "lucide-react";
 import { Link, useParams } from "wouter";
 import type { Game, Hand } from "@shared/schema";
 
@@ -25,53 +21,38 @@ export default function GameDetail() {
     enabled: !!gameId,
   });
 
-  // For demo, show first hand by default
-  const currentHand = hands?.[0];
-
   if (gameLoading || handsLoading) {
     return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="space-y-6">
           <Skeleton className="h-8 w-64" />
-          <Card>
-            <CardContent className="p-6">
-              <div className="grid grid-cols-3 gap-4">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <Skeleton key={i} className="h-32" />
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-          <div className="grid md:grid-cols-2 gap-6">
-            <Card>
-              <CardContent className="p-6">
-                <Skeleton className="h-64" />
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-6">
-                <Skeleton className="h-64" />
-              </CardContent>
-            </Card>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <Card key={i} className="animate-pulse">
+                <CardContent className="p-6">
+                  <Skeleton className="h-32" />
+                </CardContent>
+              </Card>
+            ))}
           </div>
         </div>
       </div>
     );
   }
 
-  if (!game || !currentHand) {
+  if (!game) {
     return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Card>
           <CardContent className="p-12 text-center">
             <h2 className="text-xl font-semibold mb-2">Game not found</h2>
             <p className="text-text-secondary mb-4">
               The requested game could not be found.
             </p>
-            <Link href="/browse">
+            <Link href="/">
               <Button>
                 <ArrowLeft className="mr-2 h-4 w-4" />
-                Back to Browse
+                Back to Games
               </Button>
             </Link>
           </CardContent>
@@ -81,104 +62,101 @@ export default function GameDetail() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center space-x-4 mb-4">
-          <Link href="/browse">
+          <Link href="/">
             <Button variant="ghost" size="sm">
               <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Browse
+              Back to Games
             </Button>
           </Link>
         </div>
         
-        <div className="flex justify-between items-start">
-          <div>
-            <h1 className="text-3xl font-bold text-text-primary mb-2">
-              Board {currentHand.boardNumber} - {currentHand.vulnerability} Vulnerable
-            </h1>
-            <div className="flex flex-wrap items-center gap-4 text-text-secondary">
-              {game.tournament && (
-                <div className="flex items-center space-x-1">
-                  <Calendar className="h-4 w-4" />
-                  <span>{game.tournament}</span>
-                </div>
-              )}
-              
+        <div>
+          <h1 className="text-3xl font-bold text-text-primary mb-2">
+            {game.title}
+          </h1>
+          <div className="flex flex-wrap items-center gap-4 text-text-secondary">
+            {game.tournament && (
               <div className="flex items-center space-x-1">
-                <User className="h-4 w-4" />
-                <span>Uploaded by {game.uploadedBy}</span>
+                <Calendar className="h-4 w-4" />
+                <span>{game.tournament}</span>
               </div>
-              
-              {game.round && <Badge variant="outline">{game.round}</Badge>}
+            )}
+            
+            <div className="flex items-center space-x-1">
+              <User className="h-4 w-4" />
+              <span>Uploaded by {game.uploadedBy}</span>
             </div>
-          </div>
-          
-          <div className="flex space-x-2">
-            <Button variant="ghost" size="icon">
-              <Bookmark className="h-4 w-4" />
-            </Button>
-            <Button variant="ghost" size="icon">
-              <Share2 className="h-4 w-4" />
-            </Button>
+            
+            <div className="flex items-center space-x-1">
+              <Calendar className="h-4 w-4" />
+              <span>{new Date(game.uploadedAt).toLocaleDateString()}</span>
+            </div>
+            
+            {game.round && <Badge variant="outline">{game.round}</Badge>}
           </div>
         </div>
       </div>
 
-      {/* Hand Display */}
-      <Card className="mb-8">
-        <CardContent className="p-6">
-          <HandDisplay hand={currentHand} />
-        </CardContent>
-      </Card>
-
-      {/* Bidding Comparison */}
-      <div className="grid md:grid-cols-2 gap-6 mb-8">
-        <BiddingTable
-          title="Actual Bidding"
-          bidding={currentHand.actualBidding}
-          finalContract={currentHand.finalContract}
-          declarer={currentHand.declarer}
-          icon="gavel"
-        />
-        
-        <BiddingPractice 
-          hand={currentHand} 
-          userId="current-user" // In real app, get from auth
-        />
-      </div>
-
-      {/* Hand Navigation */}
-      {hands && hands.length > 1 && (
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle>All Hands in this Game</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2">
-              {hands.map((hand) => (
-                <Button
-                  key={hand.id}
-                  variant={hand.id === currentHand.id ? "default" : "outline"}
-                  size="sm"
-                  className="h-auto p-3"
-                >
-                  <div className="text-center">
-                    <div className="font-semibold">Board {hand.boardNumber}</div>
-                    <div className="text-xs text-text-secondary">
-                      {hand.vulnerability}
+      {/* Hands List */}
+      {hands && hands.length > 0 ? (
+        <div className="space-y-4">
+          <h2 className="text-xl font-semibold mb-4">Hands ({hands.length})</h2>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {hands.map((hand) => (
+              <Card key={hand.id} className="hover:shadow-lg transition-shadow">
+                <CardContent className="p-6">
+                  <div className="flex justify-between items-start mb-4">
+                    <div>
+                      <h3 className="font-semibold text-lg">Board {hand.boardNumber}</h3>
+                      <p className="text-text-secondary text-sm">
+                        Dealer: {hand.dealer} • {hand.vulnerability}
+                      </p>
                     </div>
                   </div>
-                </Button>
-              ))}
+                  
+                  <div className="space-y-2 text-sm">
+                    {hand.finalContract && (
+                      <div className="flex justify-between">
+                        <span className="text-text-secondary">Contract:</span>
+                        <span className="font-medium">{hand.finalContract} by {hand.declarer}</span>
+                      </div>
+                    )}
+                    
+                    {hand.result && (
+                      <div className="flex justify-between">
+                        <span className="text-text-secondary">Result:</span>
+                        <span className="font-medium">{hand.result}</span>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="mt-4 pt-4 border-t border-gray-200">
+                    <Link href={`/hands/${hand.id}`}>
+                      <Button className="w-full">
+                        <Eye className="mr-2 h-4 w-4" />
+                        View Hand
+                      </Button>
+                    </Link>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <Card>
+          <CardContent className="p-12 text-center">
+            <div className="text-text-secondary">
+              <h3 className="text-lg font-semibold mb-2">No hands found</h3>
+              <p>This game doesn't contain any hands yet.</p>
             </div>
           </CardContent>
         </Card>
       )}
-
-      {/* Comments Section */}
-      <CommentsSection handId={currentHand.id} />
     </div>
   );
 }

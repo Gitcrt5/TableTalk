@@ -2,7 +2,7 @@
 
 ## Overview
 
-TableTalk is a bridge bidding practice and analysis application built with a modern full-stack TypeScript architecture. The application allows users to upload PBN (Portable Bridge Notation) files, practice bidding on real bridge hands, and engage with a community through comments and discussions. The system uses a React frontend with Express.js backend, PostgreSQL database with Drizzle ORM, and is designed for deployment on Replit.
+TableTalk is a simplified bridge review platform built with a modern full-stack TypeScript architecture. The MVP focuses on core functionality: uploading PBN files, viewing games and hands, and adding comments. Users can upload bridge games, browse available games, view individual hands with card layouts, add missing bidding sequences, and comment on hands for discussion.
 
 ## System Architecture
 
@@ -38,11 +38,11 @@ The application uses four main entities:
 - **Comments**: Community discussions on specific hands with user levels and likes
 
 ### Frontend Components
-- **Pages**: Dashboard, Browse Games, Game Detail, Practice, Not Found
-- **Layout**: Header with navigation, Sidebar with filters and quick actions
-- **Bridge-Specific**: Hand display, bidding table, bidding practice interface
-- **Upload**: PBN file upload with drag-and-drop and progress tracking
-- **Comments**: Threaded comment system with user interaction
+- **Pages**: Dashboard (games list), Game Detail (hands list), Hand Detail (individual hand view), Not Found
+- **Layout**: Simple header with just the TableTalk logo/name
+- **Bridge-Specific**: Hand display showing all four positions, bidding table for display, bidding input for missing auctions
+- **Upload**: PBN file upload with drag-and-drop integration
+- **Comments**: Simple comment system for hand discussions
 
 ### Backend Services
 - **PBN Parser**: Extracts game and hand data from uploaded bridge notation files
@@ -51,12 +51,13 @@ The application uses four main entities:
 
 ## Data Flow
 
-1. **File Upload**: Users upload PBN files through the frontend interface
+1. **File Upload**: Users upload PBN files through a simple upload interface
 2. **Parsing**: Backend parses PBN content and extracts individual hands
-3. **Storage**: Games and hands are stored in PostgreSQL with relationships
-4. **Practice**: Users select hands for bidding practice with real-time feedback
-5. **Community**: Users can comment on hands and view others' discussions
-6. **Analytics**: System tracks bidding accuracy and provides progress statistics
+3. **Storage**: Games and hands are stored with in-memory storage for MVP
+4. **Browse**: Users can view a list of all uploaded games
+5. **Hands**: Clicking a game shows all hands within that game
+6. **Hand Detail**: Individual hands show card layout, bidding (if available), and comments
+7. **Add Content**: Users can add missing bidding sequences and comments to hands
 
 ## External Dependencies
 
@@ -96,8 +97,10 @@ The application uses four main entities:
 ## Changelog
 
 Changelog:
-- June 25, 2025. Initial setup
+- June 25, 2025. Initial setup with full-featured bridge platform
+- June 25, 2025. Simplified to MVP focusing on core features: games list, hands view, bidding input, and comments
 
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
+User prefers MVP approach: Start simple and add features incrementally rather than building complex systems upfront.

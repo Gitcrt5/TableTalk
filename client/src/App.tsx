@@ -5,9 +5,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import Header from "@/components/layout/header";
 import Dashboard from "@/pages/dashboard";
-import BrowseGames from "@/pages/browse-games";
 import GameDetail from "@/pages/game-detail";
-import Practice from "@/pages/practice";
+import HandDetail from "@/pages/hand-detail";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -16,9 +15,8 @@ function Router() {
       <Header />
       <Switch>
         <Route path="/" component={Dashboard} />
-        <Route path="/browse" component={BrowseGames} />
         <Route path="/games/:id" component={GameDetail} />
-        <Route path="/practice" component={Practice} />
+        <Route path="/hands/:id" component={HandDetail} />
         <Route component={NotFound} />
       </Switch>
     </div>
