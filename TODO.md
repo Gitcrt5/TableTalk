@@ -6,6 +6,7 @@
 - [ ] Improve error handling and user feedback
 
 ## Core Feature Backlog
+- [ ] Add tags to hands and games for better organization and filtering
 - [ ] User authentication system
 - [ ] Advanced hand filtering and search
 - [ ] Comment system enhancements (likes, replies)
