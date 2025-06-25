@@ -1,0 +1,264 @@
+import { games, hands, userBidding, comments, type Game, type Hand, type UserBidding, type Comment, type InsertGame, type InsertHand, type InsertUserBidding, type InsertComment } from "@shared/schema";
+
+export interface IStorage {
+  // Games
+  createGame(game: InsertGame): Promise<Game>;
+  getGame(id: number): Promise<Game | undefined>;
+  getAllGames(): Promise<Game[]>;
+  searchGames(query: string): Promise<Game[]>;
+
+  // Hands
+  createHand(hand: InsertHand): Promise<Hand>;
+  getHand(id: number): Promise<Hand | undefined>;
+  getHandsByGame(gameId: number): Promise<Hand[]>;
+  getHandsWithFilters(filters: {
+    vulnerability?: string;
+    dealer?: string;
+    convention?: string;
+  }): Promise<Hand[]>;
+
+  // User Bidding
+  createUserBidding(bidding: InsertUserBidding): Promise<UserBidding>;
+  getUserBidding(handId: number, userId: string): Promise<UserBidding | undefined>;
+  getUserBiddingStats(userId: string): Promise<{
+    totalHands: number;
+    averageAccuracy: number;
+  }>;
+
+  // Comments
+  createComment(comment: InsertComment): Promise<Comment>;
+  getCommentsByHand(handId: number): Promise<Comment[]>;
+  likeComment(commentId: number): Promise<void>;
+  getUserCommentCount(userId: string): Promise<number>;
+
+  // Statistics
+  getUserStats(userId: string): Promise<{
+    gamesUploaded: number;
+    handsReviewed: number;
+    averageBiddingAccuracy: number;
+    commentsMade: number;
+  }>;
+}
+
+export class MemStorage implements IStorage {
+  private games: Map<number, Game>;
+  private hands: Map<number, Hand>;
+  private userBidding: Map<string, UserBidding>; // key: handId-userId
+  private comments: Map<number, Comment>;
+  private currentGameId: number;
+  private currentHandId: number;
+  private currentUserBiddingId: number;
+  private currentCommentId: number;
+
+  constructor() {
+    this.games = new Map();
+    this.hands = new Map();
+    this.userBidding = new Map();
+    this.comments = new Map();
+    this.currentGameId = 1;
+    this.currentHandId = 1;
+    this.currentUserBiddingId = 1;
+    this.currentCommentId = 1;
+
+    // Add sample data
+    this.initializeSampleData();
+  }
+
+  private async initializeSampleData() {
+    // Create a sample game
+    const sampleGame = await this.createGame({
+      title: "World Championship 2023 - Round 3",
+      tournament: "World Championship 2023",
+      round: "Round 3",
+      uploadedBy: "admin",
+      pbnContent: "% Sample PBN Content",
+    });
+
+    // Create a sample hand
+    const sampleHand = await this.createHand({
+      gameId: sampleGame.id,
+      boardNumber: 15,
+      dealer: "S",
+      vulnerability: "NS",
+      northHand: "♠AKQ108 ♥J94 ♦K63 ♣75",
+      southHand: "♠J5 ♥3 ♦A5 ♣KJ9632",
+      eastHand: "♠643 ♥A752 ♦J10872 ♣Q4",
+      westHand: "♠972 ♥KQ1086 ♦Q94 ♣A108",
+      actualBidding: ["Pass", "1♠", "Pass", "2♣", "Pass", "2♠", "Pass", "3♣", "Pass", "4♠", "Pass", "Pass", "Pass"],
+      finalContract: "4♠",
+      declarer: "N",
+      result: "Made",
+    });
+
+    // Add sample comments
+    await this.createComment({
+      handId: sampleHand.id,
+      userId: "user1",
+      userName: "BridgeMaster23",
+      userLevel: "Expert",
+      content: "Great hand for discussing weak two-suits. South's 2♣ response was questionable - with only 6 HCP and club length, a simple pass might be better. The jump to 4♠ by North shows confidence in the spade fit.",
+    });
+
+    await this.createComment({
+      handId: sampleHand.id,
+      userId: "user2",
+      userName: "CardPlayer47",
+      userLevel: "Advanced",
+      content: "I disagree - South's 2♣ shows support and the club suit could be valuable for discards. The key question is whether North should have made a game try instead of jumping directly to 4♠.",
+    });
+  }
+
+  async createGame(insertGame: InsertGame): Promise<Game> {
+    const id = this.currentGameId++;
+    const game: Game = {
+      ...insertGame,
+      id,
+      uploadedAt: new Date(),
+      tournament: insertGame.tournament || null,
+      round: insertGame.round || null,
+    };
+    this.games.set(id, game);
+    return game;
+  }
+
+  async getGame(id: number): Promise<Game | undefined> {
+    return this.games.get(id);
+  }
+
+  async getAllGames(): Promise<Game[]> {
+    return Array.from(this.games.values()).sort((a, b) => 
+      b.uploadedAt.getTime() - a.uploadedAt.getTime()
+    );
+  }
+
+  async searchGames(query: string): Promise<Game[]> {
+    const lowercaseQuery = query.toLowerCase();
+    return Array.from(this.games.values()).filter(game =>
+      game.title.toLowerCase().includes(lowercaseQuery) ||
+      game.tournament?.toLowerCase().includes(lowercaseQuery) ||
+      game.round?.toLowerCase().includes(lowercaseQuery)
+    );
+  }
+
+  async createHand(insertHand: InsertHand): Promise<Hand> {
+    const id = this.currentHandId++;
+    const hand: Hand = { 
+      ...insertHand, 
+      id,
+      actualBidding: insertHand.actualBidding as string[],
+      finalContract: insertHand.finalContract || null,
+      declarer: insertHand.declarer || null,
+      result: insertHand.result || null,
+    };
+    this.hands.set(id, hand);
+    return hand;
+  }
+
+  async getHand(id: number): Promise<Hand | undefined> {
+    return this.hands.get(id);
+  }
+
+  async getHandsByGame(gameId: number): Promise<Hand[]> {
+    return Array.from(this.hands.values()).filter(hand => hand.gameId === gameId);
+  }
+
+  async getHandsWithFilters(filters: {
+    vulnerability?: string;
+    dealer?: string;
+    convention?: string;
+  }): Promise<Hand[]> {
+    return Array.from(this.hands.values()).filter(hand => {
+      if (filters.vulnerability && hand.vulnerability !== filters.vulnerability) {
+        return false;
+      }
+      if (filters.dealer && hand.dealer !== filters.dealer) {
+        return false;
+      }
+      return true;
+    });
+  }
+
+  async createUserBidding(insertUserBidding: InsertUserBidding): Promise<UserBidding> {
+    const id = this.currentUserBiddingId++;
+    const bidding: UserBidding = {
+      ...insertUserBidding,
+      id,
+      bidding: insertUserBidding.bidding as string[],
+      completedAt: new Date(),
+      accuracy: insertUserBidding.accuracy || null,
+    };
+    const key = `${insertUserBidding.handId}-${insertUserBidding.userId}`;
+    this.userBidding.set(key, bidding);
+    return bidding;
+  }
+
+  async getUserBidding(handId: number, userId: string): Promise<UserBidding | undefined> {
+    const key = `${handId}-${userId}`;
+    return this.userBidding.get(key);
+  }
+
+  async getUserBiddingStats(userId: string): Promise<{
+    totalHands: number;
+    averageAccuracy: number;
+  }> {
+    const userBiddings = Array.from(this.userBidding.values()).filter(b => b.userId === userId);
+    const totalHands = userBiddings.length;
+    const averageAccuracy = totalHands > 0 
+      ? userBiddings.reduce((sum, b) => sum + (b.accuracy || 0), 0) / totalHands
+      : 0;
+    
+    return { totalHands, averageAccuracy };
+  }
+
+  async createComment(insertComment: InsertComment): Promise<Comment> {
+    const id = this.currentCommentId++;
+    const comment: Comment = {
+      ...insertComment,
+      id,
+      likes: 0,
+      createdAt: new Date(),
+      userLevel: insertComment.userLevel || "Beginner",
+    };
+    this.comments.set(id, comment);
+    return comment;
+  }
+
+  async getCommentsByHand(handId: number): Promise<Comment[]> {
+    return Array.from(this.comments.values())
+      .filter(comment => comment.handId === handId)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  }
+
+  async likeComment(commentId: number): Promise<void> {
+    const comment = this.comments.get(commentId);
+    if (comment) {
+      comment.likes++;
+      this.comments.set(commentId, comment);
+    }
+  }
+
+  async getUserCommentCount(userId: string): Promise<number> {
+    return Array.from(this.comments.values()).filter(c => c.userId === userId).length;
+  }
+
+  async getUserStats(userId: string): Promise<{
+    gamesUploaded: number;
+    handsReviewed: number;
+    averageBiddingAccuracy: number;
+    commentsMade: number;
+  }> {
+    const gamesUploaded = Array.from(this.games.values()).filter(g => g.uploadedBy === userId).length;
+    const handsReviewed = Array.from(this.userBidding.values()).filter(b => b.userId === userId).length;
+    const biddingStats = await this.getUserBiddingStats(userId);
+    const commentsMade = await this.getUserCommentCount(userId);
+
+    return {
+      gamesUploaded,
+      handsReviewed,
+      averageBiddingAccuracy: biddingStats.averageAccuracy,
+      commentsMade,
+    };
+  }
+}
+
+export const storage = new MemStorage();

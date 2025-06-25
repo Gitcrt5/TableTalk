@@ -1,0 +1,116 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: hsl(0, 0%, 100%);
+  --foreground: hsl(0, 0%, 20%);
+  --muted: hsl(210, 40%, 98%);
+  --muted-foreground: hsl(215, 16%, 47%);
+  --popover: hsl(0, 0%, 100%);
+  --popover-foreground: hsl(222, 84%, 5%);
+  --card: hsl(0, 0%, 100%);
+  --card-foreground: hsl(222, 84%, 5%);
+  --border: hsl(214, 32%, 91%);
+  --input: hsl(214, 32%, 91%);
+  --primary: hsl(207, 90%, 54%);
+  --primary-foreground: hsl(211, 100%, 99%);
+  --secondary: hsl(142, 71%, 45%);
+  --secondary-foreground: hsl(210, 40%, 98%);
+  --accent: hsl(36, 100%, 47%);
+  --accent-foreground: hsl(210, 40%, 98%);
+  --destructive: hsl(0, 84%, 60%);
+  --destructive-foreground: hsl(210, 40%, 98%);
+  --ring: hsl(222, 84%, 5%);
+  --radius: 0.5rem;
+  
+  /* Custom TableTalk colors */
+  --surface: hsl(0, 0%, 98%);
+  --text-primary: hsl(0, 0%, 20%);
+  --text-secondary: hsl(0, 0%, 40%);
+  --error: hsl(0, 71%, 51%);
+  --success: hsl(142, 71%, 45%);
+}
+
+.dark {
+  --background: hsl(222, 84%, 5%);
+  --foreground: hsl(210, 40%, 98%);
+  --muted: hsl(217, 32%, 17%);
+  --muted-foreground: hsl(215, 20%, 65%);
+  --popover: hsl(222, 84%, 5%);
+  --popover-foreground: hsl(210, 40%, 98%);
+  --card: hsl(222, 84%, 5%);
+  --card-foreground: hsl(210, 40%, 98%);
+  --border: hsl(217, 32%, 17%);
+  --input: hsl(217, 32%, 17%);
+  --primary: hsl(207, 90%, 54%);
+  --primary-foreground: hsl(211, 100%, 99%);
+  --secondary: hsl(142, 71%, 45%);
+  --secondary-foreground: hsl(210, 40%, 98%);
+  --accent: hsl(36, 100%, 47%);
+  --accent-foreground: hsl(210, 40%, 98%);
+  --destructive: hsl(0, 84%, 60%);
+  --destructive-foreground: hsl(210, 40%, 98%);
+  --ring: hsl(212, 12%, 84%);
+  
+  /* Custom TableTalk colors for dark mode */
+  --surface: hsl(222, 84%, 5%);
+  --text-primary: hsl(210, 40%, 98%);
+  --text-secondary: hsl(215, 20%, 65%);
+  --error: hsl(0, 71%, 51%);
+  --success: hsl(142, 71%, 45%);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+@layer components {
+  .material-shadow {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1), 0 8px 16px rgba(0,0,0,0.1);
+  }
+  
+  .material-shadow-lg {
+    box-shadow: 0 4px 8px rgba(0,0,0,0.12), 0 16px 32px rgba(0,0,0,0.12);
+  }
+  
+  .bridge-hand {
+    font-family: 'JetBrains Mono', monospace;
+  }
+  
+  .suit-spades {
+    color: hsl(0, 0%, 0%);
+  }
+  
+  .suit-hearts {
+    color: hsl(0, 84%, 60%);
+  }
+  
+  .suit-diamonds {
+    color: hsl(0, 84%, 60%);
+  }
+  
+  .suit-clubs {
+    color: hsl(0, 0%, 0%);
+  }
+}
+
+@layer utilities {
+  .text-text-primary {
+    color: var(--text-primary);
+  }
+  
+  .text-text-secondary {
+    color: var(--text-secondary);
+  }
+  
+  .bg-surface {
+    background-color: var(--surface);
+  }
+}
