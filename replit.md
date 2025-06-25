@@ -103,8 +103,44 @@ The application uses four main entities:
 - June 25, 2025. Enhanced UI with better hand display, improved search, and visual polish for better user experience
 - June 25, 2025. Added PostgreSQL database integration with proper schema and migrations
 - June 25, 2025. Fixed PBN parser validation to ensure actualBidding field is properly initialized for all hands
+- June 25, 2025. Fixed hand display navigation and layout issues, made hand display more compact and consistent across screen sizes
+
+## TODO List & Future Enhancements
+
+### Current Issues to Fix
+- [ ] Resolve LSP errors in server/storage.ts (database insertion type mismatch)
+- [ ] Fix server/vite.ts allowedHosts configuration warning
+
+### Core Features to Add
+- [ ] Bidding sequence input functionality (partially implemented, needs completion)
+- [ ] Comment system improvements (likes, replies, user levels)
+- [ ] Search and filter hands by criteria (dealer, vulnerability, convention)
+- [ ] User authentication and profiles
+- [ ] Hand statistics and analysis
+
+### UI/UX Improvements
+- [ ] Mobile-responsive design optimization
+- [ ] Dark mode theme toggle
+- [ ] Keyboard shortcuts for navigation
+- [ ] Better loading states and error handling
+- [ ] Improved PBN upload with validation feedback
+
+### Advanced Features (Future)
+- [ ] Club website data import/scraping integration
+- [ ] Mobile app development
+- [ ] Real-time collaboration on hand analysis
+- [ ] Advanced bidding analysis and suggestions
+- [ ] Tournament management features
+- [ ] Export hands to different formats (PDF, PBN, etc.)
+
+### Data & Performance
+- [ ] Database migrations and backup system
+- [ ] Caching strategy for better performance
+- [ ] File upload size limits and validation
+- [ ] Data export/import functionality
 
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
 User prefers MVP approach: Start simple and add features incrementally rather than building complex systems upfront.
+User wants to track ideas and future enhancements systematically.
