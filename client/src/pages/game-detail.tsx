@@ -151,7 +151,7 @@ export default function GameDetail() {
                   </div>
                   
                   <div className="mt-4 pt-4 border-t border-gray-200">
-                    <Link href={`/hands/${hand.id}`}>
+                    <Link to={`/hands/${hand.id}`}>
                       <Button className="w-full hover:bg-primary/90 transition-colors">
                         <Eye className="mr-2 h-4 w-4" />
                         View Hand

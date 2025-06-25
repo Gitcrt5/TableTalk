@@ -7,7 +7,11 @@ interface HandDisplayProps {
 }
 
 export default function HandDisplay({ hand }: HandDisplayProps) {
+  console.log('HandDisplay received hand:', hand);
+  
   const formatHand = (handString: string | null | undefined) => {
+    console.log('Formatting hand string:', handString);
+    
     if (!handString || typeof handString !== 'string') {
       return <div className="text-sm text-gray-500">No hand data</div>;
     }

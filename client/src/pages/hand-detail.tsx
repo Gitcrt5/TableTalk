@@ -33,9 +33,11 @@ export default function HandDetail() {
   const queryClient = useQueryClient();
 
   const { data: hand, isLoading: handLoading } = useQuery<Hand>({
-    queryKey: ["/api/hands", handId],
+    queryKey: [`/api/hands/${handId}`],
     enabled: !!handId,
   });
+  
+  console.log('Hand data:', hand);
 
   const updateBiddingMutation = useMutation({
     mutationFn: async (bidding: string[]) => {
