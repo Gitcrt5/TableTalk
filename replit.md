@@ -117,11 +117,13 @@ The application uses four main entities:
 - [ ] Add way for users to manually enter a game and/or hand (form-based input)
 - [ ] Bidding sequence input functionality (partially implemented, needs completion)
 - [ ] Comment system improvements (likes, replies, user levels)
+- [ ] Add filtering as well as search of the games list
 - [ ] Search and filter hands by criteria (dealer, vulnerability, convention)
 - [ ] User authentication and profiles
 - [ ] Hand statistics and analysis
 
 ### UI/UX Improvements
+- [ ] Add option for more compact view of the games list
 - [ ] Mobile-responsive design optimization
 - [ ] Dark mode theme toggle
 - [ ] Keyboard shortcuts for navigation
