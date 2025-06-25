@@ -37,7 +37,12 @@ export default function HandDetail() {
     enabled: !!handId,
   });
   
-  console.log('Hand data:', hand);
+
+
+  const { data: gameHands } = useQuery<Hand[]>({
+    queryKey: [`/api/games/${hand?.gameId}/hands`],
+    enabled: !!hand?.gameId,
+  });
 
   const updateBiddingMutation = useMutation({
     mutationFn: async (bidding: string[]) => {
@@ -65,6 +70,8 @@ export default function HandDetail() {
   };
 
   const positions = ["West", "North", "East", "South"];
+
+
 
   if (handLoading) {
     return (
@@ -112,13 +119,55 @@ export default function HandDetail() {
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Header */}
       <div className="mb-8">
-        <div className="flex items-center space-x-4 mb-4">
+        <div className="flex items-center justify-between mb-4">
           <Link to={`/games/${hand.gameId}`}>
             <Button variant="ghost" size="sm">
               <ArrowLeft className="mr-2 h-4 w-4" />
               Back to Game
             </Button>
           </Link>
+          
+          {gameHands && gameHands.length > 1 && (
+            <div className="flex items-center space-x-2">
+              {(() => {
+                const currentIndex = gameHands.findIndex(h => h.id === hand.id);
+                const prevHand = currentIndex > 0 ? gameHands[currentIndex - 1] : null;
+                const nextHand = currentIndex < gameHands.length - 1 ? gameHands[currentIndex + 1] : null;
+                
+                return (
+                  <>
+                    <Link to={prevHand ? `/hands/${prevHand.id}` : '#'}>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        disabled={!prevHand}
+                        className="flex items-center"
+                      >
+                        <ChevronLeft className="h-4 w-4 mr-1" />
+                        Previous
+                      </Button>
+                    </Link>
+                    
+                    <span className="text-sm text-text-secondary px-2">
+                      {currentIndex + 1} of {gameHands.length}
+                    </span>
+                    
+                    <Link to={nextHand ? `/hands/${nextHand.id}` : '#'}>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        disabled={!nextHand}
+                        className="flex items-center"
+                      >
+                        Next
+                        <ChevronRight className="h-4 w-4 ml-1" />
+                      </Button>
+                    </Link>
+                  </>
+                );
+              })()}
+            </div>
+          )}
         </div>
         
         <div className="flex justify-between items-start">

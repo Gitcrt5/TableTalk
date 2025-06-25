@@ -7,10 +7,7 @@ interface HandDisplayProps {
 }
 
 export default function HandDisplay({ hand }: HandDisplayProps) {
-  console.log('HandDisplay received hand:', hand);
-  
   const formatHand = (handString: string | null | undefined) => {
-    console.log('Formatting hand string:', handString);
     
     if (!handString || typeof handString !== 'string') {
       return <div className="text-sm text-gray-500">No hand data</div>;
@@ -100,22 +97,7 @@ export default function HandDisplay({ hand }: HandDisplayProps) {
         </Card>
       </div>
 
-      {/* Center information */}
-      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-        <Card className="shadow-lg border-2 border-primary/20">
-          <CardContent className="p-6 text-center">
-            <div className="space-y-2">
-              <div className="text-lg font-semibold text-primary">
-                Board {hand.boardNumber}
-              </div>
-              <div className="text-sm text-text-secondary space-y-1">
-                <div>Dealer: <span className="font-semibold">{hand.dealer}</span></div>
-                <div>Vulnerability: <span className="font-semibold">{hand.vulnerability}</span></div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+
     </div>
   );
 }
