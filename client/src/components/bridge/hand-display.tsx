@@ -1,6 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import type { Hand } from "@shared/schema";
+import { formatCards } from "@/lib/bridge-utils";
 
 interface HandDisplayProps {
   hand: Hand;
@@ -23,7 +24,7 @@ export default function HandDisplay({ hand }: HandDisplayProps) {
           {suitSymbols[index]}
         </span>
         <span className="font-mono text-xs flex-1 leading-relaxed">
-          {suit || '—'}
+          {formatCards(suit) || '—'}
         </span>
       </div>
     ));

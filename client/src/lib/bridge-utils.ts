@@ -105,3 +105,8 @@ export function getDealerName(dealer: string): string {
       return dealer;
   }
 }
+
+export function formatCards(cardString: string): string {
+  if (!cardString) return '';
+  return cardString.replace(/10/g, 'T');
+}
