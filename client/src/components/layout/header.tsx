@@ -1,4 +1,5 @@
 import { Link } from "wouter";
+import logoUrl from "@/assets/tabletalk-logo.svg";
 
 export default function Header() {
   return (
@@ -6,9 +7,11 @@ export default function Header() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <Link href="/" className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-lg">T</span>
-            </div>
+            <img 
+              src={logoUrl} 
+              alt="TableTalk Logo" 
+              className="w-10 h-10"
+            />
             <h1 className="text-xl font-bold text-text-primary">TableTalk</h1>
           </Link>
         </div>
