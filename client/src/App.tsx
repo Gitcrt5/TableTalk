@@ -7,9 +7,25 @@ import Header from "@/components/layout/header";
 import Dashboard from "@/pages/dashboard";
 import GameDetail from "@/pages/game-detail";
 import HandDetail from "@/pages/hand-detail";
+import Landing from "@/pages/landing";
 import NotFound from "@/pages/not-found";
+import { useAuth } from "@/hooks/useAuth";
 
 function Router() {
+  const { isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-lg">Loading...</div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <Landing />;
+  }
+
   return (
     <div className="min-h-screen bg-surface">
       <Header />

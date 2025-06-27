@@ -18,6 +18,7 @@ TableTalk is a simplified bridge review platform built with a modern full-stack 
 - **Runtime**: Node.js 20+ with Express.js framework
 - **Language**: TypeScript with ES modules
 - **API Pattern**: RESTful API with conventional HTTP methods
+- **Authentication**: Replit OpenID Connect with Passport.js
 - **File Upload**: Multer for handling PBN file uploads
 - **Session Management**: Express sessions with PostgreSQL store
 - **Error Handling**: Centralized error handling middleware
@@ -31,11 +32,13 @@ TableTalk is a simplified bridge review platform built with a modern full-stack 
 ## Key Components
 
 ### Database Schema
-The application uses four main entities:
+The application uses six main entities:
+- **Users**: Authentication data from Replit (ID, email, name, profile image)
+- **Sessions**: Express session storage for authentication state
 - **Games**: Store uploaded PBN files with metadata (title, tournament, uploader)
 - **Hands**: Individual bridge hands extracted from games (board number, cards, bidding)
-- **UserBidding**: User practice attempts with accuracy scoring
-- **Comments**: Community discussions on specific hands with user levels and likes
+- **UserBidding**: User practice attempts with accuracy scoring (linked to user ID)
+- **Comments**: Community discussions on specific hands with user levels and likes (linked to user ID)
 
 ### Frontend Components
 - **Pages**: Dashboard (games list), Game Detail (hands list), Hand Detail (individual hand view), Not Found
@@ -104,6 +107,9 @@ The application uses four main entities:
 - June 25, 2025. Added PostgreSQL database integration with proper schema and migrations
 - June 25, 2025. Fixed PBN parser validation to ensure actualBidding field is properly initialized for all hands
 - June 25, 2025. Fixed hand display navigation and layout issues, made hand display more compact and consistent across screen sizes
+- June 27, 2025. Integrated TableTalk logo into header and favicon
+- June 27, 2025. Updated card display to show tens as "T" instead of "10" for cleaner single-character formatting
+- June 27, 2025. Implemented Replit authentication system with user login/logout, landing page for unauthenticated users, and proper session management
 
 ## TODO List & Future Enhancements
 
@@ -119,7 +125,7 @@ The application uses four main entities:
 - [ ] Comment system improvements (likes, replies, user levels)
 - [ ] Add filtering as well as search of the games list
 - [ ] Search and filter hands by criteria (dealer, vulnerability, convention)
-- [ ] User authentication and profiles
+- [ ] User profiles and statistics dashboard
 - [ ] Hand statistics and analysis
 
 ### UI/UX Improvements

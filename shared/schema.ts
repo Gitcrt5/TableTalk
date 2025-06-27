@@ -1,6 +1,28 @@
-import { pgTable, text, serial, integer, boolean, timestamp, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, jsonb, varchar, index } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+
+// Session storage table for authentication
+export const sessions = pgTable(
+  "sessions",
+  {
+    sid: varchar("sid").primaryKey(),
+    sess: jsonb("sess").notNull(),
+    expire: timestamp("expire").notNull(),
+  },
+  (table) => [index("IDX_session_expire").on(table.expire)],
+);
+
+// Users table for authentication
+export const users = pgTable("users", {
+  id: varchar("id").primaryKey().notNull(),
+  email: varchar("email").unique(),
+  firstName: varchar("first_name"),
+  lastName: varchar("last_name"),
+  profileImageUrl: varchar("profile_image_url"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
 
 export const games = pgTable("games", {
   id: serial("id").primaryKey(),
@@ -81,3 +103,7 @@ export type InsertGame = z.infer<typeof insertGameSchema>;
 export type InsertHand = z.infer<typeof insertHandSchema>;
 export type InsertUserBidding = z.infer<typeof insertUserBiddingSchema>;
 export type InsertComment = z.infer<typeof insertCommentSchema>;
+
+// User types for authentication
+export type UpsertUser = typeof users.$inferInsert;
+export type User = typeof users.$inferSelect;

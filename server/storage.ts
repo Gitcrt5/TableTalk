@@ -1,6 +1,10 @@
-import { games, hands, userBidding, comments, type Game, type Hand, type UserBidding, type Comment, type InsertGame, type InsertHand, type InsertUserBidding, type InsertComment } from "@shared/schema";
+import { games, hands, userBidding, comments, users, type Game, type Hand, type UserBidding, type Comment, type User, type InsertGame, type InsertHand, type InsertUserBidding, type InsertComment, type UpsertUser } from "@shared/schema";
 
 export interface IStorage {
+  // Users (required for Replit Auth)
+  getUser(id: string): Promise<User | undefined>;
+  upsertUser(user: UpsertUser): Promise<User>;
+
   // Games
   createGame(game: InsertGame): Promise<Game>;
   getGame(id: number): Promise<Game | undefined>;
@@ -41,6 +45,7 @@ export interface IStorage {
 }
 
 export class MemStorage implements IStorage {
+  private users: Map<string, User>;
   private games: Map<number, Game>;
   private hands: Map<number, Hand>;
   private userBidding: Map<string, UserBidding>; // key: handId-userId
@@ -51,6 +56,7 @@ export class MemStorage implements IStorage {
   private currentCommentId: number;
 
   constructor() {
+    this.users = new Map();
     this.games = new Map();
     this.hands = new Map();
     this.userBidding = new Map();
@@ -62,6 +68,25 @@ export class MemStorage implements IStorage {
 
     // Add sample data
     this.initializeSampleData();
+  }
+
+  // User operations (required for Replit Auth)
+  async getUser(id: string): Promise<User | undefined> {
+    return this.users.get(id);
+  }
+
+  async upsertUser(userData: UpsertUser): Promise<User> {
+    const user: User = {
+      id: userData.id!,
+      email: userData.email || null,
+      firstName: userData.firstName || null,
+      lastName: userData.lastName || null,
+      profileImageUrl: userData.profileImageUrl || null,
+      createdAt: userData.createdAt || new Date(),
+      updatedAt: new Date(),
+    };
+    this.users.set(user.id, user);
+    return user;
   }
 
   private async initializeSampleData() {
@@ -265,6 +290,27 @@ import { db } from "./db";
 import { eq, desc, like, and, sql } from "drizzle-orm";
 
 export class DatabaseStorage implements IStorage {
+  // User operations (required for Replit Auth)
+  async getUser(id: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
+  }
+
+  async upsertUser(userData: UpsertUser): Promise<User> {
+    const [user] = await db
+      .insert(users)
+      .values(userData)
+      .onConflictDoUpdate({
+        target: users.id,
+        set: {
+          ...userData,
+          updatedAt: new Date(),
+        },
+      })
+      .returning();
+    return user;
+  }
+
   async createGame(insertGame: InsertGame): Promise<Game> {
     const [game] = await db
       .insert(games)
