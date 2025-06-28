@@ -196,9 +196,9 @@ export default function HandDetail() {
   const hasBidding = hand.actualBidding && hand.actualBidding.length > 0;
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="max-w-6xl mx-auto px-2 sm:px-4 lg:px-8 py-4 md:py-8">
       {/* Header */}
-      <div className="mb-8">
+      <div className="mb-4 md:mb-8">
         <div className="flex items-center justify-between mb-4">
           <Link to={`/games/${hand.gameId}`}>
             <Button variant="ghost" size="sm">
@@ -252,14 +252,14 @@ export default function HandDetail() {
         
         <div className="flex justify-between items-start">
           <div>
-            <h1 className="text-3xl font-bold text-text-primary mb-2">
+            <h1 className="text-2xl md:text-3xl font-bold text-text-primary mb-2">
               Board {hand.boardNumber}
             </h1>
-            <div className="flex flex-wrap items-center gap-4 text-text-secondary">
-              <Badge variant="outline">Dealer: {hand.dealer}</Badge>
-              <Badge variant="outline">{hand.vulnerability}</Badge>
+            <div className="flex flex-wrap items-center gap-2 md:gap-4 text-text-secondary">
+              <Badge variant="outline" className="text-xs md:text-sm">Dealer: {hand.dealer}</Badge>
+              <Badge variant="outline" className="text-xs md:text-sm">{hand.vulnerability}</Badge>
               {hand.finalContract && (
-                <Badge>Contract: {hand.finalContract} by {hand.declarer}</Badge>
+                <Badge className="text-xs md:text-sm">Contract: {hand.finalContract} by {hand.declarer}</Badge>
               )}
             </div>
           </div>
@@ -267,14 +267,14 @@ export default function HandDetail() {
       </div>
 
       {/* Hand Display */}
-      <Card className="mb-8">
-        <CardContent className="p-6">
+      <Card className="mb-4 md:mb-8">
+        <CardContent className="p-3 md:p-6">
           <HandDisplay hand={hand} />
         </CardContent>
       </Card>
 
       {/* Bidding Section */}
-      <Card className="mb-8">
+      <Card className="mb-4 md:mb-8">
         <CardHeader>
           <div className="flex justify-between items-center">
             <CardTitle>Bidding</CardTitle>
@@ -295,15 +295,15 @@ export default function HandDetail() {
               declarer={hand.declarer ?? undefined}
             />
           ) : isEditingBidding ? (
-            <div className="space-y-6">
+            <div className="space-y-4 md:space-y-6">
               {/* Current Bidding Display */}
               {newBidding.length > 0 && (
-                <div className="mb-6">
-                  <h4 className="font-medium mb-2">Current Auction:</h4>
-                  <div className="bg-gray-50 p-4 rounded">
-                    <div className="flex flex-wrap gap-2">
+                <div className="mb-4 md:mb-6">
+                  <h4 className="font-medium mb-2 text-sm md:text-base">Current Auction:</h4>
+                  <div className="bg-gray-50 p-2 md:p-4 rounded">
+                    <div className="flex flex-wrap gap-1 md:gap-2">
                       {newBidding.map((bid, index) => (
-                        <Badge key={index} variant="outline" className={getBidColor(bid)}>
+                        <Badge key={index} variant="outline" className={`text-xs md:text-sm ${getBidColor(bid)}`}>
                           {positions[index % 4]}: <span className={getBidColor(bid)}>{bid}</span>
                         </Badge>
                       ))}
@@ -314,12 +314,12 @@ export default function HandDetail() {
 
               {/* Bidding Controls */}
               <div>
-                <div className="flex items-center justify-between mb-4">
-                  <h4 className="font-medium">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3 md:mb-4 gap-2">
+                  <h4 className="font-medium text-sm md:text-base">
                     Current bidder: <strong>{positions[currentBidder]}</strong>
                   </h4>
                   <div className="flex space-x-2">
-                    <Button variant="outline" onClick={() => {
+                    <Button variant="outline" size="sm" onClick={() => {
                       setIsEditingBidding(false);
                       setNewBidding([]);
                       setCurrentBidder(0);
@@ -327,6 +327,7 @@ export default function HandDetail() {
                       Cancel
                     </Button>
                     <Button 
+                      size="sm"
                       onClick={handleSaveBidding}
                       disabled={newBidding.length === 0}
                     >
@@ -335,9 +336,9 @@ export default function HandDetail() {
                   </div>
                 </div>
                 
-                <div className="space-y-3">
+                <div className="space-y-2 md:space-y-3">
                   {/* Clubs Row */}
-                  <div className="grid grid-cols-7 gap-2">
+                  <div className="grid grid-cols-7 gap-1 md:gap-2">
                     {BIDDING_LAYOUT.clubs.map((bid) => {
                       const isDisabled = !isValidBid(bid, newBidding);
                       return (
@@ -347,7 +348,7 @@ export default function HandDetail() {
                           size="sm"
                           onClick={() => handleBid(bid)}
                           disabled={isDisabled}
-                          className={`text-xs ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''} text-black`}
+                          className={`text-xs h-8 md:h-10 ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''} text-black`}
                         >
                           {bid}
                         </Button>
@@ -356,7 +357,7 @@ export default function HandDetail() {
                   </div>
 
                   {/* Diamonds Row */}
-                  <div className="grid grid-cols-7 gap-2">
+                  <div className="grid grid-cols-7 gap-1 md:gap-2">
                     {BIDDING_LAYOUT.diamonds.map((bid) => {
                       const isDisabled = !isValidBid(bid, newBidding);
                       return (
@@ -366,7 +367,7 @@ export default function HandDetail() {
                           size="sm"
                           onClick={() => handleBid(bid)}
                           disabled={isDisabled}
-                          className={`text-xs ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''} text-orange-600`}
+                          className={`text-xs h-8 md:h-10 ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''} text-orange-600`}
                         >
                           {bid}
                         </Button>
@@ -375,7 +376,7 @@ export default function HandDetail() {
                   </div>
 
                   {/* Hearts Row */}
-                  <div className="grid grid-cols-7 gap-2">
+                  <div className="grid grid-cols-7 gap-1 md:gap-2">
                     {BIDDING_LAYOUT.hearts.map((bid) => {
                       const isDisabled = !isValidBid(bid, newBidding);
                       return (
@@ -385,7 +386,7 @@ export default function HandDetail() {
                           size="sm"
                           onClick={() => handleBid(bid)}
                           disabled={isDisabled}
-                          className={`text-xs ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''} text-red-600`}
+                          className={`text-xs h-8 md:h-10 ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''} text-red-600`}
                         >
                           {bid}
                         </Button>
@@ -394,7 +395,7 @@ export default function HandDetail() {
                   </div>
 
                   {/* Spades Row */}
-                  <div className="grid grid-cols-7 gap-2">
+                  <div className="grid grid-cols-7 gap-1 md:gap-2">
                     {BIDDING_LAYOUT.spades.map((bid) => {
                       const isDisabled = !isValidBid(bid, newBidding);
                       return (
@@ -404,7 +405,7 @@ export default function HandDetail() {
                           size="sm"
                           onClick={() => handleBid(bid)}
                           disabled={isDisabled}
-                          className={`text-xs ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''} text-black`}
+                          className={`text-xs h-8 md:h-10 ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''} text-black`}
                         >
                           {bid}
                         </Button>
@@ -413,7 +414,7 @@ export default function HandDetail() {
                   </div>
 
                   {/* No Trump Row */}
-                  <div className="grid grid-cols-7 gap-2">
+                  <div className="grid grid-cols-7 gap-1 md:gap-2">
                     {BIDDING_LAYOUT.notrump.map((bid) => {
                       const isDisabled = !isValidBid(bid, newBidding);
                       return (
@@ -423,7 +424,7 @@ export default function HandDetail() {
                           size="sm"
                           onClick={() => handleBid(bid)}
                           disabled={isDisabled}
-                          className={`text-xs ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''} text-blue-700`}
+                          className={`text-xs h-8 md:h-10 ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''} text-blue-700`}
                         >
                           {bid}
                         </Button>
@@ -432,7 +433,7 @@ export default function HandDetail() {
                   </div>
 
                   {/* Pass, Double, Redouble Row */}
-                  <div className="grid grid-cols-3 gap-2 max-w-md">
+                  <div className="grid grid-cols-3 gap-2 max-w-xs md:max-w-md">
                     {BIDDING_LAYOUT.actions.map((bid) => {
                       const isDisabled = !isValidBid(bid, newBidding);
                       return (
@@ -442,7 +443,7 @@ export default function HandDetail() {
                           size="sm"
                           onClick={() => handleBid(bid)}
                           disabled={isDisabled}
-                          className={`text-xs ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                          className={`text-xs h-8 md:h-10 ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
                         >
                           {bid}
                         </Button>
