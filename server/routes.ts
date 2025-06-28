@@ -59,14 +59,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/games/upload", upload.single('file'), async (req, res) => {
+  app.post("/api/games/upload", isAuthenticated, upload.single('file'), async (req: any, res) => {
     try {
       if (!req.file) {
         return res.status(400).json({ error: "No PBN file provided" });
       }
 
       const pbnContent = req.file.buffer.toString('utf-8');
-      const userId = req.body.userId || 'anonymous';
+      const userId = req.user.claims.sub;
       
       // Parse PBN file
       const parsedPBN = parsePBN(pbnContent);
@@ -151,10 +151,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // User bidding routes
-  app.post("/api/hands/:handId/bidding", async (req, res) => {
+  app.post("/api/hands/:handId/bidding", isAuthenticated, async (req: any, res) => {
     try {
       const handId = parseInt(req.params.handId);
-      const userId = req.body.userId || 'anonymous';
+      const userId = req.user.claims.sub;
       
       const biddingData = insertUserBiddingSchema.parse({
         handId,
@@ -171,13 +171,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/hands/:handId/bidding/:userId", async (req, res) => {
+  app.get("/api/hands/:handId/bidding", isAuthenticated, async (req: any, res) => {
     try {
       const handId = parseInt(req.params.handId);
-      const userId = req.params.userId;
+      const userId = req.user.claims.sub;
       
       const bidding = await storage.getUserBidding(handId, userId);
-      res.json(bidding);
+      res.json(bidding || null);
     } catch (error) {
       console.error("Error fetching user bidding:", error);
       res.status(500).json({ error: "Failed to fetch bidding" });
@@ -196,15 +196,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/hands/:handId/comments", async (req, res) => {
+  app.post("/api/hands/:handId/comments", isAuthenticated, async (req: any, res) => {
     try {
       const handId = parseInt(req.params.handId);
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
       
       const commentData = insertCommentSchema.parse({
         handId,
-        userId: req.body.userId || 'anonymous',
-        userName: req.body.userName || 'Anonymous',
-        userLevel: req.body.userLevel || 'Beginner',
+        userId,
+        userName: user?.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : user?.email || 'Anonymous',
+        userLevel: req.body.userLevel || 'Player',
         content: req.body.content,
       });
 

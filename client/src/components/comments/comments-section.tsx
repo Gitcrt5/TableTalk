@@ -5,8 +5,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { apiRequest } from "@/lib/queryClient";
 import { MessageSquare, ThumbsUp, Reply, Flag } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 import type { Comment } from "@shared/schema";
 
 interface CommentsSectionProps {
@@ -15,10 +17,10 @@ interface CommentsSectionProps {
 
 export default function CommentsSection({ handId }: CommentsSectionProps) {
   const [newComment, setNewComment] = useState("");
-  const [userName, setUserName] = useState("Anonymous");
-  const [userLevel, setUserLevel] = useState("Beginner");
+  const [userLevel, setUserLevel] = useState("Player");
   
   const queryClient = useQueryClient();
+  const { user, isAuthenticated } = useAuth();
 
   const { data: comments, isLoading } = useQuery<Comment[]>({
     queryKey: ["/api/hands", handId, "comments"],
@@ -27,13 +29,9 @@ export default function CommentsSection({ handId }: CommentsSectionProps) {
   const createCommentMutation = useMutation({
     mutationFn: async (commentData: {
       content: string;
-      userName: string;
       userLevel: string;
     }) => {
-      const response = await apiRequest("POST", `/api/hands/${handId}/comments`, {
-        userId: "current-user", // In real app, get from auth
-        ...commentData,
-      });
+      const response = await apiRequest("POST", `/api/hands/${handId}/comments`, commentData);
       return response.json();
     },
     onSuccess: () => {
@@ -53,11 +51,10 @@ export default function CommentsSection({ handId }: CommentsSectionProps) {
   });
 
   const handleSubmitComment = () => {
-    if (!newComment.trim()) return;
+    if (!newComment.trim() || !isAuthenticated) return;
     
     createCommentMutation.mutate({
       content: newComment.trim(),
-      userName,
       userLevel,
     });
   };
@@ -177,46 +174,56 @@ export default function CommentsSection({ handId }: CommentsSectionProps) {
         </div>
 
         {/* Comment Input */}
-        <div className="pt-6 border-t border-gray-200">
-          <div className="flex items-start space-x-3">
-            <Avatar className="w-8 h-8">
-              <AvatarFallback className="bg-primary text-white">
-                <MessageSquare className="h-4 w-4" />
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex-1">
-              <Textarea
-                placeholder="Share your analysis of this hand..."
-                value={newComment}
-                onChange={(e) => setNewComment(e.target.value)}
-                className="resize-none"
-                rows={3}
-              />
-              <div className="flex justify-between items-center mt-3">
-                <div className="flex items-center space-x-4 text-sm text-text-secondary">
-                  <Button variant="ghost" size="sm" className="p-0 h-auto">
-                    <i className="fas fa-bold mr-1" />
-                    Bold
-                  </Button>
-                  <Button variant="ghost" size="sm" className="p-0 h-auto">
-                    <i className="fas fa-italic mr-1" />
-                    Italic
-                  </Button>
-                  <Button variant="ghost" size="sm" className="p-0 h-auto">
-                    <i className="fas fa-bridge mr-1" />
-                    Bridge Notation
+        {isAuthenticated ? (
+          <div className="pt-6 border-t border-gray-200">
+            <div className="flex items-start space-x-3">
+              <Avatar className="w-8 h-8">
+                <AvatarFallback className="bg-primary text-white">
+                  <MessageSquare className="h-4 w-4" />
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1">
+                <div className="mb-3">
+                  <label className="block text-sm font-medium mb-1">Bridge Level</label>
+                  <Select value={userLevel} onValueChange={setUserLevel}>
+                    <SelectTrigger className="w-48">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Beginner">Beginner</SelectItem>
+                      <SelectItem value="Player">Player</SelectItem>
+                      <SelectItem value="Intermediate">Intermediate</SelectItem>
+                      <SelectItem value="Advanced">Advanced</SelectItem>
+                      <SelectItem value="Expert">Expert</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Textarea
+                  placeholder="Share your analysis of this hand..."
+                  value={newComment}
+                  onChange={(e) => setNewComment(e.target.value)}
+                  className="resize-none"
+                  rows={3}
+                />
+                <div className="flex justify-end mt-3">
+                  <Button
+                    onClick={handleSubmitComment}
+                    disabled={!newComment.trim() || createCommentMutation.isPending}
+                  >
+                    {createCommentMutation.isPending ? "Posting..." : "Post Comment"}
                   </Button>
                 </div>
-                <Button
-                  onClick={handleSubmitComment}
-                  disabled={!newComment.trim() || createCommentMutation.isPending}
-                >
-                  {createCommentMutation.isPending ? "Posting..." : "Post Comment"}
-                </Button>
               </div>
             </div>
           </div>
-        </div>
+        ) : (
+          <div className="pt-6 border-t border-gray-200 text-center">
+            <p className="text-gray-600 mb-4">Sign in to join the discussion</p>
+            <Button onClick={() => window.location.href = '/api/login'}>
+              Sign In to Comment
+            </Button>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
