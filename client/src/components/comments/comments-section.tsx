@@ -22,15 +22,25 @@ export default function CommentsSection({ handId }: CommentsSectionProps) {
 
   const { data: comments, isLoading } = useQuery<Comment[]>({
     queryKey: ["/api/hands", handId, "comments"],
+    staleTime: 0,
+    retry: false,
   });
 
-  // Debug: Log the raw response
+  // Debug: Log the raw response and clear cache if corrupted
   console.log("=== COMMENTS DEBUG START ===");
   console.log("Hand ID:", handId);
   console.log("Raw comments response:", comments);
   console.log("Comments type:", typeof comments);
   console.log("Is Array:", Array.isArray(comments));
   console.log("Comments length:", comments?.length);
+  
+  // If we detect corrupted data (more than 10 entries), clear cache
+  if (comments && Array.isArray(comments) && comments.length > 10) {
+    console.log("🚨 CORRUPTED DATA DETECTED - Clearing cache");
+    queryClient.removeQueries({ queryKey: ["/api/hands", handId, "comments"] });
+    queryClient.refetchQueries({ queryKey: ["/api/hands", handId, "comments"] });
+  }
+  
   console.log("=== COMMENTS DEBUG END ===");
   
   // Filter out any invalid entries
@@ -54,8 +64,9 @@ export default function CommentsSection({ handId }: CommentsSectionProps) {
       return response.json();
     },
     onSuccess: () => {
+      // Clear all comment-related cache
+      queryClient.removeQueries({ queryKey: ["/api/hands", handId, "comments"] });
       queryClient.invalidateQueries({ queryKey: ["/api/hands", handId, "comments"] });
-      queryClient.refetchQueries({ queryKey: ["/api/hands", handId, "comments"] });
       setNewComment("");
     },
   });
