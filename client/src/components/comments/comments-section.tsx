@@ -24,7 +24,28 @@ export default function CommentsSection({ handId }: CommentsSectionProps) {
 
   const { data: comments, isLoading } = useQuery<Comment[]>({
     queryKey: ["/api/hands", handId, "comments"],
+    staleTime: 0, // Force fresh data
+    cacheTime: 0, // Don't cache
   });
+
+  // Debug: Log the raw response
+  console.log("Raw comments response for hand", handId, ":", comments);
+  console.log("Comments array length:", comments?.length);
+  console.log("Comments array type:", Array.isArray(comments));
+  if (comments) {
+    comments.forEach((comment, index) => {
+      console.log(`Comment ${index}:`, comment);
+    });
+  }
+  
+  // Filter out any invalid entries
+  const validComments = comments?.filter(comment => 
+    comment && 
+    typeof comment === 'object' && 
+    comment.id && 
+    comment.content && 
+    comment.content.trim() !== ''
+  ) || [];
 
 
 
@@ -38,6 +59,7 @@ export default function CommentsSection({ handId }: CommentsSectionProps) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/hands", handId, "comments"] });
+      queryClient.refetchQueries({ queryKey: ["/api/hands", handId, "comments"] });
       setNewComment("");
     },
   });
@@ -116,13 +138,13 @@ export default function CommentsSection({ handId }: CommentsSectionProps) {
                 </div>
               ))}
             </div>
-          ) : comments?.length === 0 ? (
+          ) : validComments.length === 0 ? (
             <div className="text-center py-8 text-text-secondary">
               <MessageSquare className="h-12 w-12 mx-auto mb-4 opacity-50" />
               <p>No comments yet. Be the first to share your analysis!</p>
             </div>
           ) : (
-            comments?.filter(comment => comment && comment.id).map((comment) => (
+            validComments.map((comment) => (
               <div key={comment.id} className="border-l-4 border-primary pl-4 mb-6">
                 <div className="flex items-start space-x-3">
                   <Avatar className="w-8 h-8">
