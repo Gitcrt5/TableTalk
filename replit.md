@@ -110,6 +110,7 @@ The application uses six main entities:
 - June 27, 2025. Integrated TableTalk logo into header and favicon
 - June 27, 2025. Updated card display to show tens as "T" instead of "10" for cleaner single-character formatting
 - June 27, 2025. Implemented Replit authentication system with user login/logout, landing page for unauthenticated users, and proper session management
+- June 28, 2025. Fixed critical comment system bug where 74 empty entries were displaying instead of 3 real comments due to corrupted TanStack Query cache - implemented direct API fetching to bypass cache corruption
 
 ## TODO List & Future Enhancements
 

@@ -30,21 +30,14 @@ export default function CommentsSection({ handId }: CommentsSectionProps) {
         throw new Error(`Failed to fetch comments: ${response.status}`);
       }
       const data = await response.json();
-      console.log("Fresh comments data:", data);
+
       return data;
     },
     staleTime: 0,
     retry: false,
   });
 
-  // Debug: Log the raw response
-  console.log("=== COMMENTS DEBUG START ===");
-  console.log("Hand ID:", handId);
-  console.log("Raw comments response:", comments);
-  console.log("Comments type:", typeof comments);
-  console.log("Is Array:", Array.isArray(comments));
-  console.log("Comments length:", comments?.length);
-  console.log("=== COMMENTS DEBUG END ===");
+
   
   // Filter out any invalid entries
   const validComments = comments?.filter(comment => 
