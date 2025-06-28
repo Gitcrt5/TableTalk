@@ -26,6 +26,8 @@ export default function CommentsSection({ handId }: CommentsSectionProps) {
     queryKey: ["/api/hands", handId, "comments"],
   });
 
+
+
   const createCommentMutation = useMutation({
     mutationFn: async (commentData: {
       content: string;
@@ -120,8 +122,8 @@ export default function CommentsSection({ handId }: CommentsSectionProps) {
               <p>No comments yet. Be the first to share your analysis!</p>
             </div>
           ) : (
-            comments?.map((comment) => (
-              <div key={comment.id} className="border-l-4 border-primary pl-4">
+            comments?.filter(comment => comment && comment.id).map((comment) => (
+              <div key={comment.id} className="border-l-4 border-primary pl-4 mb-6">
                 <div className="flex items-start space-x-3">
                   <Avatar className="w-8 h-8">
                     <AvatarFallback className="text-sm font-semibold">
@@ -130,15 +132,15 @@ export default function CommentsSection({ handId }: CommentsSectionProps) {
                   </Avatar>
                   <div className="flex-1">
                     <div className="flex items-center space-x-2 mb-2">
-                      <span className="font-semibold">{comment.userName}</span>
-                      <Badge variant="outline" className={getLevelColor(comment.userLevel)}>
-                        {comment.userLevel}
+                      <span className="font-semibold">{comment.userName || "Anonymous"}</span>
+                      <Badge variant="outline" className={getLevelColor(comment.userLevel || "Player")}>
+                        {comment.userLevel || "Player"}
                       </Badge>
                       <span className="text-text-secondary text-sm">
-                        {getTimeAgo(comment.createdAt)}
+                        {comment.createdAt ? getTimeAgo(comment.createdAt) : "Just now"}
                       </span>
                     </div>
-                    <p className="text-text-primary mb-3">{comment.content}</p>
+                    <p className="text-text-primary mb-3">{comment.content || "No content"}</p>
                     <div className="flex items-center space-x-4 text-sm text-text-secondary">
                       <Button
                         variant="ghost"
@@ -147,7 +149,7 @@ export default function CommentsSection({ handId }: CommentsSectionProps) {
                         className="p-0 h-auto text-text-secondary hover:text-primary"
                       >
                         <ThumbsUp className="mr-1 h-3 w-3" />
-                        {comment.likes}
+                        {comment.likes || 0}
                       </Button>
                       <Button
                         variant="ghost"
