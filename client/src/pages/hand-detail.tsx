@@ -45,14 +45,17 @@ export default function HandDetail() {
   });
 
   const updateBiddingMutation = useMutation({
-    mutationFn: async (bidding: string[]) => {
-      // This would update the hand's bidding in a real implementation
-      // For now, we'll just simulate the update
-      console.log("Updating bidding:", bidding);
-      return { success: true };
+    mutationFn: async (biddingData: {
+      bidding: string[];
+      finalContract?: string;
+      declarer?: string;
+      result?: string;
+    }) => {
+      const response = await apiRequest("PUT", `/api/hands/${handId}/bidding`, biddingData);
+      return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/hands", handId] });
+      queryClient.invalidateQueries({ queryKey: [`/api/hands/${handId}`] });
       setIsEditingBidding(false);
       setNewBidding([]);
       setCurrentBidder(0);
@@ -66,7 +69,26 @@ export default function HandDetail() {
   };
 
   const handleSaveBidding = () => {
-    updateBiddingMutation.mutate(newBidding);
+    // Determine final contract and declarer from bidding
+    const finalBid = newBidding.slice().reverse().find(bid => 
+      bid !== "Pass" && bid !== "Double" && bid !== "Redouble"
+    );
+    
+    let finalContract = "";
+    let declarer = "";
+    
+    if (finalBid) {
+      finalContract = finalBid;
+      // Find who made the final contract bid
+      const finalBidIndex = newBidding.lastIndexOf(finalBid);
+      declarer = positions[finalBidIndex % 4];
+    }
+    
+    updateBiddingMutation.mutate({
+      bidding: newBidding,
+      finalContract,
+      declarer,
+    });
   };
 
   const positions = ["West", "North", "East", "South"];
@@ -211,8 +233,8 @@ export default function HandDetail() {
             <BiddingTable
               title="Auction"
               bidding={hand.actualBidding}
-              finalContract={hand.finalContract}
-              declarer={hand.declarer}
+              finalContract={hand.finalContract ?? undefined}
+              declarer={hand.declarer ?? undefined}
             />
           ) : isEditingBidding ? (
             <div className="space-y-6">

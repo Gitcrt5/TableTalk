@@ -150,7 +150,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // User bidding routes
+  // Update hand bidding (admin/original functionality)
+  app.put("/api/hands/:id/bidding", isAuthenticated, async (req: any, res) => {
+    try {
+      const handId = parseInt(req.params.id);
+      const { bidding, finalContract, declarer, result } = req.body;
+      
+      // Get the current hand
+      const hand = await storage.getHand(handId);
+      if (!hand) {
+        return res.status(404).json({ error: "Hand not found" });
+      }
+      
+      // Update the hand's actual bidding
+      const updates = {
+        actualBidding: bidding,
+        finalContract: finalContract || null,
+        declarer: declarer || null,
+        result: result || null,
+      };
+      
+      const updatedHand = await storage.updateHand(handId, updates);
+      if (!updatedHand) {
+        return res.status(404).json({ error: "Hand not found" });
+      }
+      
+      res.json(updatedHand);
+    } catch (error) {
+      console.error("Error updating hand bidding:", error);
+      res.status(500).json({ error: "Failed to update bidding" });
+    }
+  });
+
+  // User bidding routes (for practice)
   app.post("/api/hands/:handId/bidding", isAuthenticated, async (req: any, res) => {
     try {
       const handId = parseInt(req.params.handId);

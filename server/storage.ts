@@ -14,6 +14,7 @@ export interface IStorage {
   // Hands
   createHand(hand: InsertHand): Promise<Hand>;
   getHand(id: number): Promise<Hand | undefined>;
+  updateHand(id: number, updates: Partial<Hand>): Promise<Hand | undefined>;
   getHandsByGame(gameId: number): Promise<Hand[]>;
   getHandsWithFilters(filters: {
     vulnerability?: string;
@@ -183,6 +184,17 @@ export class MemStorage implements IStorage {
     return this.hands.get(id);
   }
 
+  async updateHand(id: number, updates: Partial<Hand>): Promise<Hand | undefined> {
+    const existingHand = this.hands.get(id);
+    if (!existingHand) {
+      return undefined;
+    }
+    
+    const updatedHand = { ...existingHand, ...updates };
+    this.hands.set(id, updatedHand);
+    return updatedHand;
+  }
+
   async getHandsByGame(gameId: number): Promise<Hand[]> {
     return Array.from(this.hands.values()).filter(hand => hand.gameId === gameId);
   }
@@ -342,9 +354,20 @@ export class DatabaseStorage implements IStorage {
     return hand;
   }
 
+
+
   async getHand(id: number): Promise<Hand | undefined> {
     const [hand] = await db.select().from(hands).where(eq(hands.id, id));
-    return hand || undefined;
+    return hand;
+  }
+
+  async updateHand(id: number, updates: Partial<Hand>): Promise<Hand | undefined> {
+    const [updatedHand] = await db
+      .update(hands)
+      .set(updates)
+      .where(eq(hands.id, id))
+      .returning();
+    return updatedHand;
   }
 
   async getHandsByGame(gameId: number): Promise<Hand[]> {
