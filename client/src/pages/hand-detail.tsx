@@ -12,16 +12,60 @@ import { Link, useParams } from "wouter";
 import { apiRequest } from "@/lib/queryClient";
 import type { Hand } from "@shared/schema";
 
-const BIDDING_OPTIONS = [
-  "Pass", "1♣", "1♦", "1♥", "1♠", "1NT",
-  "2♣", "2♦", "2♥", "2♠", "2NT",
-  "3♣", "3♦", "3♥", "3♠", "3NT",
-  "4♣", "4♦", "4♥", "4♠", "4NT",
-  "5♣", "5♦", "5♥", "5♠", "5NT",
-  "6♣", "6♦", "6♥", "6♠", "6NT",
-  "7♣", "7♦", "7♥", "7♠", "7NT",
-  "Double", "Redouble"
-];
+const BIDDING_LAYOUT = {
+  clubs: ["1♣", "2♣", "3♣", "4♣", "5♣", "6♣", "7♣"],
+  diamonds: ["1♦", "2♦", "3♦", "4♦", "5♦", "6♦", "7♦"],
+  hearts: ["1♥", "2♥", "3♥", "4♥", "5♥", "6♥", "7♥"],
+  spades: ["1♠", "2♠", "3♠", "4♠", "5♠", "6♠", "7♠"],
+  notrump: ["1NT", "2NT", "3NT", "4NT", "5NT", "6NT", "7NT"],
+  actions: ["Pass", "Double", "Redouble"]
+};
+
+// Get the last valid bid (not Pass, Double, or Redouble)
+const getLastValidBid = (bidding: string[]) => {
+  for (let i = bidding.length - 1; i >= 0; i--) {
+    const bid = bidding[i];
+    if (bid !== "Pass" && bid !== "Double" && bid !== "Redouble") {
+      return bid;
+    }
+  }
+  return null;
+};
+
+// Convert bid to numeric value for comparison
+const getBidValue = (bid: string) => {
+  if (bid === "Pass" || bid === "Double" || bid === "Redouble") return 0;
+  
+  const level = parseInt(bid[0]);
+  let suit = 0;
+  if (bid.includes("♣")) suit = 1;
+  else if (bid.includes("♦")) suit = 2;
+  else if (bid.includes("♥")) suit = 3;
+  else if (bid.includes("♠")) suit = 4;
+  else if (bid.includes("NT")) suit = 5;
+  
+  return level * 5 + suit;
+};
+
+// Check if a bid is valid given the current bidding sequence
+const isValidBid = (bid: string, currentBidding: string[]) => {
+  // Pass is always allowed
+  if (bid === "Pass") return true;
+  
+  const lastBid = currentBidding[currentBidding.length - 1];
+  
+  // Double can only be used after opponent's bid (simplified - just check it's not after Double/Redouble)
+  if (bid === "Double") return lastBid !== "Double" && lastBid !== "Redouble";
+  
+  // Redouble can only be used after Double
+  if (bid === "Redouble") return lastBid === "Double";
+  
+  // For suit/NT bids, must be higher than last valid bid
+  const lastValidBid = getLastValidBid(currentBidding);
+  if (!lastValidBid) return true; // First bid can be anything
+  
+  return getBidValue(bid) > getBidValue(lastValidBid);
+};
 
 export default function HandDetail() {
   const { id } = useParams<{ id: string }>();
@@ -63,6 +107,11 @@ export default function HandDetail() {
   });
 
   const handleBid = (bid: string) => {
+    // Only allow valid bids
+    if (!isValidBid(bid, newBidding)) {
+      return;
+    }
+    
     const updatedBidding = [...newBidding, bid];
     setNewBidding(updatedBidding);
     setCurrentBidder((currentBidder + 1) % 4);
@@ -277,18 +326,138 @@ export default function HandDetail() {
                   </div>
                 </div>
                 
-                <div className="grid grid-cols-6 gap-2">
-                  {BIDDING_OPTIONS.map((bid) => (
-                    <Button
-                      key={bid}
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleBid(bid)}
-                      className="text-xs"
-                    >
-                      {bid}
-                    </Button>
-                  ))}
+                <div className="space-y-3">
+                  {/* Clubs Row */}
+                  <div>
+                    <div className="text-xs font-medium text-gray-600 mb-1">♣ Clubs</div>
+                    <div className="grid grid-cols-7 gap-2">
+                      {BIDDING_LAYOUT.clubs.map((bid) => {
+                      const isDisabled = !isValidBid(bid, newBidding);
+                      return (
+                        <Button
+                          key={bid}
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleBid(bid)}
+                          disabled={isDisabled}
+                          className={`text-xs ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        >
+                          {bid}
+                        </Button>
+                      );
+                    })}
+                    </div>
+                  </div>
+
+                  {/* Diamonds Row */}
+                  <div>
+                    <div className="text-xs font-medium text-gray-600 mb-1">♦ Diamonds</div>
+                    <div className="grid grid-cols-7 gap-2">
+                      {BIDDING_LAYOUT.diamonds.map((bid) => {
+                        const isDisabled = !isValidBid(bid, newBidding);
+                        return (
+                          <Button
+                            key={bid}
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleBid(bid)}
+                            disabled={isDisabled}
+                            className={`text-xs ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                          >
+                            {bid}
+                          </Button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Hearts Row */}
+                  <div>
+                    <div className="text-xs font-medium text-gray-600 mb-1">♥ Hearts</div>
+                    <div className="grid grid-cols-7 gap-2">
+                      {BIDDING_LAYOUT.hearts.map((bid) => {
+                        const isDisabled = !isValidBid(bid, newBidding);
+                        return (
+                          <Button
+                            key={bid}
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleBid(bid)}
+                            disabled={isDisabled}
+                            className={`text-xs ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                          >
+                            {bid}
+                          </Button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Spades Row */}
+                  <div>
+                    <div className="text-xs font-medium text-gray-600 mb-1">♠ Spades</div>
+                    <div className="grid grid-cols-7 gap-2">
+                      {BIDDING_LAYOUT.spades.map((bid) => {
+                        const isDisabled = !isValidBid(bid, newBidding);
+                        return (
+                          <Button
+                            key={bid}
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleBid(bid)}
+                            disabled={isDisabled}
+                            className={`text-xs ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                          >
+                            {bid}
+                          </Button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* No Trump Row */}
+                  <div>
+                    <div className="text-xs font-medium text-gray-600 mb-1">NT No Trump</div>
+                    <div className="grid grid-cols-7 gap-2">
+                      {BIDDING_LAYOUT.notrump.map((bid) => {
+                        const isDisabled = !isValidBid(bid, newBidding);
+                        return (
+                          <Button
+                            key={bid}
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleBid(bid)}
+                            disabled={isDisabled}
+                            className={`text-xs ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                          >
+                            {bid}
+                          </Button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Pass, Double, Redouble Row */}
+                  <div>
+                    <div className="text-xs font-medium text-gray-600 mb-1">Actions</div>
+                    <div className="grid grid-cols-3 gap-2 max-w-md">
+                      {BIDDING_LAYOUT.actions.map((bid) => {
+                        const isDisabled = !isValidBid(bid, newBidding);
+                        return (
+                          <Button
+                            key={bid}
+                            variant={bid === "Pass" ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => handleBid(bid)}
+                            disabled={isDisabled}
+                            className={`text-xs ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                          >
+                            {bid}
+                          </Button>
+                        );
+                      })}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
