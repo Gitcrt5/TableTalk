@@ -20,27 +20,30 @@ export default function CommentsSection({ handId }: CommentsSectionProps) {
   const queryClient = useQueryClient();
   const { user, isAuthenticated } = useAuth();
 
-  const { data: comments, isLoading } = useQuery<Comment[]>({
+  const { data: comments, isLoading, error } = useQuery<Comment[]>({
     queryKey: ["/api/hands", handId, "comments"],
+    queryFn: async () => {
+      const response = await fetch(`/api/hands/${handId}/comments`, {
+        credentials: "include",
+      });
+      if (!response.ok) {
+        throw new Error(`Failed to fetch comments: ${response.status}`);
+      }
+      const data = await response.json();
+      console.log("Fresh comments data:", data);
+      return data;
+    },
     staleTime: 0,
     retry: false,
   });
 
-  // Debug: Log the raw response and clear cache if corrupted
+  // Debug: Log the raw response
   console.log("=== COMMENTS DEBUG START ===");
   console.log("Hand ID:", handId);
   console.log("Raw comments response:", comments);
   console.log("Comments type:", typeof comments);
   console.log("Is Array:", Array.isArray(comments));
   console.log("Comments length:", comments?.length);
-  
-  // If we detect corrupted data (more than 10 entries), clear cache
-  if (comments && Array.isArray(comments) && comments.length > 10) {
-    console.log("🚨 CORRUPTED DATA DETECTED - Clearing cache");
-    queryClient.removeQueries({ queryKey: ["/api/hands", handId, "comments"] });
-    queryClient.refetchQueries({ queryKey: ["/api/hands", handId, "comments"] });
-  }
-  
   console.log("=== COMMENTS DEBUG END ===");
   
   // Filter out any invalid entries
@@ -64,8 +67,6 @@ export default function CommentsSection({ handId }: CommentsSectionProps) {
       return response.json();
     },
     onSuccess: () => {
-      // Clear all comment-related cache
-      queryClient.removeQueries({ queryKey: ["/api/hands", handId, "comments"] });
       queryClient.invalidateQueries({ queryKey: ["/api/hands", handId, "comments"] });
       setNewComment("");
     },
