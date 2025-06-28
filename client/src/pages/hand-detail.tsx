@@ -328,15 +328,108 @@ export default function HandDetail() {
                 
                 <div className="space-y-3">
                   {/* Clubs Row */}
-                  <div>
-                    <div className="text-xs font-medium text-gray-600 mb-1">♣ Clubs</div>
-                    <div className="grid grid-cols-7 gap-2">
-                      {BIDDING_LAYOUT.clubs.map((bid) => {
+                  <div className="grid grid-cols-7 gap-2">
+                    {BIDDING_LAYOUT.clubs.map((bid) => {
                       const isDisabled = !isValidBid(bid, newBidding);
                       return (
                         <Button
                           key={bid}
                           variant="outline"
+                          size="sm"
+                          onClick={() => handleBid(bid)}
+                          disabled={isDisabled}
+                          className={`text-xs ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''} text-black`}
+                        >
+                          {bid}
+                        </Button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Diamonds Row */}
+                  <div className="grid grid-cols-7 gap-2">
+                    {BIDDING_LAYOUT.diamonds.map((bid) => {
+                      const isDisabled = !isValidBid(bid, newBidding);
+                      return (
+                        <Button
+                          key={bid}
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleBid(bid)}
+                          disabled={isDisabled}
+                          className={`text-xs ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''} text-orange-600`}
+                        >
+                          {bid}
+                        </Button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Hearts Row */}
+                  <div className="grid grid-cols-7 gap-2">
+                    {BIDDING_LAYOUT.hearts.map((bid) => {
+                      const isDisabled = !isValidBid(bid, newBidding);
+                      return (
+                        <Button
+                          key={bid}
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleBid(bid)}
+                          disabled={isDisabled}
+                          className={`text-xs ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''} text-red-600`}
+                        >
+                          {bid}
+                        </Button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Spades Row */}
+                  <div className="grid grid-cols-7 gap-2">
+                    {BIDDING_LAYOUT.spades.map((bid) => {
+                      const isDisabled = !isValidBid(bid, newBidding);
+                      return (
+                        <Button
+                          key={bid}
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleBid(bid)}
+                          disabled={isDisabled}
+                          className={`text-xs ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''} text-black`}
+                        >
+                          {bid}
+                        </Button>
+                      );
+                    })}
+                  </div>
+
+                  {/* No Trump Row */}
+                  <div className="grid grid-cols-7 gap-2">
+                    {BIDDING_LAYOUT.notrump.map((bid) => {
+                      const isDisabled = !isValidBid(bid, newBidding);
+                      return (
+                        <Button
+                          key={bid}
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleBid(bid)}
+                          disabled={isDisabled}
+                          className={`text-xs ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''} text-blue-700`}
+                        >
+                          {bid}
+                        </Button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Pass, Double, Redouble Row */}
+                  <div className="grid grid-cols-3 gap-2 max-w-md">
+                    {BIDDING_LAYOUT.actions.map((bid) => {
+                      const isDisabled = !isValidBid(bid, newBidding);
+                      return (
+                        <Button
+                          key={bid}
+                          variant={bid === "Pass" ? "default" : "outline"}
                           size="sm"
                           onClick={() => handleBid(bid)}
                           disabled={isDisabled}
@@ -346,117 +439,6 @@ export default function HandDetail() {
                         </Button>
                       );
                     })}
-                    </div>
-                  </div>
-
-                  {/* Diamonds Row */}
-                  <div>
-                    <div className="text-xs font-medium text-gray-600 mb-1">♦ Diamonds</div>
-                    <div className="grid grid-cols-7 gap-2">
-                      {BIDDING_LAYOUT.diamonds.map((bid) => {
-                        const isDisabled = !isValidBid(bid, newBidding);
-                        return (
-                          <Button
-                            key={bid}
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleBid(bid)}
-                            disabled={isDisabled}
-                            className={`text-xs ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                          >
-                            {bid}
-                          </Button>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {/* Hearts Row */}
-                  <div>
-                    <div className="text-xs font-medium text-gray-600 mb-1">♥ Hearts</div>
-                    <div className="grid grid-cols-7 gap-2">
-                      {BIDDING_LAYOUT.hearts.map((bid) => {
-                        const isDisabled = !isValidBid(bid, newBidding);
-                        return (
-                          <Button
-                            key={bid}
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleBid(bid)}
-                            disabled={isDisabled}
-                            className={`text-xs ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                          >
-                            {bid}
-                          </Button>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {/* Spades Row */}
-                  <div>
-                    <div className="text-xs font-medium text-gray-600 mb-1">♠ Spades</div>
-                    <div className="grid grid-cols-7 gap-2">
-                      {BIDDING_LAYOUT.spades.map((bid) => {
-                        const isDisabled = !isValidBid(bid, newBidding);
-                        return (
-                          <Button
-                            key={bid}
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleBid(bid)}
-                            disabled={isDisabled}
-                            className={`text-xs ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                          >
-                            {bid}
-                          </Button>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {/* No Trump Row */}
-                  <div>
-                    <div className="text-xs font-medium text-gray-600 mb-1">NT No Trump</div>
-                    <div className="grid grid-cols-7 gap-2">
-                      {BIDDING_LAYOUT.notrump.map((bid) => {
-                        const isDisabled = !isValidBid(bid, newBidding);
-                        return (
-                          <Button
-                            key={bid}
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleBid(bid)}
-                            disabled={isDisabled}
-                            className={`text-xs ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                          >
-                            {bid}
-                          </Button>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {/* Pass, Double, Redouble Row */}
-                  <div>
-                    <div className="text-xs font-medium text-gray-600 mb-1">Actions</div>
-                    <div className="grid grid-cols-3 gap-2 max-w-md">
-                      {BIDDING_LAYOUT.actions.map((bid) => {
-                        const isDisabled = !isValidBid(bid, newBidding);
-                        return (
-                          <Button
-                            key={bid}
-                            variant={bid === "Pass" ? "default" : "outline"}
-                            size="sm"
-                            onClick={() => handleBid(bid)}
-                            disabled={isDisabled}
-                            className={`text-xs ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                          >
-                            {bid}
-                          </Button>
-                        );
-                      })}
-                    </div>
                   </div>
                 </div>
               </div>
