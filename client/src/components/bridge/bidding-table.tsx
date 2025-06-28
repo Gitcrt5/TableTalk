@@ -37,6 +37,15 @@ export default function BiddingTable({
     return bid.replace(/S/g, '♠').replace(/H/g, '♥').replace(/D/g, '♦').replace(/C/g, '♣');
   };
 
+  // Get the appropriate color class for a bid
+  const getBidColor = (bid: string) => {
+    if (bid.includes("♣") || bid.includes("♠")) return "text-black";
+    if (bid.includes("♥")) return "text-red-600";
+    if (bid.includes("♦")) return "text-orange-600";
+    if (bid.includes("NT")) return "text-blue-700";
+    return "text-gray-700"; // For Pass, Double, Redouble
+  };
+
   return (
     <Card className="bg-gray-50">
       <CardHeader>
@@ -59,10 +68,18 @@ export default function BiddingTable({
             <tbody>
               {biddingRounds.map((round, index) => (
                 <tr key={index} className="border-b border-gray-200">
-                  <td className="py-2">{formatBid(round[0]) || '-'}</td>
-                  <td className="py-2">{formatBid(round[1]) || '-'}</td>
-                  <td className="py-2">{formatBid(round[2]) || '-'}</td>
-                  <td className="py-2">{formatBid(round[3]) || '-'}</td>
+                  <td className={`py-2 ${getBidColor(formatBid(round[0]) || '')}`}>
+                    {formatBid(round[0]) || '-'}
+                  </td>
+                  <td className={`py-2 ${getBidColor(formatBid(round[1]) || '')}`}>
+                    {formatBid(round[1]) || '-'}
+                  </td>
+                  <td className={`py-2 ${getBidColor(formatBid(round[2]) || '')}`}>
+                    {formatBid(round[2]) || '-'}
+                  </td>
+                  <td className={`py-2 ${getBidColor(formatBid(round[3]) || '')}`}>
+                    {formatBid(round[3]) || '-'}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -73,7 +90,7 @@ export default function BiddingTable({
           <Card className="mt-4 bg-white">
             <CardContent className="p-3">
               <div className="text-sm text-text-secondary">Final Contract:</div>
-              <div className="font-semibold text-lg">
+              <div className={`font-semibold text-lg ${getBidColor(formatBid(finalContract))}`}>
                 {formatBid(finalContract)} {declarer ? `by ${declarer}` : ''}
               </div>
             </CardContent>

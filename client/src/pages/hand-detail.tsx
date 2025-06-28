@@ -67,6 +67,15 @@ const isValidBid = (bid: string, currentBidding: string[]) => {
   return getBidValue(bid) > getBidValue(lastValidBid);
 };
 
+// Get the appropriate color class for a bid
+const getBidColor = (bid: string) => {
+  if (bid.includes("♣") || bid.includes("♠")) return "text-black";
+  if (bid.includes("♥")) return "text-red-600";
+  if (bid.includes("♦")) return "text-orange-600";
+  if (bid.includes("NT")) return "text-blue-700";
+  return "text-gray-700"; // For Pass, Double, Redouble
+};
+
 export default function HandDetail() {
   const { id } = useParams<{ id: string }>();
   const handId = parseInt(id!);
@@ -294,8 +303,8 @@ export default function HandDetail() {
                   <div className="bg-gray-50 p-4 rounded">
                     <div className="flex flex-wrap gap-2">
                       {newBidding.map((bid, index) => (
-                        <Badge key={index} variant="outline">
-                          {positions[index % 4]}: {bid}
+                        <Badge key={index} variant="outline" className={getBidColor(bid)}>
+                          {positions[index % 4]}: <span className={getBidColor(bid)}>{bid}</span>
                         </Badge>
                       ))}
                     </div>
