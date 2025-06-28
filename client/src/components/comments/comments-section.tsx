@@ -4,8 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
 import { apiRequest } from "@/lib/queryClient";
 import { MessageSquare, ThumbsUp, Reply, Flag } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
@@ -17,31 +16,21 @@ interface CommentsSectionProps {
 
 export default function CommentsSection({ handId }: CommentsSectionProps) {
   const [newComment, setNewComment] = useState("");
-  const [userLevel, setUserLevel] = useState("Player");
   
   const queryClient = useQueryClient();
   const { user, isAuthenticated } = useAuth();
 
   const { data: comments, isLoading } = useQuery<Comment[]>({
     queryKey: ["/api/hands", handId, "comments"],
-    staleTime: 0, // Force fresh data
-    cacheTime: 0, // Don't cache
   });
 
   // Debug: Log the raw response
   console.log("Raw comments response for hand", handId, ":", comments);
   console.log("Comments array length:", comments?.length);
-  console.log("Comments array type:", Array.isArray(comments));
-  if (comments) {
-    comments.forEach((comment, index) => {
-      console.log(`Comment ${index}:`, comment);
-    });
-  }
   
   // Filter out any invalid entries
   const validComments = comments?.filter(comment => 
     comment && 
-    typeof comment === 'object' && 
     comment.id && 
     comment.content && 
     comment.content.trim() !== ''
@@ -52,9 +41,11 @@ export default function CommentsSection({ handId }: CommentsSectionProps) {
   const createCommentMutation = useMutation({
     mutationFn: async (commentData: {
       content: string;
-      userLevel: string;
     }) => {
-      const response = await apiRequest("POST", `/api/hands/${handId}/comments`, commentData);
+      const response = await apiRequest("POST", `/api/hands/${handId}/comments`, {
+        ...commentData,
+        userLevel: "Player", // Default level for now
+      });
       return response.json();
     },
     onSuccess: () => {
@@ -79,7 +70,6 @@ export default function CommentsSection({ handId }: CommentsSectionProps) {
     
     createCommentMutation.mutate({
       content: newComment.trim(),
-      userLevel,
     });
   };
 
@@ -87,18 +77,7 @@ export default function CommentsSection({ handId }: CommentsSectionProps) {
     likeCommentMutation.mutate(commentId);
   };
 
-  const getLevelColor = (level: string) => {
-    switch (level) {
-      case "Expert":
-        return "text-red-600 border-red-600";
-      case "Advanced":
-        return "text-blue-600 border-blue-600";
-      case "Intermediate":
-        return "text-green-600 border-green-600";
-      default:
-        return "text-gray-600 border-gray-600";
-    }
-  };
+
 
   const getTimeAgo = (date: Date) => {
     const now = new Date();
@@ -144,7 +123,7 @@ export default function CommentsSection({ handId }: CommentsSectionProps) {
               <p>No comments yet. Be the first to share your analysis!</p>
             </div>
           ) : (
-            validComments.map((comment) => (
+            validComments.map((comment: Comment) => (
               <div key={comment.id} className="border-l-4 border-primary pl-4 mb-6">
                 <div className="flex items-start space-x-3">
                   <Avatar className="w-8 h-8">
@@ -155,9 +134,6 @@ export default function CommentsSection({ handId }: CommentsSectionProps) {
                   <div className="flex-1">
                     <div className="flex items-center space-x-2 mb-2">
                       <span className="font-semibold">{comment.userName || "Anonymous"}</span>
-                      <Badge variant="outline" className={getLevelColor(comment.userLevel || "Player")}>
-                        {comment.userLevel || "Player"}
-                      </Badge>
                       <span className="text-text-secondary text-sm">
                         {comment.createdAt ? getTimeAgo(comment.createdAt) : "Just now"}
                       </span>
@@ -207,21 +183,6 @@ export default function CommentsSection({ handId }: CommentsSectionProps) {
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1">
-                <div className="mb-3">
-                  <label className="block text-sm font-medium mb-1">Bridge Level</label>
-                  <Select value={userLevel} onValueChange={setUserLevel}>
-                    <SelectTrigger className="w-48">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Beginner">Beginner</SelectItem>
-                      <SelectItem value="Player">Player</SelectItem>
-                      <SelectItem value="Intermediate">Intermediate</SelectItem>
-                      <SelectItem value="Advanced">Advanced</SelectItem>
-                      <SelectItem value="Expert">Expert</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
                 <Textarea
                   placeholder="Share your analysis of this hand..."
                   value={newComment}
