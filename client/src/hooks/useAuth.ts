@@ -14,16 +14,37 @@ type RegisterData = {
   lastName: string;
 };
 
-// Check if we're using Replit auth based on environment
-const isReplitAuth = import.meta.env.VITE_USE_REPLIT_AUTH !== "false";
+// Check if we're using Replit auth based on environment - temporarily set to false for testing
+const isReplitAuth = false; // import.meta.env.VITE_USE_REPLIT_AUTH !== "false";
 const userEndpoint = isReplitAuth ? "/api/auth/user" : "/api/user";
 
 export function useAuth() {
   const { toast } = useToast();
   
-  const { data: user, isLoading } = useQuery({
+  const { data: user, isLoading, error } = useQuery({
     queryKey: [userEndpoint],
+    queryFn: async () => {
+      try {
+        const res = await fetch(userEndpoint, {
+          credentials: 'include',
+        });
+        if (res.status === 401) {
+          return null; // User not authenticated, return null instead of throwing
+        }
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+        }
+        return await res.json();
+      } catch (error) {
+        // For network errors or other issues, return null to show auth page
+        return null;
+      }
+    },
     retry: false,
+    refetchOnWindowFocus: false,
+    refetchOnMount: true, // Allow initial mount check
+    refetchOnReconnect: false,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
   const loginMutation = useMutation({
