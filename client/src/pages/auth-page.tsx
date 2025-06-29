@@ -33,8 +33,8 @@ export default function AuthPage() {
   const { user, isLoading, loginMutation, registerMutation } = useAuth();
   const [isRegistering, setIsRegistering] = useState(false);
 
-  // Check if we're using Replit auth - temporarily set to false for testing
-  const isReplitAuth = false; // import.meta.env.VITE_USE_REPLIT_AUTH !== "false";
+  // Check if we're using Replit auth (presence of REPLIT_DOMAINS means we're on Replit)
+  const isReplitAuth = import.meta.env.VITE_USE_REPLIT_AUTH !== "false";
 
   const loginForm = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),

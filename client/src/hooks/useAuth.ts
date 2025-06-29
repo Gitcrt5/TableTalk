@@ -15,8 +15,8 @@ type RegisterData = {
   displayName: string;
 };
 
-// Check if we're using Replit auth based on environment - temporarily set to false for testing
-const isReplitAuth = false; // import.meta.env.VITE_USE_REPLIT_AUTH !== "false";
+// Check if we're using Replit auth based on environment
+const isReplitAuth = import.meta.env.VITE_USE_REPLIT_AUTH !== "false";
 const userEndpoint = isReplitAuth ? "/api/auth/user" : "/api/user";
 
 export function useAuth() {
