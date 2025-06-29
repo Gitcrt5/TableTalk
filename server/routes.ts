@@ -259,7 +259,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const commentData = insertCommentSchema.parse({
         handId,
         userId,
-        userName: user?.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : user?.email || 'Anonymous',
+        userName: user?.displayName || user?.firstName || 'Anonymous',
         userLevel: req.body.userLevel || 'Player',
         content: req.body.content,
       });

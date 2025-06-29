@@ -20,6 +20,7 @@ export const users = pgTable("users", {
   email: varchar("email").unique(),
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
+  displayName: varchar("display_name"),
   profileImageUrl: varchar("profile_image_url"),
   // For email/password auth (optional - only set for non-OAuth users)
   password: varchar("password"),

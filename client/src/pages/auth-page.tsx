@@ -19,6 +19,7 @@ const loginSchema = z.object({
 const registerSchema = loginSchema.extend({
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().min(1, "Last name is required"),
+  displayName: z.string().min(1, "Display name is required").max(20, "Display name must be 20 characters or less"),
   confirmPassword: z.string(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
@@ -51,6 +52,7 @@ export default function AuthPage() {
       confirmPassword: "",
       firstName: "",
       lastName: "",
+      displayName: "",
     },
   });
 
@@ -160,6 +162,19 @@ export default function AuthPage() {
                             <FormLabel>Email</FormLabel>
                             <FormControl>
                               <Input type="email" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={registerForm.control}
+                        name="displayName"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Display Name</FormLabel>
+                            <FormControl>
+                              <Input {...field} placeholder="How others will see you" />
                             </FormControl>
                             <FormMessage />
                           </FormItem>

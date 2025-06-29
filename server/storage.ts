@@ -92,6 +92,7 @@ export class MemStorage implements IStorage {
       email: userData.email || null,
       firstName: userData.firstName || null,
       lastName: userData.lastName || null,
+      displayName: userData.displayName || null,
       profileImageUrl: userData.profileImageUrl || null,
       password: userData.password || null,
       authType: userData.authType || "replit",
@@ -103,6 +104,34 @@ export class MemStorage implements IStorage {
   }
 
   private async initializeSampleData() {
+    // Create sample users
+    await this.upsertUser({
+      id: "admin",
+      email: "admin@tabletalk.bridge",
+      firstName: "Admin",
+      lastName: "User",
+      displayName: "Admin",
+      authType: "local",
+    });
+
+    await this.upsertUser({
+      id: "player1",
+      email: "player1@tabletalk.bridge",
+      firstName: "Bridge",
+      lastName: "Expert",
+      displayName: "BridgeExpert",
+      authType: "local",
+    });
+
+    await this.upsertUser({
+      id: "player2",
+      email: "player2@tabletalk.bridge",
+      firstName: "Card",
+      lastName: "Shark",
+      displayName: "CardShark",
+      authType: "local",
+    });
+
     // Create a sample game
     const sampleGame = await this.createGame({
       title: "World Championship 2023 - Round 3",
@@ -131,16 +160,16 @@ export class MemStorage implements IStorage {
     // Add sample comments
     await this.createComment({
       handId: sampleHand.id,
-      userId: "user1",
-      userName: "BridgeMaster23",
+      userId: "player1",
+      userName: "BridgeExpert",
       userLevel: "Expert",
       content: "Great hand for discussing weak two-suits. South's 2♣ response was questionable - with only 6 HCP and club length, a simple pass might be better. The jump to 4♠ by North shows confidence in the spade fit.",
     });
 
     await this.createComment({
       handId: sampleHand.id,
-      userId: "user2",
-      userName: "CardPlayer47",
+      userId: "player2",
+      userName: "CardShark",
       userLevel: "Advanced",
       content: "I disagree - South's 2♣ shows support and the club suit could be valuable for discards. The key question is whether North should have made a game try instead of jumping directly to 4♠.",
     });

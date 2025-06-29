@@ -12,6 +12,7 @@ type RegisterData = {
   password: string;
   firstName: string;
   lastName: string;
+  displayName: string;
 };
 
 // Check if we're using Replit auth based on environment - temporarily set to false for testing
