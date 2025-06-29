@@ -6,7 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import type { User as UserType } from "@shared/schema";
 
 export default function Header() {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, logoutMutation } = useAuth();
 
   return (
     <header className="bg-white shadow-sm border-b sticky top-0 z-50">
@@ -42,10 +42,11 @@ export default function Header() {
               <Button 
                 variant="outline" 
                 size="sm"
-                onClick={() => window.location.href = '/api/logout'}
+                onClick={() => logoutMutation.mutate()}
+                disabled={logoutMutation.isPending}
               >
                 <LogOut className="w-4 h-4 mr-2" />
-                Sign Out
+                {logoutMutation.isPending ? "Signing Out..." : "Sign Out"}
               </Button>
             </div>
           )}

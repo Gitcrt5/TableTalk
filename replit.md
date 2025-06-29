@@ -18,7 +18,7 @@ TableTalk is a simplified bridge review platform built with a modern full-stack 
 - **Runtime**: Node.js 20+ with Express.js framework
 - **Language**: TypeScript with ES modules
 - **API Pattern**: RESTful API with conventional HTTP methods
-- **Authentication**: Replit OpenID Connect with Passport.js
+- **Authentication**: Flexible system supporting both Replit OAuth and email/password authentication
 - **File Upload**: Multer for handling PBN file uploads
 - **Session Management**: Express sessions with PostgreSQL store
 - **Error Handling**: Centralized error handling middleware
@@ -77,6 +77,25 @@ The application uses six main entities:
 - **Development Server**: TSX for TypeScript execution in development
 - **Asset Processing**: ESBuild for server-side bundle optimization
 
+## Authentication Configuration
+
+TableTalk supports two authentication methods for maximum hosting flexibility:
+
+### Replit OAuth (Default)
+- **When**: Automatically used when `REPLIT_DOMAINS` environment variable is present
+- **Benefits**: Zero-configuration authentication when hosting on Replit
+- **User Experience**: Single-click login using existing Replit account
+
+### Email/Password Authentication
+- **When**: Used when hosting outside Replit or when `USE_REPLIT_AUTH=false`
+- **Benefits**: Portable to any hosting platform, full user control
+- **User Experience**: Traditional registration/login forms with email validation
+
+### Switching Authentication Methods
+- **On Replit**: Authentication is automatic (uses OAuth)
+- **Other hosts**: Set `USE_REPLIT_AUTH=false` to use email/password
+- **Database**: Same user schema supports both methods seamlessly
+
 ## Deployment Strategy
 
 ### Development Environment
@@ -112,6 +131,8 @@ The application uses six main entities:
 - June 27, 2025. Implemented Replit authentication system with user login/logout, landing page for unauthenticated users, and proper session management
 - June 28, 2025. Fixed critical comment system bug where 74 empty entries were displaying instead of 3 real comments due to corrupted TanStack Query cache - implemented direct API fetching to bypass cache corruption
 - June 28, 2025. Enhanced bidding interface with 6-row layout organized by suit, removed redundant labels, added proper suit colors (black clubs/spades, red hearts, orange diamonds, blue NT), and implemented bid validation to prevent invalid sequences
+- June 29, 2025. Added flexible authentication system supporting both Replit OAuth and traditional email/password authentication for hosting portability - automatically detects environment and uses appropriate method
+- June 29, 2025. Fixed mobile responsiveness issues on iPhone with responsive hand display layout and compact bidding interface optimized for small screens
 
 ## TODO List & Future Enhancements
 

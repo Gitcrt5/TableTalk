@@ -3,6 +3,7 @@ import { games, hands, userBidding, comments, users, type Game, type Hand, type 
 export interface IStorage {
   // Users (required for Replit Auth)
   getUser(id: string): Promise<User | undefined>;
+  getUserByEmail(email: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
 
   // Games
@@ -76,6 +77,15 @@ export class MemStorage implements IStorage {
     return this.users.get(id);
   }
 
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    for (const user of Array.from(this.users.values())) {
+      if (user.email === email) {
+        return user;
+      }
+    }
+    return undefined;
+  }
+
   async upsertUser(userData: UpsertUser): Promise<User> {
     const user: User = {
       id: userData.id!,
@@ -83,6 +93,8 @@ export class MemStorage implements IStorage {
       firstName: userData.firstName || null,
       lastName: userData.lastName || null,
       profileImageUrl: userData.profileImageUrl || null,
+      password: userData.password || null,
+      authType: userData.authType || "replit",
       createdAt: userData.createdAt || new Date(),
       updatedAt: new Date(),
     };
@@ -305,6 +317,11 @@ export class DatabaseStorage implements IStorage {
   // User operations (required for Replit Auth)
   async getUser(id: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
+  }
+
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.email, email));
     return user;
   }
 

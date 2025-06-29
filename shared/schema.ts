@@ -14,12 +14,17 @@ export const sessions = pgTable(
 );
 
 // Users table for authentication
+// Supports both Replit OAuth and email/password authentication
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().notNull(),
   email: varchar("email").unique(),
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
   profileImageUrl: varchar("profile_image_url"),
+  // For email/password auth (optional - only set for non-OAuth users)
+  password: varchar("password"),
+  // Auth type to distinguish between Replit OAuth and local auth
+  authType: varchar("auth_type").notNull().default("replit"), // "replit" or "local"
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

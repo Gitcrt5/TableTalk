@@ -8,11 +8,15 @@ import Dashboard from "@/pages/dashboard";
 import GameDetail from "@/pages/game-detail";
 import HandDetail from "@/pages/hand-detail";
 import Landing from "@/pages/landing";
+import AuthPage from "@/pages/auth-page";
 import NotFound from "@/pages/not-found";
 import { useAuth } from "@/hooks/useAuth";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
+  
+  // Check if we're using Replit auth (presence of REPLIT_DOMAINS means we're on Replit)
+  const isReplitAuth = import.meta.env.VITE_USE_REPLIT_AUTH !== "false";
 
   if (isLoading) {
     return (
@@ -23,7 +27,8 @@ function Router() {
   }
 
   if (!isAuthenticated) {
-    return <Landing />;
+    // Use different landing pages based on auth method
+    return isReplitAuth ? <Landing /> : <AuthPage />;
   }
 
   return (

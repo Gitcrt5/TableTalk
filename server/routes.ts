@@ -4,25 +4,47 @@ import multer from "multer";
 import { storage } from "./storage";
 import { parsePBN } from "./services/pbn-parser";
 import { insertGameSchema, insertHandSchema, insertUserBiddingSchema, insertCommentSchema } from "@shared/schema";
-import { setupAuth, isAuthenticated } from "./replitAuth";
+import { setupAuth as setupReplitAuth, isAuthenticated as isReplitAuthenticated } from "./replitAuth";
+import { setupLocalAuth } from "./auth";
+
+// Configuration for authentication method
+const USE_REPLIT_AUTH = process.env.USE_REPLIT_AUTH !== "false" && !!process.env.REPLIT_DOMAINS;
 
 const upload = multer({ storage: multer.memoryStorage() });
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Setup authentication
-  await setupAuth(app);
+  // Setup authentication based on environment
+  if (USE_REPLIT_AUTH) {
+    console.log("Using Replit OAuth authentication");
+    await setupReplitAuth(app);
+  } else {
+    console.log("Using local email/password authentication");
+    setupLocalAuth(app);
+  }
 
-  // Auth routes
-  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
-      res.json(user);
-    } catch (error) {
-      console.error("Error fetching user:", error);
-      res.status(500).json({ message: "Failed to fetch user" });
+  // Create unified authentication middleware
+  const isAuthenticated = (req: any, res: any, next: any) => {
+    if (!req.isAuthenticated() || !req.user) {
+      return res.status(401).json({ message: "Unauthorized" });
     }
-  });
+    next();
+  };
+
+  // Auth routes - different endpoints based on auth type
+  if (USE_REPLIT_AUTH) {
+    app.get('/api/auth/user', isReplitAuthenticated, async (req: any, res) => {
+      try {
+        const userId = req.user.claims.sub;
+        const user = await storage.getUser(userId);
+        res.json(user);
+      } catch (error) {
+        console.error("Error fetching user:", error);
+        res.status(500).json({ message: "Failed to fetch user" });
+      }
+    });
+  } else {
+    // Local auth already provides /api/user endpoint in setupLocalAuth
+  }
 
   // Games routes
   app.get("/api/games", async (req, res) => {
