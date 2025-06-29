@@ -51,12 +51,12 @@ export default function Landing() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                📊 Practice Bidding
+                📈 Analyze Games
               </CardTitle>
             </CardHeader>
             <CardContent>
               <CardDescription>
-                Test your bidding skills on real hands and see how you compare to the actual auction.
+                Browse through detailed hand records and study different aspects of tournament play.
               </CardDescription>
             </CardContent>
           </Card>

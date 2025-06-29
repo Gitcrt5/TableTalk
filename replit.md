@@ -133,6 +133,8 @@ TableTalk supports two authentication methods for maximum hosting flexibility:
 - June 28, 2025. Enhanced bidding interface with 6-row layout organized by suit, removed redundant labels, added proper suit colors (black clubs/spades, red hearts, orange diamonds, blue NT), and implemented bid validation to prevent invalid sequences
 - June 29, 2025. Added flexible authentication system supporting both Replit OAuth and traditional email/password authentication for hosting portability - automatically detects environment and uses appropriate method
 - June 29, 2025. Fixed mobile responsiveness issues on iPhone with responsive hand display layout and compact bidding interface optimized for small screens
+- June 29, 2025. Added display name feature to user registration and comments system - users can set a display name (max 20 characters) that appears in comments instead of full names
+- June 29, 2025. Updated welcome page to remove unimplemented practice bidding section and replaced with "Analyze Games" feature that reflects current functionality
 
 ## TODO List & Future Enhancements
 
