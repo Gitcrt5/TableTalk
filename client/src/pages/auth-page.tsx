@@ -9,6 +9,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Redirect } from "wouter";
+import logoUrl from "@/assets/tabletalk-logo.svg";
 
 const loginSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -88,6 +89,13 @@ export default function AuthPage() {
       <div className="flex-1 flex items-center justify-center p-8">
         <div className="max-w-md w-full space-y-6">
           <div className="text-center">
+            <div className="flex justify-center mb-6">
+              <img 
+                src={logoUrl} 
+                alt="TableTalk Logo" 
+                className="w-16 h-16"
+              />
+            </div>
             <h1 className="text-3xl font-bold text-gray-900">Welcome to TableTalk</h1>
             <p className="mt-2 text-gray-600">
               {isRegistering ? "Create your account to get started" : "Sign in to your account"}
@@ -255,9 +263,11 @@ export default function AuthPage() {
         <div className="max-w-md text-center text-white">
           <div className="mb-8">
             <div className="w-24 h-24 bg-white bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-6">
-              <svg className="w-12 h-12" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-              </svg>
+              <img 
+                src={logoUrl} 
+                alt="TableTalk Logo" 
+                className="w-12 h-12 brightness-0 invert"
+              />
             </div>
             <h2 className="text-3xl font-bold mb-4">Master Your Bridge Game</h2>
             <p className="text-lg text-blue-100 mb-6">
