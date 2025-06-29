@@ -7,8 +7,8 @@ import { insertGameSchema, insertHandSchema, insertUserBiddingSchema, insertComm
 import { setupAuth as setupReplitAuth, isAuthenticated as isReplitAuthenticated } from "./replitAuth";
 import { setupLocalAuth } from "./auth";
 
-// Configuration for authentication method - temporarily set to false for testing
-const USE_REPLIT_AUTH = false; // process.env.USE_REPLIT_AUTH !== "false" && !!process.env.REPLIT_DOMAINS;
+// Configuration for authentication method - detect based on environment
+const USE_REPLIT_AUTH = process.env.USE_REPLIT_AUTH !== "false" && !!process.env.REPLIT_DOMAINS;
 
 const upload = multer({ storage: multer.memoryStorage() });
 
