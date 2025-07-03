@@ -137,6 +137,8 @@ TableTalk supports two authentication methods for maximum hosting flexibility:
 - June 29, 2025. Updated welcome page to remove unimplemented practice bidding section and replaced with "Analyze Games" feature that reflects current functionality
 - June 29, 2025. Enhanced bidding interface color coding by making Double and Redouble options red across all bidding components (hand detail, bidding practice, and bidding table)
 - June 29, 2025. Implemented proper bridge bidding rules for Double and Redouble: can only double opponent's bids (not partner's or when no bid exists), and can only redouble opponent's double
+- June 29, 2025. Fixed cache invalidation issue where bidding updates weren't reflected in game hands list when navigating back from hand detail
+- June 29, 2025. Removed unimplemented like, reply, and report buttons from comments section to clean up UI for MVP - added TODO for future implementation
 
 ## TODO List & Future Enhancements
 
@@ -149,7 +151,7 @@ TableTalk supports two authentication methods for maximum hosting flexibility:
 - [ ] Add users with varying levels of ability (Admin, Teacher, Player, Kibbitzer)
 - [ ] Add way for users to manually enter a game and/or hand (form-based input)
 - [ ] Bidding sequence input functionality (partially implemented, needs completion)
-- [ ] Comment system improvements (likes, replies, user levels)
+- [ ] Comment system improvements: add like, reply, and report functionality (UI removed for MVP)
 - [ ] Add filtering as well as search of the games list
 - [ ] Search and filter hands by criteria (dealer, vulnerability, convention)
 - [ ] User profiles and statistics dashboard

@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 import { apiRequest } from "@/lib/queryClient";
-import { MessageSquare, ThumbsUp, Reply, Flag } from "lucide-react";
+import { MessageSquare } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import type { Comment } from "@shared/schema";
 
@@ -65,26 +65,12 @@ export default function CommentsSection({ handId }: CommentsSectionProps) {
     },
   });
 
-  const likeCommentMutation = useMutation({
-    mutationFn: async (commentId: number) => {
-      const response = await apiRequest("POST", `/api/comments/${commentId}/like`, {});
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/hands", handId, "comments"] });
-    },
-  });
-
   const handleSubmitComment = () => {
     if (!newComment.trim() || !isAuthenticated) return;
     
     createCommentMutation.mutate({
       content: newComment.trim(),
     });
-  };
-
-  const handleLike = (commentId: number) => {
-    likeCommentMutation.mutate(commentId);
   };
 
 
@@ -149,33 +135,7 @@ export default function CommentsSection({ handId }: CommentsSectionProps) {
                       </span>
                     </div>
                     <p className="text-text-primary mb-3">{comment.content || "No content"}</p>
-                    <div className="flex items-center space-x-4 text-sm text-text-secondary">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleLike(comment.id)}
-                        className="p-0 h-auto text-text-secondary hover:text-primary"
-                      >
-                        <ThumbsUp className="mr-1 h-3 w-3" />
-                        {comment.likes || 0}
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="p-0 h-auto text-text-secondary hover:text-primary"
-                      >
-                        <Reply className="mr-1 h-3 w-3" />
-                        Reply
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="p-0 h-auto text-text-secondary hover:text-primary"
-                      >
-                        <Flag className="mr-1 h-3 w-3" />
-                        Report
-                      </Button>
-                    </div>
+                    {/* TODO: Add like, reply, and report functionality in future update */}
                   </div>
                 </div>
               </div>
