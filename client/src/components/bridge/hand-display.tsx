@@ -48,8 +48,8 @@ export default function HandDisplay({ hand }: HandDisplayProps) {
           {/* North */}
           <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-44">
             <Card className="shadow-md">
-              <CardContent className="p-3">
-                <div className="text-center mb-2">
+              <CardContent className="p-2">
+                <div className="text-center mb-1">
                   <Badge className={getPositionBadgeColor('North')}>North</Badge>
                 </div>
                 <div className="space-y-1 text-xs">
@@ -62,8 +62,8 @@ export default function HandDisplay({ hand }: HandDisplayProps) {
           {/* West */}
           <div className="absolute left-0 top-1/2 transform -translate-y-1/2 w-44">
             <Card className="shadow-md">
-              <CardContent className="p-3">
-                <div className="text-center mb-2">
+              <CardContent className="p-2">
+                <div className="text-center mb-1">
                   <Badge className={getPositionBadgeColor('West')}>West</Badge>
                 </div>
                 <div className="space-y-1 text-xs">
@@ -76,8 +76,8 @@ export default function HandDisplay({ hand }: HandDisplayProps) {
           {/* East */}
           <div className="absolute right-0 top-1/2 transform -translate-y-1/2 w-44">
             <Card className="shadow-md">
-              <CardContent className="p-3">
-                <div className="text-center mb-2">
+              <CardContent className="p-2">
+                <div className="text-center mb-1">
                   <Badge className={getPositionBadgeColor('East')}>East</Badge>
                 </div>
                 <div className="space-y-1 text-xs">
@@ -90,8 +90,8 @@ export default function HandDisplay({ hand }: HandDisplayProps) {
           {/* South */}
           <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-44">
             <Card className="shadow-md">
-              <CardContent className="p-3">
-                <div className="text-center mb-2">
+              <CardContent className="p-2">
+                <div className="text-center mb-1">
                   <Badge className={getPositionBadgeColor('South')}>South</Badge>
                 </div>
                 <div className="space-y-1 text-xs">

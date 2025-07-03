@@ -241,9 +241,9 @@ export default function HandDetail() {
   const hasBidding = hand.actualBidding && hand.actualBidding.length > 0;
 
   return (
-    <div className="max-w-6xl mx-auto px-2 sm:px-4 lg:px-8 py-4 md:py-8">
+    <div className="max-w-6xl mx-auto px-2 sm:px-4 lg:px-8 py-2 md:py-4">
       {/* Header */}
-      <div className="mb-4 md:mb-8">
+      <div className="mb-3 md:mb-4">
         <div className="flex items-center justify-between mb-4">
           <Link to={`/games/${hand.gameId}`}>
             <Button variant="ghost" size="sm">
@@ -312,14 +312,14 @@ export default function HandDetail() {
       </div>
 
       {/* Hand Display */}
-      <Card className="mb-4 md:mb-8">
-        <CardContent className="p-3 md:p-6">
+      <Card className="mb-3 md:mb-4">
+        <CardContent className="p-2 md:p-4">
           <HandDisplay hand={hand} />
         </CardContent>
       </Card>
 
       {/* Bidding Section */}
-      <Card className="mb-4 md:mb-8">
+      <Card className="mb-3 md:mb-4">
         <CardHeader>
           <div className="flex justify-between items-center">
             <CardTitle>Bidding</CardTitle>
@@ -331,14 +331,65 @@ export default function HandDetail() {
             )}
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-3 md:p-6">
           {hasBidding && !isEditingBidding ? (
-            <BiddingTable
-              title="Auction"
-              bidding={hand.actualBidding}
-              finalContract={hand.finalContract ?? undefined}
-              declarer={hand.declarer ?? undefined}
-            />
+            <div className="space-y-4">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm bridge-hand">
+                  <thead>
+                    <tr className="border-b border-gray-300">
+                      <th className="text-left py-2">West</th>
+                      <th className="text-left py-2">North</th>
+                      <th className="text-left py-2">East</th>
+                      <th className="text-left py-2">South</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(() => {
+                      const biddingRounds = [];
+                      if (hand.actualBidding && hand.actualBidding.length > 0) {
+                        for (let i = 0; i < hand.actualBidding.length; i += 4) {
+                          biddingRounds.push(hand.actualBidding.slice(i, i + 4));
+                        }
+                      }
+                      
+                      const formatBid = (bid: string) => {
+                        if (!bid || bid === "Pass" || bid === "-") return bid;
+                        return bid.replace(/S/g, '♠').replace(/H/g, '♥').replace(/D/g, '♦').replace(/C/g, '♣');
+                      };
+                      
+                      return biddingRounds.map((round, index) => (
+                        <tr key={index} className="border-b border-gray-200">
+                          <td className={`py-2 ${getBidColor(formatBid(round[0]) || '')}`}>
+                            {formatBid(round[0]) || '-'}
+                          </td>
+                          <td className={`py-2 ${getBidColor(formatBid(round[1]) || '')}`}>
+                            {formatBid(round[1]) || '-'}
+                          </td>
+                          <td className={`py-2 ${getBidColor(formatBid(round[2]) || '')}`}>
+                            {formatBid(round[2]) || '-'}
+                          </td>
+                          <td className={`py-2 ${getBidColor(formatBid(round[3]) || '')}`}>
+                            {formatBid(round[3]) || '-'}
+                          </td>
+                        </tr>
+                      ));
+                    })()}
+                  </tbody>
+                </table>
+              </div>
+              
+              {hand.finalContract && (
+                <Card className="bg-white">
+                  <CardContent className="p-3">
+                    <div className="text-sm text-text-secondary">Final Contract:</div>
+                    <div className={`font-semibold text-lg ${getBidColor(hand.finalContract)}`}>
+                      {hand.finalContract.replace(/S/g, '♠').replace(/H/g, '♥').replace(/D/g, '♦').replace(/C/g, '♣')} {hand.declarer ? `by ${hand.declarer}` : ''}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
           ) : isEditingBidding ? (
             <div className="space-y-4 md:space-y-6">
               {/* Current Bidding Display */}
