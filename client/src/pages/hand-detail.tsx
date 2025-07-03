@@ -48,17 +48,61 @@ const getBidValue = (bid: string) => {
 };
 
 // Check if a bid is valid given the current bidding sequence
-const isValidBid = (bid: string, currentBidding: string[]) => {
+const isValidBid = (bid: string, currentBidding: string[], currentBidderIndex: number) => {
   // Pass is always allowed
   if (bid === "Pass") return true;
   
   const lastBid = currentBidding[currentBidding.length - 1];
   
-  // Double can only be used after opponent's bid (simplified - just check it's not after Double/Redouble)
-  if (bid === "Double") return lastBid !== "Double" && lastBid !== "Redouble";
+  // Double validation: can only double opponent's bid, not partner's or your own
+  if (bid === "Double") {
+    // Must have at least one bid in the sequence
+    if (currentBidding.length === 0) return false;
+    
+    // Cannot double Pass, Double, or Redouble
+    if (!lastBid || lastBid === "Pass" || lastBid === "Double" || lastBid === "Redouble") return false;
+    
+    // Find the last actual bid (not Pass/Double/Redouble)
+    let lastActualBidIndex = -1;
+    for (let i = currentBidding.length - 1; i >= 0; i--) {
+      if (currentBidding[i] !== "Pass" && currentBidding[i] !== "Double" && currentBidding[i] !== "Redouble") {
+        lastActualBidIndex = i;
+        break;
+      }
+    }
+    
+    if (lastActualBidIndex === -1) return false;
+    
+    // Check if the last actual bid was made by an opponent
+    // In a 4-player game: positions 0,2 are partners and 1,3 are partners
+    const lastBidderIndex = lastActualBidIndex % 4;
+    const isOpponentBid = (currentBidderIndex + lastBidderIndex) % 2 === 1;
+    
+    return isOpponentBid;
+  }
   
-  // Redouble can only be used after Double
-  if (bid === "Redouble") return lastBid === "Double";
+  // Redouble can only be used after opponent's Double
+  if (bid === "Redouble") {
+    // Must have a Double as the last bid
+    if (lastBid !== "Double") return false;
+    
+    // Find who made the Double
+    let doubleIndex = -1;
+    for (let i = currentBidding.length - 1; i >= 0; i--) {
+      if (currentBidding[i] === "Double") {
+        doubleIndex = i;
+        break;
+      }
+    }
+    
+    if (doubleIndex === -1) return false;
+    
+    // Check if the Double was made by an opponent
+    const doubleBidderIndex = doubleIndex % 4;
+    const isOpponentDouble = (currentBidderIndex + doubleBidderIndex) % 2 === 1;
+    
+    return isOpponentDouble;
+  }
   
   // For suit/NT bids, must be higher than last valid bid
   const lastValidBid = getLastValidBid(currentBidding);
@@ -117,7 +161,7 @@ export default function HandDetail() {
 
   const handleBid = (bid: string) => {
     // Only allow valid bids
-    if (!isValidBid(bid, newBidding)) {
+    if (!isValidBid(bid, newBidding, currentBidder)) {
       return;
     }
     
@@ -340,7 +384,7 @@ export default function HandDetail() {
                   {/* Clubs Row */}
                   <div className="grid grid-cols-7 gap-1 md:gap-2">
                     {BIDDING_LAYOUT.clubs.map((bid) => {
-                      const isDisabled = !isValidBid(bid, newBidding);
+                      const isDisabled = !isValidBid(bid, newBidding, currentBidder);
                       return (
                         <Button
                           key={bid}
@@ -359,7 +403,7 @@ export default function HandDetail() {
                   {/* Diamonds Row */}
                   <div className="grid grid-cols-7 gap-1 md:gap-2">
                     {BIDDING_LAYOUT.diamonds.map((bid) => {
-                      const isDisabled = !isValidBid(bid, newBidding);
+                      const isDisabled = !isValidBid(bid, newBidding, currentBidder);
                       return (
                         <Button
                           key={bid}
@@ -378,7 +422,7 @@ export default function HandDetail() {
                   {/* Hearts Row */}
                   <div className="grid grid-cols-7 gap-1 md:gap-2">
                     {BIDDING_LAYOUT.hearts.map((bid) => {
-                      const isDisabled = !isValidBid(bid, newBidding);
+                      const isDisabled = !isValidBid(bid, newBidding, currentBidder);
                       return (
                         <Button
                           key={bid}
@@ -397,7 +441,7 @@ export default function HandDetail() {
                   {/* Spades Row */}
                   <div className="grid grid-cols-7 gap-1 md:gap-2">
                     {BIDDING_LAYOUT.spades.map((bid) => {
-                      const isDisabled = !isValidBid(bid, newBidding);
+                      const isDisabled = !isValidBid(bid, newBidding, currentBidder);
                       return (
                         <Button
                           key={bid}
@@ -416,7 +460,7 @@ export default function HandDetail() {
                   {/* No Trump Row */}
                   <div className="grid grid-cols-7 gap-1 md:gap-2">
                     {BIDDING_LAYOUT.notrump.map((bid) => {
-                      const isDisabled = !isValidBid(bid, newBidding);
+                      const isDisabled = !isValidBid(bid, newBidding, currentBidder);
                       return (
                         <Button
                           key={bid}
@@ -435,7 +479,7 @@ export default function HandDetail() {
                   {/* Pass, Double, Redouble Row */}
                   <div className="grid grid-cols-3 gap-2 max-w-xs md:max-w-md">
                     {BIDDING_LAYOUT.actions.map((bid) => {
-                      const isDisabled = !isValidBid(bid, newBidding);
+                      const isDisabled = !isValidBid(bid, newBidding, currentBidder);
                       const isDoubleAction = bid === "Double" || bid === "Redouble";
                       return (
                         <Button
