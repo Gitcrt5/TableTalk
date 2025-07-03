@@ -153,6 +153,7 @@ export default function HandDetail() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/hands/${handId}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/games/${hand?.gameId}/hands`] });
       setIsEditingBidding(false);
       setNewBidding([]);
       setCurrentBidder(0);
