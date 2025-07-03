@@ -160,17 +160,20 @@ export default function BiddingPractice({ hand, userId }: BiddingPracticeProps) 
         {!isComplete ? (
           <div className="space-y-4">
             <div className="grid grid-cols-6 gap-2">
-              {BIDDING_OPTIONS.map((bid) => (
-                <Button
-                  key={bid}
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleBid(bid)}
-                  className="text-xs"
-                >
-                  {bid}
-                </Button>
-              ))}
+              {BIDDING_OPTIONS.map((bid) => {
+                const isDoubleAction = bid === "Double" || bid === "Redouble";
+                return (
+                  <Button
+                    key={bid}
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleBid(bid)}
+                    className={`text-xs ${isDoubleAction ? 'text-red-600' : ''}`}
+                  >
+                    {bid}
+                  </Button>
+                );
+              })}
             </div>
             <div className="flex justify-between items-center">
               <p className="text-sm text-text-secondary">

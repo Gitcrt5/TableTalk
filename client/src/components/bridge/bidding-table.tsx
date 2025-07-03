@@ -43,7 +43,8 @@ export default function BiddingTable({
     if (bid.includes("♥")) return "text-red-600";
     if (bid.includes("♦")) return "text-orange-600";
     if (bid.includes("NT")) return "text-blue-700";
-    return "text-gray-700"; // For Pass, Double, Redouble
+    if (bid === "Double" || bid === "Redouble") return "text-red-600";
+    return "text-gray-700"; // For Pass
   };
 
   return (

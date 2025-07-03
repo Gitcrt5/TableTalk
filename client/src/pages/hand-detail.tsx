@@ -436,6 +436,7 @@ export default function HandDetail() {
                   <div className="grid grid-cols-3 gap-2 max-w-xs md:max-w-md">
                     {BIDDING_LAYOUT.actions.map((bid) => {
                       const isDisabled = !isValidBid(bid, newBidding);
+                      const isDoubleAction = bid === "Double" || bid === "Redouble";
                       return (
                         <Button
                           key={bid}
@@ -443,7 +444,7 @@ export default function HandDetail() {
                           size="sm"
                           onClick={() => handleBid(bid)}
                           disabled={isDisabled}
-                          className={`text-xs h-8 md:h-10 ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                          className={`text-xs h-8 md:h-10 ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''} ${isDoubleAction ? 'text-red-600' : ''}`}
                         >
                           {bid}
                         </Button>
