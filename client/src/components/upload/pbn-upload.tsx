@@ -56,7 +56,7 @@ export default function PBNUpload({ open, onOpenChange }: PBNUploadProps) {
       queryClient.invalidateQueries({ queryKey: ["/api/games"] });
       handleClose();
       // Redirect to the game page for immediate editing
-      setLocation(`/games/${data.game.id}`);
+      setLocation(`/games/${data.game.id}?edit=true`);
     },
     onError: (error: Error) => {
       toast({

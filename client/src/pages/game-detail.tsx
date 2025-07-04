@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -13,6 +14,18 @@ export default function GameDetail() {
   const { id } = useParams<{ id: string }>();
   const gameId = parseInt(id!);
   const { user } = useAuth();
+  
+  // Check if we should auto-open the edit form (from upload redirect)
+  const searchParams = new URLSearchParams(window.location.search);
+  const shouldAutoEdit = searchParams.get('edit') === 'true';
+
+  // Clean up URL parameter after it's been used
+  useEffect(() => {
+    if (shouldAutoEdit) {
+      const newUrl = window.location.pathname;
+      window.history.replaceState(null, '', newUrl);
+    }
+  }, [shouldAutoEdit]);
 
   const { data: game, isLoading: gameLoading } = useQuery<Game>({
     queryKey: [`/api/games/${gameId}`],
@@ -83,7 +96,7 @@ export default function GameDetail() {
               {game.title}
             </h1>
             {user && user.id === game.uploadedBy && (
-              <GameEditForm game={game} />
+              <GameEditForm game={game} autoOpen={shouldAutoEdit} />
             )}
           </div>
           <div className="flex flex-wrap items-center gap-4 text-text-secondary">

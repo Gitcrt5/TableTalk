@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -39,12 +39,20 @@ type GameEditFormData = z.infer<typeof gameEditSchema>;
 
 interface GameEditFormProps {
   game: Game;
+  autoOpen?: boolean;
 }
 
-export default function GameEditForm({ game }: GameEditFormProps) {
+export default function GameEditForm({ game, autoOpen = false }: GameEditFormProps) {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Auto-open if requested (e.g., after upload)
+  useEffect(() => {
+    if (autoOpen) {
+      setOpen(true);
+    }
+  }, [autoOpen]);
 
   const form = useForm<GameEditFormData>({
     resolver: zodResolver(gameEditSchema),
