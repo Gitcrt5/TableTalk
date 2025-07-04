@@ -140,6 +140,7 @@ TableTalk supports two authentication methods for maximum hosting flexibility:
 - June 29, 2025. Fixed cache invalidation issue where bidding updates weren't reflected in game hands list when navigating back from hand detail
 - June 29, 2025. Removed unimplemented like, reply, and report buttons from comments section to clean up UI for MVP - added TODO for future implementation
 - July 3, 2025. Reduced whitespace around all elements for more compact layout and removed redundant "auction" subheading in bidding section
+- July 3, 2025. Implemented responsive side-by-side layout: bidding section appears to the right of hand display on large screens (PC/tablet) and below on narrow screens (mobile)
 
 ## TODO List & Future Enhancements
 

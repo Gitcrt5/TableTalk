@@ -311,27 +311,32 @@ export default function HandDetail() {
         </div>
       </div>
 
-      {/* Hand Display */}
-      <Card className="mb-3 md:mb-4">
-        <CardContent className="p-2 md:p-4">
-          <HandDisplay hand={hand} />
-        </CardContent>
-      </Card>
+      {/* Hand Display and Bidding Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 md:gap-4 mb-3 md:mb-4">
+        {/* Hand Display - takes 2/3 of width on large screens */}
+        <div className="lg:col-span-2">
+          <Card>
+            <CardContent className="p-2 md:p-4">
+              <HandDisplay hand={hand} />
+            </CardContent>
+          </Card>
+        </div>
 
-      {/* Bidding Section */}
-      <Card className="mb-3 md:mb-4">
-        <CardHeader>
-          <div className="flex justify-between items-center">
-            <CardTitle>Bidding</CardTitle>
-            {!hasBidding && !isEditingBidding && (
-              <Button onClick={() => setIsEditingBidding(true)}>
-                <Edit className="mr-2 h-4 w-4" />
-                Add Bidding
-              </Button>
-            )}
-          </div>
-        </CardHeader>
-        <CardContent className="p-3 md:p-6">
+        {/* Bidding Section - takes 1/3 of width on large screens, full width on smaller screens */}
+        <div className="lg:col-span-1">
+          <Card>
+            <CardHeader>
+              <div className="flex justify-between items-center">
+                <CardTitle>Bidding</CardTitle>
+                {!hasBidding && !isEditingBidding && (
+                  <Button onClick={() => setIsEditingBidding(true)}>
+                    <Edit className="mr-2 h-4 w-4" />
+                    Add Bidding
+                  </Button>
+                )}
+              </div>
+            </CardHeader>
+            <CardContent className="p-3 md:p-6">
           {hasBidding && !isEditingBidding ? (
             <div className="space-y-4">
               <div className="overflow-x-auto">
@@ -394,12 +399,12 @@ export default function HandDetail() {
             <div className="space-y-4 md:space-y-6">
               {/* Current Bidding Display */}
               {newBidding.length > 0 && (
-                <div className="mb-4 md:mb-6">
-                  <h4 className="font-medium mb-2 text-sm md:text-base">Current Auction:</h4>
-                  <div className="bg-gray-50 p-2 md:p-4 rounded">
-                    <div className="flex flex-wrap gap-1 md:gap-2">
+                <div className="mb-3">
+                  <h4 className="font-medium mb-2 text-sm">Current Auction:</h4>
+                  <div className="bg-gray-50 p-2 rounded">
+                    <div className="flex flex-wrap gap-1">
                       {newBidding.map((bid, index) => (
-                        <Badge key={index} variant="outline" className={`text-xs md:text-sm ${getBidColor(bid)}`}>
+                        <Badge key={index} variant="outline" className={`text-xs ${getBidColor(bid)}`}>
                           {positions[index % 4]}: <span className={getBidColor(bid)}>{bid}</span>
                         </Badge>
                       ))}
@@ -410,8 +415,8 @@ export default function HandDetail() {
 
               {/* Bidding Controls */}
               <div>
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3 md:mb-4 gap-2">
-                  <h4 className="font-medium text-sm md:text-base">
+                <div className="flex flex-col gap-2 mb-3">
+                  <h4 className="font-medium text-sm">
                     Current bidder: <strong>{positions[currentBidder]}</strong>
                   </h4>
                   <div className="flex space-x-2">
@@ -432,9 +437,9 @@ export default function HandDetail() {
                   </div>
                 </div>
                 
-                <div className="space-y-2 md:space-y-3">
+                <div className="space-y-1">
                   {/* Clubs Row */}
-                  <div className="grid grid-cols-7 gap-1 md:gap-2">
+                  <div className="grid grid-cols-7 gap-1">
                     {BIDDING_LAYOUT.clubs.map((bid) => {
                       const isDisabled = !isValidBid(bid, newBidding, currentBidder);
                       return (
@@ -444,7 +449,7 @@ export default function HandDetail() {
                           size="sm"
                           onClick={() => handleBid(bid)}
                           disabled={isDisabled}
-                          className={`text-xs h-8 md:h-10 ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''} text-black`}
+                          className={`text-xs h-7 ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''} text-black`}
                         >
                           {bid}
                         </Button>
@@ -453,7 +458,7 @@ export default function HandDetail() {
                   </div>
 
                   {/* Diamonds Row */}
-                  <div className="grid grid-cols-7 gap-1 md:gap-2">
+                  <div className="grid grid-cols-7 gap-1">
                     {BIDDING_LAYOUT.diamonds.map((bid) => {
                       const isDisabled = !isValidBid(bid, newBidding, currentBidder);
                       return (
@@ -463,7 +468,7 @@ export default function HandDetail() {
                           size="sm"
                           onClick={() => handleBid(bid)}
                           disabled={isDisabled}
-                          className={`text-xs h-8 md:h-10 ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''} text-orange-600`}
+                          className={`text-xs h-7 ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''} text-orange-600`}
                         >
                           {bid}
                         </Button>
@@ -472,7 +477,7 @@ export default function HandDetail() {
                   </div>
 
                   {/* Hearts Row */}
-                  <div className="grid grid-cols-7 gap-1 md:gap-2">
+                  <div className="grid grid-cols-7 gap-1">
                     {BIDDING_LAYOUT.hearts.map((bid) => {
                       const isDisabled = !isValidBid(bid, newBidding, currentBidder);
                       return (
@@ -482,7 +487,7 @@ export default function HandDetail() {
                           size="sm"
                           onClick={() => handleBid(bid)}
                           disabled={isDisabled}
-                          className={`text-xs h-8 md:h-10 ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''} text-red-600`}
+                          className={`text-xs h-7 ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''} text-red-600`}
                         >
                           {bid}
                         </Button>
@@ -491,7 +496,7 @@ export default function HandDetail() {
                   </div>
 
                   {/* Spades Row */}
-                  <div className="grid grid-cols-7 gap-1 md:gap-2">
+                  <div className="grid grid-cols-7 gap-1">
                     {BIDDING_LAYOUT.spades.map((bid) => {
                       const isDisabled = !isValidBid(bid, newBidding, currentBidder);
                       return (
@@ -501,7 +506,7 @@ export default function HandDetail() {
                           size="sm"
                           onClick={() => handleBid(bid)}
                           disabled={isDisabled}
-                          className={`text-xs h-8 md:h-10 ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''} text-black`}
+                          className={`text-xs h-7 ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''} text-black`}
                         >
                           {bid}
                         </Button>
@@ -510,7 +515,7 @@ export default function HandDetail() {
                   </div>
 
                   {/* No Trump Row */}
-                  <div className="grid grid-cols-7 gap-1 md:gap-2">
+                  <div className="grid grid-cols-7 gap-1">
                     {BIDDING_LAYOUT.notrump.map((bid) => {
                       const isDisabled = !isValidBid(bid, newBidding, currentBidder);
                       return (
@@ -520,7 +525,7 @@ export default function HandDetail() {
                           size="sm"
                           onClick={() => handleBid(bid)}
                           disabled={isDisabled}
-                          className={`text-xs h-8 md:h-10 ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''} text-blue-700`}
+                          className={`text-xs h-7 ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''} text-blue-700`}
                         >
                           {bid}
                         </Button>
@@ -540,7 +545,7 @@ export default function HandDetail() {
                           size="sm"
                           onClick={() => handleBid(bid)}
                           disabled={isDisabled}
-                          className={`text-xs h-8 md:h-10 ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''} ${isDoubleAction ? 'text-red-600' : ''}`}
+                          className={`text-xs h-7 ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''} ${isDoubleAction ? 'text-red-600' : ''}`}
                         >
                           {bid}
                         </Button>
@@ -555,8 +560,10 @@ export default function HandDetail() {
               <p>No bidding recorded for this hand.</p>
             </div>
           )}
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
 
       {/* Comments Section */}
       <CommentsSection handId={hand.id} />
