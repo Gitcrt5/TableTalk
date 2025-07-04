@@ -5,11 +5,14 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowLeft, Calendar, User, Eye } from "lucide-react";
 import { Link, useParams } from "wouter";
+import GameEditForm from "@/components/game-edit-form";
+import { useAuth } from "@/hooks/useAuth";
 import type { Game, Hand } from "@shared/schema";
 
 export default function GameDetail() {
   const { id } = useParams<{ id: string }>();
   const gameId = parseInt(id!);
+  const { user } = useAuth();
 
   const { data: game, isLoading: gameLoading } = useQuery<Game>({
     queryKey: ["/api/games", gameId],
@@ -75,28 +78,48 @@ export default function GameDetail() {
         </div>
         
         <div>
-          <h1 className="text-3xl font-bold text-text-primary mb-2">
-            {game.title}
-          </h1>
+          <div className="flex items-center justify-between mb-2">
+            <h1 className="text-3xl font-bold text-text-primary">
+              {game.title}
+            </h1>
+            {user && user.id === game.uploadedBy && (
+              <GameEditForm game={game} />
+            )}
+          </div>
           <div className="flex flex-wrap items-center gap-4 text-text-secondary">
-            {game.tournament && (
+            {game.date && (
               <div className="flex items-center space-x-1">
                 <Calendar className="h-4 w-4" />
-                <span>{game.tournament}</span>
+                <span>{game.date}</span>
               </div>
             )}
+            
+            {game.location && (
+              <div className="flex items-center space-x-1">
+                <span>📍 {game.location}</span>
+              </div>
+            )}
+            
+            {game.event && (
+              <Badge variant="secondary">{game.event}</Badge>
+            )}
+            
+            {game.tournament && (
+              <div className="flex items-center space-x-1">
+                <span>🏆 {game.tournament}</span>
+              </div>
+            )}
+            
+            {game.round && <Badge variant="outline">{game.round}</Badge>}
             
             <div className="flex items-center space-x-1">
               <User className="h-4 w-4" />
               <span>Uploaded by {game.uploadedBy}</span>
             </div>
             
-            <div className="flex items-center space-x-1">
-              <Calendar className="h-4 w-4" />
-              <span>{new Date(game.uploadedAt).toLocaleDateString()}</span>
+            <div className="flex items-center space-x-1 text-xs">
+              <span>Uploaded {new Date(game.uploadedAt).toLocaleDateString()}</span>
             </div>
-            
-            {game.round && <Badge variant="outline">{game.round}</Badge>}
           </div>
         </div>
       </div>

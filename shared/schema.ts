@@ -35,6 +35,9 @@ export const games = pgTable("games", {
   title: text("title").notNull(),
   tournament: text("tournament"),
   round: text("round"),
+  date: text("date"), // Game date (e.g., "2025-07-04")
+  location: text("location"), // Where the game was played
+  event: text("event"), // Type of event (e.g., "Club Championship", "Pairs Game")
   uploadedBy: text("uploaded_by").notNull(),
   uploadedAt: timestamp("uploaded_at").notNull().defaultNow(),
   pbnContent: text("pbn_content").notNull(),

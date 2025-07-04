@@ -9,6 +9,7 @@ export interface IStorage {
   // Games
   createGame(game: InsertGame): Promise<Game>;
   getGame(id: number): Promise<Game | undefined>;
+  updateGame(id: number, updates: Partial<Game>): Promise<Game | undefined>;
   getAllGames(): Promise<Game[]>;
   searchGames(query: string): Promise<Game[]>;
 
@@ -183,6 +184,9 @@ export class MemStorage implements IStorage {
       uploadedAt: new Date(),
       tournament: insertGame.tournament || null,
       round: insertGame.round || null,
+      date: insertGame.date || null,
+      location: insertGame.location || null,
+      event: insertGame.event || null,
     };
     this.games.set(id, game);
     return game;
@@ -190,6 +194,15 @@ export class MemStorage implements IStorage {
 
   async getGame(id: number): Promise<Game | undefined> {
     return this.games.get(id);
+  }
+
+  async updateGame(id: number, updates: Partial<Game>): Promise<Game | undefined> {
+    const existingGame = this.games.get(id);
+    if (!existingGame) return undefined;
+    
+    const updatedGame: Game = { ...existingGame, ...updates };
+    this.games.set(id, updatedGame);
+    return updatedGame;
   }
 
   async getAllGames(): Promise<Game[]> {
@@ -380,6 +393,15 @@ export class DatabaseStorage implements IStorage {
   async getGame(id: number): Promise<Game | undefined> {
     const [game] = await db.select().from(games).where(eq(games.id, id));
     return game || undefined;
+  }
+
+  async updateGame(id: number, updates: Partial<Game>): Promise<Game | undefined> {
+    const [updatedGame] = await db
+      .update(games)
+      .set(updates)
+      .where(eq(games.id, id))
+      .returning();
+    return updatedGame || undefined;
   }
 
   async getAllGames(): Promise<Game[]> {

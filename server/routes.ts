@@ -81,6 +81,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.put("/api/games/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const userId = req.user.claims.sub;
+      
+      // Get the existing game to check ownership
+      const existingGame = await storage.getGame(id);
+      if (!existingGame) {
+        return res.status(404).json({ error: "Game not found" });
+      }
+      
+      // Only allow the uploader to edit the game
+      if (existingGame.uploadedBy !== userId) {
+        return res.status(403).json({ error: "Only the uploader can edit this game" });
+      }
+      
+      // Validate the update data
+      const updateData = {
+        title: req.body.title,
+        date: req.body.date,
+        location: req.body.location,
+        event: req.body.event,
+        tournament: req.body.tournament,
+        round: req.body.round,
+      };
+      
+      // Remove undefined values
+      const filteredUpdateData = Object.fromEntries(
+        Object.entries(updateData).filter(([_, value]) => value !== undefined)
+      );
+      
+      const updatedGame = await storage.updateGame(id, filteredUpdateData);
+      
+      if (!updatedGame) {
+        return res.status(404).json({ error: "Game not found" });
+      }
+      
+      res.json(updatedGame);
+    } catch (error) {
+      console.error("Error updating game:", error);
+      res.status(500).json({ error: "Failed to update game" });
+    }
+  });
+
   app.post("/api/games/upload", isAuthenticated, upload.single('file'), async (req: any, res) => {
     try {
       if (!req.file) {
