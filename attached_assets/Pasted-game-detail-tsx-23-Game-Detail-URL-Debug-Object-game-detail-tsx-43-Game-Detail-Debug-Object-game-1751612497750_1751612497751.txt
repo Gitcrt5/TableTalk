@@ -1,0 +1,28 @@
+game-detail.tsx:23 Game Detail URL Debug: Object
+game-detail.tsx:43 Game Detail Debug: Object
+game-detail.tsx:23 Game Detail URL Debug: Object
+game-detail.tsx:43 Game Detail Debug: Object
+game-detail.tsx:23 Game Detail URL Debug: Object
+@radix-ui_react-dialog.js?v=f2fe328f:1412 Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+(anonymous) @ @radix-ui_react-dialog.js?v=f2fe328f:1412
+commitHookEffectListMount @ chunk-WERSD76P.js?v=f2fe328f:16915
+commitPassiveMountOnFiber @ chunk-WERSD76P.js?v=f2fe328f:18156
+commitPassiveMountEffects_complete @ chunk-WERSD76P.js?v=f2fe328f:18129
+commitPassiveMountEffects_begin @ chunk-WERSD76P.js?v=f2fe328f:18119
+commitPassiveMountEffects @ chunk-WERSD76P.js?v=f2fe328f:18109
+flushPassiveEffectsImpl @ chunk-WERSD76P.js?v=f2fe328f:19490
+flushPassiveEffects @ chunk-WERSD76P.js?v=f2fe328f:19447
+commitRootImpl @ chunk-WERSD76P.js?v=f2fe328f:19416
+commitRoot @ chunk-WERSD76P.js?v=f2fe328f:19277
+performSyncWorkOnRoot @ chunk-WERSD76P.js?v=f2fe328f:18895
+flushSyncCallbacks @ chunk-WERSD76P.js?v=f2fe328f:9119
+(anonymous) @ chunk-WERSD76P.js?v=f2fe328f:18627Understand this warning
+pbn-upload.tsx:61 Redirecting to: /games/11?edit=true
+game-detail.tsx:23 Game Detail URL Debug: {fullUrl: 'https://096a9ae0-e332-4339-9523-3e4748e4efd7-00-20c3v8r9lieew.spock.replit.dev/games/11?edit=true', pathname: '/games/11', search: '?edit=true', editParam: 'true', shouldAutoEdit: true}
+game-detail.tsx:43 Game Detail Debug: {shouldAutoEdit: true, gameExists: false, userExists: true, userCanEdit: undefined, gameUploadedBy: undefined, …}
+game-detail.tsx:23 Game Detail URL Debug: {fullUrl: 'https://096a9ae0-e332-4339-9523-3e4748e4efd7-00-20c3v8r9lieew.spock.replit.dev/games/11?edit=true', pathname: '/games/11', search: '?edit=true', editParam: 'true', shouldAutoEdit: true}
+game-detail.tsx:23 Game Detail URL Debug: {fullUrl: 'https://096a9ae0-e332-4339-9523-3e4748e4efd7-00-20c3v8r9lieew.spock.replit.dev/games/11?edit=true', pathname: '/games/11', search: '?edit=true', editParam: 'true', shouldAutoEdit: true}
+game-detail.tsx:43 Game Detail Debug: {shouldAutoEdit: true, gameExists: true, userExists: true, userCanEdit: true, gameUploadedBy: '44237982', …}
+game-detail.tsx:23 Game Detail URL Debug: {fullUrl: 'https://096a9ae0-e332-4339-9523-3e4748e4efd7-00-20c3v8r9lieew.spock.replit.dev/games/11', pathname: '/games/11', search: '', editParam: null, shouldAutoEdit: false}
+game-detail.tsx:43 Game Detail Debug: {shouldAutoEdit: false, gameExists: true, userExists: true, userCanEdit: true, gameUploadedBy: '44237982', …}
+game-detail.tsx:23 Game Detail URL Debug: {fullUrl: 'https://096a9ae0-e332-4339-9523-3e4748e4efd7-00-20c3v8r9lieew.spock.replit.dev/games/11', pathname: '/games/11', search: '', editParam: null, shouldAutoEdit: false}

@@ -50,13 +50,16 @@ export default function GameDetail() {
     });
   }, [shouldAutoEdit, game, user]);
 
-  // Clean up URL parameter after it's been used, but wait for game data to load
+  // Clean up URL parameter after it's been used, but wait for game data to load AND auto-edit to be processed
   useEffect(() => {
-    if (shouldAutoEdit && game) {
-      const newUrl = window.location.pathname;
-      window.history.replaceState(null, '', newUrl);
+    if (shouldAutoEdit && game && user && user.id === game.uploadedBy) {
+      // Wait a bit longer to ensure the GameEditForm component has time to process autoOpen
+      setTimeout(() => {
+        const newUrl = window.location.pathname;
+        window.history.replaceState(null, '', newUrl);
+      }, 500);
     }
-  }, [shouldAutoEdit, game]);
+  }, [shouldAutoEdit, game, user]);
 
   if (gameLoading || handsLoading) {
     return (
