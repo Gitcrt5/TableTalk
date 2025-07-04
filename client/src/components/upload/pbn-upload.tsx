@@ -57,9 +57,7 @@ export default function PBNUpload({ open, onOpenChange }: PBNUploadProps) {
       });
       queryClient.invalidateQueries({ queryKey: ["/api/games"] });
       // Redirect to the game page for immediate editing
-      const redirectUrl = `/games/${data.game.id}?edit=true`;
-      console.log('Redirecting to:', redirectUrl);
-      setLocation(redirectUrl);
+      setLocation(`/games/${data.game.id}?edit=true`);
       // Close dialog after redirect
       setTimeout(() => handleClose(), 100);
     },

@@ -19,15 +19,6 @@ export default function GameDetail() {
   const searchParams = new URLSearchParams(window.location.search);
   const shouldAutoEdit = searchParams.get('edit') === 'true';
   
-  // Debug URL and search params
-  console.log('Game Detail URL Debug:', {
-    fullUrl: window.location.href,
-    pathname: window.location.pathname,
-    search: window.location.search,
-    editParam: searchParams.get('edit'),
-    shouldAutoEdit
-  });
-
   const { data: game, isLoading: gameLoading } = useQuery<Game>({
     queryKey: [`/api/games/${gameId}`],
     enabled: !!gameId,
@@ -37,18 +28,6 @@ export default function GameDetail() {
     queryKey: [`/api/games/${gameId}/hands`],
     enabled: !!gameId,
   });
-
-  // Debug logging
-  useEffect(() => {
-    console.log('Game Detail Debug:', {
-      shouldAutoEdit,
-      gameExists: !!game,
-      userExists: !!user,
-      userCanEdit: user && game && user.id === game.uploadedBy,
-      gameUploadedBy: game?.uploadedBy,
-      currentUserId: user?.id
-    });
-  }, [shouldAutoEdit, game, user]);
 
   // Clean up URL parameter after it's been used, but wait for game data to load AND auto-edit to be processed
   useEffect(() => {
