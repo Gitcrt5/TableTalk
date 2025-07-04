@@ -1,5 +1,4 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { formatSuitSymbol } from "@/lib/bridge-utils";
 
 interface BiddingTableProps {
   title: string;
@@ -28,13 +27,16 @@ export default function BiddingTable({
   const formatBid = (bid: string) => {
     if (!bid || bid === "Pass" || bid === "-") return bid;
     
+    // Handle special bids that shouldn't be converted
+    if (bid === "Double" || bid === "Redouble") return bid;
+    
     // Handle bids like "1NT", "4♠", etc.
     if (bid.includes('♠') || bid.includes('♥') || bid.includes('♦') || bid.includes('♣')) {
       return bid;
     }
     
-    // Convert suit letters to symbols
-    return bid.replace(/S/g, '♠').replace(/H/g, '♥').replace(/D/g, '♦').replace(/C/g, '♣');
+    // Convert suit letters to symbols only for actual suit bids (number + suit)
+    return bid.replace(/(\d)S/g, '$1♠').replace(/(\d)H/g, '$1♥').replace(/(\d)D/g, '$1♦').replace(/(\d)C/g, '$1♣');
   };
 
   // Get the appropriate color class for a bid
