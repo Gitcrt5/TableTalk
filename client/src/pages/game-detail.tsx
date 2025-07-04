@@ -19,14 +19,6 @@ export default function GameDetail() {
   const searchParams = new URLSearchParams(window.location.search);
   const shouldAutoEdit = searchParams.get('edit') === 'true';
 
-  // Clean up URL parameter after it's been used
-  useEffect(() => {
-    if (shouldAutoEdit) {
-      const newUrl = window.location.pathname;
-      window.history.replaceState(null, '', newUrl);
-    }
-  }, [shouldAutoEdit]);
-
   const { data: game, isLoading: gameLoading } = useQuery<Game>({
     queryKey: [`/api/games/${gameId}`],
     enabled: !!gameId,
@@ -36,6 +28,26 @@ export default function GameDetail() {
     queryKey: [`/api/games/${gameId}/hands`],
     enabled: !!gameId,
   });
+
+  // Debug logging
+  useEffect(() => {
+    console.log('Game Detail Debug:', {
+      shouldAutoEdit,
+      gameExists: !!game,
+      userExists: !!user,
+      userCanEdit: user && game && user.id === game.uploadedBy,
+      gameUploadedBy: game?.uploadedBy,
+      currentUserId: user?.id
+    });
+  }, [shouldAutoEdit, game, user]);
+
+  // Clean up URL parameter after it's been used, but wait for game data to load
+  useEffect(() => {
+    if (shouldAutoEdit && game) {
+      const newUrl = window.location.pathname;
+      window.history.replaceState(null, '', newUrl);
+    }
+  }, [shouldAutoEdit, game]);
 
   if (gameLoading || handsLoading) {
     return (
