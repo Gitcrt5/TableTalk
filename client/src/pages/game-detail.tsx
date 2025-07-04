@@ -18,6 +18,15 @@ export default function GameDetail() {
   // Check if we should auto-open the edit form (from upload redirect)
   const searchParams = new URLSearchParams(window.location.search);
   const shouldAutoEdit = searchParams.get('edit') === 'true';
+  
+  // Debug URL and search params
+  console.log('Game Detail URL Debug:', {
+    fullUrl: window.location.href,
+    pathname: window.location.pathname,
+    search: window.location.search,
+    editParam: searchParams.get('edit'),
+    shouldAutoEdit
+  });
 
   const { data: game, isLoading: gameLoading } = useQuery<Game>({
     queryKey: [`/api/games/${gameId}`],
