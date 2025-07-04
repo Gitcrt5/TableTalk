@@ -56,9 +56,10 @@ export default function PBNUpload({ open, onOpenChange }: PBNUploadProps) {
         description: `Successfully uploaded ${data.hands.length} hands from ${data.game.title}`,
       });
       queryClient.invalidateQueries({ queryKey: ["/api/games"] });
-      handleClose();
       // Redirect to the game page for immediate editing
       setLocation(`/games/${data.game.id}?edit=true`);
+      // Close dialog after redirect
+      setTimeout(() => handleClose(), 100);
     },
     onError: (error: Error) => {
       toast({
