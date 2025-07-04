@@ -96,12 +96,9 @@ export default function GameDetail() {
             
             {game.location && (
               <div className="flex items-center space-x-1">
-                <span>📍 {game.location}</span>
+                <span>📍</span>
+                <span className="min-w-[120px]">{game.location}</span>
               </div>
-            )}
-            
-            {game.event && (
-              <Badge variant="secondary">{game.event}</Badge>
             )}
             
             {game.tournament && (

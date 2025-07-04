@@ -143,6 +143,7 @@ TableTalk supports two authentication methods for maximum hosting flexibility:
 - July 3, 2025. Implemented responsive side-by-side layout: bidding section appears to the right of hand display on large screens (PC/tablet) and below on narrow screens (mobile)
 - July 4, 2025. Fixed critical bid display bug where "Double" was incorrectly converted to "(Diamond symbol)ouble" - updated both bidding table and hand detail formatBid functions to preserve Double/Redouble as text while properly converting suit bids
 - July 4, 2025. Added game editing functionality allowing users to update game details (date, location, event, tournament, round) after PBN upload - includes database schema updates, API routes, and edit form component with ownership validation
+- July 4, 2025. Simplified game editing to focus on essential fields (title, location, date), improved location display width for better readability, and added automatic redirect to game page after PBN upload for immediate editing
 
 ## TODO List & Future Enhancements
 

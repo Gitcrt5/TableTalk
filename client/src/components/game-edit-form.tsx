@@ -33,9 +33,6 @@ const gameEditSchema = z.object({
   title: z.string().min(1, "Title is required"),
   date: z.string().optional(),
   location: z.string().optional(),
-  event: z.string().optional(),
-  tournament: z.string().optional(),
-  round: z.string().optional(),
 });
 
 type GameEditFormData = z.infer<typeof gameEditSchema>;
@@ -55,9 +52,6 @@ export default function GameEditForm({ game }: GameEditFormProps) {
       title: game.title,
       date: game.date || "",
       location: game.location || "",
-      event: game.event || "",
-      tournament: game.tournament || "",
-      round: game.round || "",
     },
   });
 
@@ -145,48 +139,6 @@ export default function GameEditForm({ game }: GameEditFormProps) {
                   <FormLabel>Location</FormLabel>
                   <FormControl>
                     <Input placeholder="Where the game was played" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="event"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Event</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Type of event (e.g., Club Championship)" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="tournament"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Tournament</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Tournament name" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="round"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Round</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Round number or name" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

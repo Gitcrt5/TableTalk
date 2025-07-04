@@ -8,6 +8,7 @@ import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Upload, FileText, CheckCircle, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useLocation } from "wouter";
 
 interface PBNUploadProps {
   open: boolean;
@@ -21,6 +22,7 @@ export default function PBNUpload({ open, onOpenChange }: PBNUploadProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
 
   const uploadMutation = useMutation({
     mutationFn: async (file: File) => {
@@ -53,6 +55,8 @@ export default function PBNUpload({ open, onOpenChange }: PBNUploadProps) {
       });
       queryClient.invalidateQueries({ queryKey: ["/api/games"] });
       handleClose();
+      // Redirect to the game page for immediate editing
+      setLocation(`/games/${data.game.id}`);
     },
     onError: (error: Error) => {
       toast({
