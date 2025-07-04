@@ -15,7 +15,7 @@ export default function GameDetail() {
   const { user } = useAuth();
 
   const { data: game, isLoading: gameLoading } = useQuery<Game>({
-    queryKey: ["/api/games", gameId],
+    queryKey: [`/api/games/${gameId}`],
     enabled: !!gameId,
   });
 
@@ -84,12 +84,6 @@ export default function GameDetail() {
             </h1>
             {user && user.id === game.uploadedBy && (
               <GameEditForm game={game} />
-            )}
-            {/* Debug info - remove after testing */}
-            {user && (
-              <div className="text-xs text-gray-500 ml-4">
-                User ID: {user.id} | Uploader: {game.uploadedBy} | Match: {user.id === game.uploadedBy ? 'Yes' : 'No'}
-              </div>
             )}
           </div>
           <div className="flex flex-wrap items-center gap-4 text-text-secondary">
