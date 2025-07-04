@@ -9,6 +9,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Upload, FileText, CheckCircle, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
+import { useAuth } from "@/hooks/useAuth";
 
 interface PBNUploadProps {
   open: boolean;
@@ -23,12 +24,13 @@ export default function PBNUpload({ open, onOpenChange }: PBNUploadProps) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
+  const { user } = useAuth();
 
   const uploadMutation = useMutation({
     mutationFn: async (file: File) => {
       const formData = new FormData();
       formData.append('file', file);
-      formData.append('userId', 'current-user'); // In real app, get from auth
+      formData.append('userId', user?.id || 'current-user');
 
       // Simulate progress
       setUploadProgress(25);
