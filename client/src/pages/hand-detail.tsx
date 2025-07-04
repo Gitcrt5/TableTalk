@@ -360,7 +360,12 @@ export default function HandDetail() {
                       
                       const formatBid = (bid: string) => {
                         if (!bid || bid === "Pass" || bid === "-") return bid;
-                        return bid.replace(/S/g, '♠').replace(/H/g, '♥').replace(/D/g, '♦').replace(/C/g, '♣');
+                        
+                        // Handle special bids that shouldn't be converted
+                        if (bid === "Double" || bid === "Redouble") return bid;
+                        
+                        // Convert suit letters to symbols only for actual suit bids (number + suit)
+                        return bid.replace(/(\d)S/g, '$1♠').replace(/(\d)H/g, '$1♥').replace(/(\d)D/g, '$1♦').replace(/(\d)C/g, '$1♣');
                       };
                       
                       return biddingRounds.map((round, index) => (
