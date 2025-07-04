@@ -141,6 +141,7 @@ TableTalk supports two authentication methods for maximum hosting flexibility:
 - June 29, 2025. Removed unimplemented like, reply, and report buttons from comments section to clean up UI for MVP - added TODO for future implementation
 - July 3, 2025. Reduced whitespace around all elements for more compact layout and removed redundant "auction" subheading in bidding section
 - July 3, 2025. Implemented responsive side-by-side layout: bidding section appears to the right of hand display on large screens (PC/tablet) and below on narrow screens (mobile)
+- July 4, 2025. Fixed critical bid display bug where "Double" was incorrectly converted to "(Diamond symbol)ouble" - updated both bidding table and hand detail formatBid functions to preserve Double/Redouble as text while properly converting suit bids
 
 ## TODO List & Future Enhancements
 
