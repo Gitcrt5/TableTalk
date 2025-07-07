@@ -103,7 +103,9 @@ export const insertCommentSchema = createInsertSchema(comments).omit({
 });
 
 // Types
-export type Game = typeof games.$inferSelect;
+export type Game = typeof games.$inferSelect & {
+  uploaderName?: string;
+};
 export type Hand = typeof hands.$inferSelect;
 export type UserBidding = typeof userBidding.$inferSelect;
 export type Comment = typeof comments.$inferSelect;

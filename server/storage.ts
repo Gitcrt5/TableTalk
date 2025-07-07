@@ -391,8 +391,30 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getGame(id: number): Promise<Game | undefined> {
-    const [game] = await db.select().from(games).where(eq(games.id, id));
-    return game || undefined;
+    const [gameWithUser] = await db
+      .select({
+        id: games.id,
+        title: games.title,
+        tournament: games.tournament,
+        round: games.round,
+        date: games.date,
+        location: games.location,
+        event: games.event,
+        uploadedBy: games.uploadedBy,
+        uploadedAt: games.uploadedAt,
+        pbnContent: games.pbnContent,
+        uploaderName: sql<string>`COALESCE(${users.firstName} || ' ' || ${users.lastName}, ${users.email})`,
+      })
+      .from(games)
+      .leftJoin(users, eq(games.uploadedBy, users.id))
+      .where(eq(games.id, id));
+
+    if (!gameWithUser) return undefined;
+
+    return {
+      ...gameWithUser,
+      uploaderName: gameWithUser.uploaderName || gameWithUser.uploadedBy,
+    };
   }
 
   async updateGame(id: number, updates: Partial<Game>): Promise<Game | undefined> {
@@ -405,7 +427,28 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAllGames(): Promise<Game[]> {
-    return await db.select().from(games).orderBy(desc(games.uploadedAt));
+    const gamesWithUsers = await db
+      .select({
+        id: games.id,
+        title: games.title,
+        tournament: games.tournament,
+        round: games.round,
+        date: games.date,
+        location: games.location,
+        event: games.event,
+        uploadedBy: games.uploadedBy,
+        uploadedAt: games.uploadedAt,
+        pbnContent: games.pbnContent,
+        uploaderName: sql<string>`COALESCE(${users.firstName} || ' ' || ${users.lastName}, ${users.email})`,
+      })
+      .from(games)
+      .leftJoin(users, eq(games.uploadedBy, users.id))
+      .orderBy(desc(games.uploadedAt));
+
+    return gamesWithUsers.map(game => ({
+      ...game,
+      uploaderName: game.uploaderName || game.uploadedBy,
+    }));
   }
 
   async searchGames(query: string): Promise<Game[]> {
