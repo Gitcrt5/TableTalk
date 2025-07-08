@@ -136,16 +136,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/games/upload", isAuthenticated, upload.single('file'), async (req: any, res) => {
     try {
-      console.log("Upload request - req.user:", req.user);
-      console.log("USE_REPLIT_AUTH:", USE_REPLIT_AUTH);
-      
       if (!req.file) {
         return res.status(400).json({ error: "No PBN file provided" });
       }
 
       const pbnContent = req.file.buffer.toString('utf-8');
       const userId = getUserId(req);
-      console.log("Extracted userId:", userId);
       
       // Parse PBN file
       const parsedPBN = parsePBN(pbnContent);

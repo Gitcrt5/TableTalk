@@ -151,6 +151,7 @@ TableTalk supports two authentication methods for maximum hosting flexibility:
 - July 8, 2025. **LOGIN PAGE REDESIGN** - Changed authentication page from split-screen to single column layout with description at top and login/register forms below. Increased logo size and reduced whitespace for cleaner appearance.
 - July 8, 2025. **EMAIL FIELD FIX** - Resolved email input field issue where typing wasn't working. Replaced complex FormField components with direct React Hook Form registration for better compatibility.
 - July 8, 2025. **USER ID AUTHENTICATION FIX** - Fixed PBN upload and all API routes that were failing due to user ID mismatch between Replit OAuth (`req.user.claims.sub`) and local authentication (`req.user.id`). Added getUserId() helper function to handle both authentication methods.
+- July 8, 2025. **PBN UPLOAD WORKING** - Successfully tested complete workflow: user registration → login → PBN file upload → game creation → auto-edit functionality. All authentication and upload features now working correctly with local email/password system.
 
 ## TODO List & Future Enhancements
 
