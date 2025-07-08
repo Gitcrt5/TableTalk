@@ -87,43 +87,43 @@ export default function AuthPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-8">
-      <div className="max-w-lg w-full space-y-8">
+      <div className="max-w-lg w-full space-y-6">
         {/* Header with logo and description */}
         <div className="text-center">
-          <div className="flex justify-center mb-6">
+          <div className="flex justify-center mb-4">
             <img 
               src={logoUrl} 
               alt="TableTalk Logo" 
-              className="w-20 h-20"
+              className="w-28 h-28"
             />
           </div>
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">TableTalk</h1>
-          <p className="text-lg text-gray-700 mb-6">
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">TableTalk</h1>
+          <p className="text-lg text-gray-700 mb-4">
             Master your bridge game with our comprehensive review platform
           </p>
-          <div className="bg-white bg-opacity-60 rounded-lg p-4 mb-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
+          <div className="bg-white bg-opacity-60 rounded-lg p-3 mb-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm text-gray-600">
               <div className="flex items-center justify-center">
-                <svg className="w-5 h-5 mr-2 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                <svg className="w-4 h-4 mr-2 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                 </svg>
                 Upload & analyze games
               </div>
               <div className="flex items-center justify-center">
-                <svg className="w-5 h-5 mr-2 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                <svg className="w-4 h-4 mr-2 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                 </svg>
                 Practice bidding
               </div>
               <div className="flex items-center justify-center">
-                <svg className="w-5 h-5 mr-2 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                <svg className="w-4 h-4 mr-2 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                 </svg>
                 Comment & discuss
               </div>
             </div>
           </div>
-          <p className="text-gray-600">
+          <p className="text-gray-600 mb-2">
             {isRegistering ? "Create your account to get started" : "Sign in to your account"}
           </p>
         </div>
