@@ -153,6 +153,7 @@ TableTalk supports two authentication methods for maximum hosting flexibility:
 - July 8, 2025. **USER ID AUTHENTICATION FIX** - Fixed PBN upload and all API routes that were failing due to user ID mismatch between Replit OAuth (`req.user.claims.sub`) and local authentication (`req.user.id`). Added getUserId() helper function to handle both authentication methods.
 - July 8, 2025. **PBN UPLOAD WORKING** - Successfully tested complete workflow: user registration → login → PBN file upload → game creation → auto-edit functionality. All authentication and upload features now working correctly with local email/password system.
 - July 8, 2025. **HEADER CONSOLIDATION** - Added tagline to main header and removed redundant "TableTalk" header from dashboard for cleaner UI. Tagline now appears in top header across all pages.
+- July 8, 2025. **COMMENT UI CLEANUP** - Removed confusing "Add Comment" button from comments section. Users can now directly click in the text area to add comments, creating a more intuitive interface.
 
 ## TODO List & Future Enhancements
 

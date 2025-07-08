@@ -87,13 +87,7 @@ export default function CommentsSection({ handId }: CommentsSectionProps) {
   return (
     <Card>
       <CardHeader>
-        <div className="flex justify-between items-start">
-          <CardTitle className="text-xl">Discussion & Analysis</CardTitle>
-          <Button className="bg-secondary hover:bg-secondary/90">
-            <MessageSquare className="mr-2 h-4 w-4" />
-            Add Comment
-          </Button>
-        </div>
+        <CardTitle className="text-xl">Discussion & Analysis</CardTitle>
       </CardHeader>
       <CardContent>
         {/* Comments List */}
