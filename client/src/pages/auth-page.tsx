@@ -86,25 +86,49 @@ export default function AuthPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex">
-      {/* Left side - Authentication Form */}
-      <div className="flex-1 flex items-center justify-center p-8">
-        <div className="max-w-md w-full space-y-6">
-          <div className="text-center">
-            <div className="flex justify-center mb-6">
-              <img 
-                src={logoUrl} 
-                alt="TableTalk Logo" 
-                className="w-16 h-16"
-              />
-            </div>
-            <h1 className="text-3xl font-bold text-gray-900">Welcome to TableTalk</h1>
-            <p className="mt-2 text-gray-600">
-              {isRegistering ? "Create your account to get started" : "Sign in to your account"}
-            </p>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-8">
+      <div className="max-w-lg w-full space-y-8">
+        {/* Header with logo and description */}
+        <div className="text-center">
+          <div className="flex justify-center mb-6">
+            <img 
+              src={logoUrl} 
+              alt="TableTalk Logo" 
+              className="w-20 h-20"
+            />
           </div>
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">TableTalk</h1>
+          <p className="text-lg text-gray-700 mb-6">
+            Master your bridge game with our comprehensive review platform
+          </p>
+          <div className="bg-white bg-opacity-60 rounded-lg p-4 mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
+              <div className="flex items-center justify-center">
+                <svg className="w-5 h-5 mr-2 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
+                Upload & analyze games
+              </div>
+              <div className="flex items-center justify-center">
+                <svg className="w-5 h-5 mr-2 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
+                Practice bidding
+              </div>
+              <div className="flex items-center justify-center">
+                <svg className="w-5 h-5 mr-2 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
+                Comment & discuss
+              </div>
+            </div>
+          </div>
+          <p className="text-gray-600">
+            {isRegistering ? "Create your account to get started" : "Sign in to your account"}
+          </p>
+        </div>
 
-          {isReplitAuth ? (
+        {isReplitAuth ? (
             // Replit OAuth
             <Card>
               <CardHeader>
@@ -270,46 +294,6 @@ export default function AuthPage() {
               </CardContent>
             </Card>
           )}
-        </div>
-      </div>
-
-      {/* Right side - Hero Section */}
-      <div className="hidden lg:flex flex-1 bg-gradient-to-br from-blue-600 to-indigo-700 items-center justify-center p-8">
-        <div className="max-w-md text-center text-white">
-          <div className="mb-8">
-            <div className="w-24 h-24 bg-white bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-6">
-              <img 
-                src={logoUrl} 
-                alt="TableTalk Logo" 
-                className="w-12 h-12 brightness-0 invert"
-              />
-            </div>
-            <h2 className="text-3xl font-bold mb-4">Master Your Bridge Game</h2>
-            <p className="text-lg text-blue-100 mb-6">
-              Upload PBN files, analyze hands, practice bidding, and improve your bridge skills with our comprehensive review platform.
-            </p>
-            <div className="space-y-3 text-sm text-blue-100">
-              <div className="flex items-center">
-                <svg className="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                </svg>
-                Upload and analyze bridge games
-              </div>
-              <div className="flex items-center">
-                <svg className="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                </svg>
-                Practice bidding sequences
-              </div>
-              <div className="flex items-center">
-                <svg className="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                </svg>
-                Comment and discuss hands
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );
