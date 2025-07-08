@@ -154,7 +154,7 @@ export default function GameDetail() {
                     <div>
                       <h3 className="font-semibold text-lg">Board {hand.boardNumber}</h3>
                       <p className="text-text-secondary text-sm">
-                        Dealer: {hand.dealer} • {hand.vulnerability}
+                        Dealer: {hand.dealer} • Vul: {hand.vulnerability}
                       </p>
                     </div>
                     {hand.actualBidding && hand.actualBidding.length > 0 ? (
