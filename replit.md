@@ -146,6 +146,8 @@ TableTalk supports two authentication methods for maximum hosting flexibility:
 - July 4, 2025. Simplified game editing to focus on essential fields (title, location, date), improved location display width for better readability, and added automatic redirect to game page after PBN upload for immediate editing
 - July 4, 2025. Reset database to clean state with sample users (Alice Johnson, Bob Smith, Carol Wilson, David Brown) - all games, hands, and comments cleared for fresh start
 - July 4, 2025. **CHECKPOINT: Auto-Edit After Upload Complete** - Fixed critical user ID mismatch in upload process and timing issues in auto-edit workflow. Upload now properly associates games with authenticated user and edit form opens automatically after upload with proper URL parameter handling and cleanup timing.
+- July 8, 2025. **AUTHENTICATION SYSTEM SWITCH** - Changed from Replit OAuth to email/password authentication system. Set USE_REPLIT_AUTH=false and VITE_USE_REPLIT_AUTH=false environment variables. Frontend now shows login/register forms instead of Replit OAuth landing page. All existing functionality preserved with local user account management.
+- July 8, 2025. **DATABASE RESET** - Completely cleared all data from database (users, games, hands, comments, sessions) for fresh start with new authentication system.
 
 ## TODO List & Future Enhancements
 
