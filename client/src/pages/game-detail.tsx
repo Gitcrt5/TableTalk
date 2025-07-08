@@ -172,14 +172,7 @@ export default function GameDetail() {
                       </div>
                     )}
                     
-                    {hand.result && (
-                      <div className="flex justify-between">
-                        <span className="text-text-secondary">Result:</span>
-                        <span className="font-medium">{hand.result}</span>
-                      </div>
-                    )}
-
-                    {!hand.finalContract && !hand.result && (
+                    {!hand.finalContract && (
                       <p className="text-text-secondary text-xs italic">
                         Click to view hand layout and add bidding
                       </p>
