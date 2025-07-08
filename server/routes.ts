@@ -14,6 +14,11 @@ config();
 // Configuration for authentication method - explicit setting takes precedence
 const USE_REPLIT_AUTH = process.env.USE_REPLIT_AUTH === "false" ? false : !!process.env.REPLIT_DOMAINS;
 
+// Helper function to get user ID from request based on auth method
+function getUserId(req: any): string {
+  return USE_REPLIT_AUTH ? req.user.claims.sub : req.user.id;
+}
+
 const upload = multer({ storage: multer.memoryStorage() });
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -38,7 +43,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   if (USE_REPLIT_AUTH) {
     app.get('/api/auth/user', isReplitAuthenticated, async (req: any, res) => {
       try {
-        const userId = req.user.claims.sub;
+        const userId = getUserId(req);
         const user = await storage.getUser(userId);
         res.json(user);
       } catch (error) {
@@ -88,7 +93,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/games/:id", isAuthenticated, async (req: any, res) => {
     try {
       const id = parseInt(req.params.id);
-      const userId = req.user.claims.sub;
+      const userId = getUserId(req);
       
       // Get the existing game to check ownership
       const existingGame = await storage.getGame(id);
@@ -136,7 +141,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const pbnContent = req.file.buffer.toString('utf-8');
-      const userId = req.user.claims.sub;
+      const userId = getUserId(req);
       
       // Parse PBN file
       const parsedPBN = parsePBN(pbnContent);
@@ -256,7 +261,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/hands/:handId/bidding", isAuthenticated, async (req: any, res) => {
     try {
       const handId = parseInt(req.params.handId);
-      const userId = req.user.claims.sub;
+      const userId = getUserId(req);
       
       const biddingData = insertUserBiddingSchema.parse({
         handId,
@@ -276,7 +281,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/hands/:handId/bidding", isAuthenticated, async (req: any, res) => {
     try {
       const handId = parseInt(req.params.handId);
-      const userId = req.user.claims.sub;
+      const userId = getUserId(req);
       
       const bidding = await storage.getUserBidding(handId, userId);
       res.json(bidding || null);
@@ -301,7 +306,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/hands/:handId/comments", isAuthenticated, async (req: any, res) => {
     try {
       const handId = parseInt(req.params.handId);
-      const userId = req.user.claims.sub;
+      const userId = getUserId(req);
       const user = await storage.getUser(userId);
       
       const commentData = insertCommentSchema.parse({

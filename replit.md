@@ -148,6 +148,9 @@ TableTalk supports two authentication methods for maximum hosting flexibility:
 - July 4, 2025. **CHECKPOINT: Auto-Edit After Upload Complete** - Fixed critical user ID mismatch in upload process and timing issues in auto-edit workflow. Upload now properly associates games with authenticated user and edit form opens automatically after upload with proper URL parameter handling and cleanup timing.
 - July 8, 2025. **AUTHENTICATION SYSTEM SWITCH** - Changed from Replit OAuth to email/password authentication system. Set USE_REPLIT_AUTH=false and VITE_USE_REPLIT_AUTH=false environment variables. Frontend now shows login/register forms instead of Replit OAuth landing page. All existing functionality preserved with local user account management.
 - July 8, 2025. **DATABASE RESET** - Completely cleared all data from database (users, games, hands, comments, sessions) for fresh start with new authentication system.
+- July 8, 2025. **LOGIN PAGE REDESIGN** - Changed authentication page from split-screen to single column layout with description at top and login/register forms below. Increased logo size and reduced whitespace for cleaner appearance.
+- July 8, 2025. **EMAIL FIELD FIX** - Resolved email input field issue where typing wasn't working. Replaced complex FormField components with direct React Hook Form registration for better compatibility.
+- July 8, 2025. **USER ID AUTHENTICATION FIX** - Fixed PBN upload and all API routes that were failing due to user ID mismatch between Replit OAuth (`req.user.claims.sub`) and local authentication (`req.user.id`). Added getUserId() helper function to handle both authentication methods.
 
 ## TODO List & Future Enhancements
 
