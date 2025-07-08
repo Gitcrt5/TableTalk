@@ -180,24 +180,21 @@ export default function AuthPage() {
                           )}
                         />
                       </div>
-                      <FormField
-                        control={registerForm.control}
-                        name="email"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Email</FormLabel>
-                            <FormControl>
-                              <Input 
-                                type="email" 
-                                autoComplete="email"
-                                placeholder="Enter your email"
-                                {...field} 
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
+                      <div className="space-y-2">
+                        <Label htmlFor="register-email">Email</Label>
+                        <Input
+                          id="register-email"
+                          type="email"
+                          placeholder="Enter your email"
+                          autoComplete="email"
+                          {...registerForm.register("email")}
+                        />
+                        {registerForm.formState.errors.email && (
+                          <p className="text-sm text-red-600">
+                            {registerForm.formState.errors.email.message}
+                          </p>
                         )}
-                      />
+                      </div>
                       <FormField
                         control={registerForm.control}
                         name="displayName"
@@ -249,24 +246,21 @@ export default function AuthPage() {
                 ) : (
                   <Form {...loginForm}>
                     <form onSubmit={loginForm.handleSubmit(onLogin)} className="space-y-4">
-                      <FormField
-                        control={loginForm.control}
-                        name="email"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Email</FormLabel>
-                            <FormControl>
-                              <Input 
-                                type="email" 
-                                autoComplete="email"
-                                placeholder="Enter your email"
-                                {...field} 
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
+                      <div className="space-y-2">
+                        <Label htmlFor="login-email">Email</Label>
+                        <Input
+                          id="login-email"
+                          type="email"
+                          placeholder="Enter your email"
+                          autoComplete="email"
+                          {...loginForm.register("email")}
+                        />
+                        {loginForm.formState.errors.email && (
+                          <p className="text-sm text-red-600">
+                            {loginForm.formState.errors.email.message}
+                          </p>
                         )}
-                      />
+                      </div>
                       <FormField
                         control={loginForm.control}
                         name="password"
