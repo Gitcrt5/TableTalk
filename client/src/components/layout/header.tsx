@@ -18,7 +18,10 @@ export default function Header() {
               alt="TableTalk Logo" 
               className="w-10 h-10"
             />
-            <h1 className="text-xl font-bold text-text-primary">TableTalk</h1>
+            <div>
+              <h1 className="text-xl font-bold text-text-primary">TableTalk</h1>
+              <p className="text-xs text-text-secondary">Upload and review bridge games with bidding analysis</p>
+            </div>
           </Link>
           
           {isAuthenticated && (

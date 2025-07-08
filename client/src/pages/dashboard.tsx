@@ -26,13 +26,6 @@ export default function Dashboard() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-text-primary mb-2">TableTalk</h1>
-        <p className="text-text-secondary">
-          Upload and review bridge games with bidding analysis
-        </p>
-      </div>
 
       {/* Action Bar */}
       <Card className="mb-6">
