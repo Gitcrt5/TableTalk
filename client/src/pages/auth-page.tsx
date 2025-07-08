@@ -42,6 +42,7 @@ export default function AuthPage() {
       email: "",
       password: "",
     },
+    mode: "onChange",
   });
 
   const registerForm = useForm<RegisterFormData>({
@@ -54,6 +55,7 @@ export default function AuthPage() {
       lastName: "",
       displayName: "",
     },
+    mode: "onChange",
   });
 
   // Redirect if already logged in
@@ -185,7 +187,12 @@ export default function AuthPage() {
                           <FormItem>
                             <FormLabel>Email</FormLabel>
                             <FormControl>
-                              <Input type="email" {...field} />
+                              <Input 
+                                type="email" 
+                                autoComplete="email"
+                                placeholder="Enter your email"
+                                {...field} 
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -249,7 +256,12 @@ export default function AuthPage() {
                           <FormItem>
                             <FormLabel>Email</FormLabel>
                             <FormControl>
-                              <Input type="email" {...field} />
+                              <Input 
+                                type="email" 
+                                autoComplete="email"
+                                placeholder="Enter your email"
+                                {...field} 
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
