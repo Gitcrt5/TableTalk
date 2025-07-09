@@ -37,6 +37,7 @@ export function setupLocalAuth(app: Express) {
     conString: process.env.DATABASE_URL,
     tableName: 'sessions',
     createTableIfMissing: false, // Table already exists in our schema
+    ttl: 30 * 24 * 60 * 60, // 30 days in seconds (long-lasting sessions)
   });
 
   const sessionSettings: session.SessionOptions = {
@@ -44,15 +45,16 @@ export function setupLocalAuth(app: Express) {
     resave: false,
     saveUninitialized: false,
     store: sessionStore,
+    name: 'tabletalk.session', // Custom session name
     cookie: {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      // Remove maxAge to keep session active until browser closes or explicit logout
-      // maxAge: undefined means session cookie (no expiration)
+      secure: 'auto', // Let express-session decide based on connection
+      sameSite: 'lax', // Add sameSite for better cross-origin support
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days in milliseconds for persistence
     },
   };
 
-  app.set("trust proxy", 1);
+  app.set("trust proxy", 1); // Trust Replit's proxy for session handling
   app.use(session(sessionSettings));
   app.use(passport.initialize());
   app.use(passport.session());

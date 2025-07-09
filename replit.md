@@ -179,6 +179,7 @@ TableTalk supports two authentication methods for maximum hosting flexibility:
 - July 9, 2025. **POINTS DISPLAY ALIGNMENT** - Improved points display to align vertically with position badges (North, South, East, West) and added "pts" text suffix for clarity (e.g., "12 pts").
 - July 9, 2025. **SESSION PERSISTENCE FIX** - Fixed session timeout issues by removing session expiration (maxAge) and implementing PostgreSQL session store for persistence across server restarts. Users will now remain logged in until they explicitly log out or close their browser.
 - July 9, 2025. **CONTRACT COLOR CODING** - Added red color coding for hearts and diamonds contracts throughout the application. Contract numbers and suit symbols display in red for hearts/diamonds while position text (e.g., "by East") remains black. Applied to game detail page, hand detail page, and bidding table components.
+- July 9, 2025. **SESSION CONFIGURATION FIX** - Fixed session persistence issues between development and deployed environments by setting cookie.secure to 'auto', adding 30-day maxAge, and configuring proper session store TTL. This should resolve logout issues on deployed apps while maintaining session persistence.
 
 ## TODO List & Future Enhancements
 
