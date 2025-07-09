@@ -15,8 +15,8 @@ import { useAuth } from "@/hooks/useAuth";
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
   
-  // Check if we're using Replit auth (presence of REPLIT_DOMAINS means we're on Replit)
-  const isReplitAuth = import.meta.env.VITE_USE_REPLIT_AUTH !== "false";
+  // Check if we're using Replit auth - default to local auth unless explicitly set to use Replit
+  const isReplitAuth = import.meta.env.VITE_USE_REPLIT_AUTH === "true";
 
   if (isLoading) {
     return (
@@ -38,6 +38,7 @@ function Router() {
         <Route path="/" component={Dashboard} />
         <Route path="/games/:id" component={GameDetail} />
         <Route path="/hands/:id" component={HandDetail} />
+        <Route path="/auth" component={AuthPage} />
         <Route component={NotFound} />
       </Switch>
     </div>
