@@ -180,6 +180,96 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/games/import-url", isAuthenticated, async (req: any, res) => {
+    try {
+      const { url } = req.body;
+      
+      if (!url) {
+        return res.status(400).json({ error: "URL is required" });
+      }
+
+      // Validate URL
+      let parsedUrl;
+      try {
+        parsedUrl = new URL(url);
+      } catch {
+        return res.status(400).json({ error: "Invalid URL format" });
+      }
+
+      // Only allow HTTP/HTTPS URLs
+      if (!['http:', 'https:'].includes(parsedUrl.protocol)) {
+        return res.status(400).json({ error: "Only HTTP and HTTPS URLs are allowed" });
+      }
+
+      const userId = getUserId(req);
+      
+      // Fetch PBN content from URL
+      let pbnContent;
+      try {
+        const response = await fetch(url, {
+          method: 'GET',
+          headers: {
+            'User-Agent': 'TableTalk Bridge App',
+            'Accept': 'text/plain,*/*',
+          },
+          // Set timeout to prevent hanging
+          signal: AbortSignal.timeout(30000), // 30 seconds
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        pbnContent = await response.text();
+      } catch (error) {
+        console.error("Error fetching PBN from URL:", error);
+        return res.status(400).json({ 
+          error: `Failed to fetch PBN file from URL: ${error.message}` 
+        });
+      }
+
+      // Parse PBN content
+      const parsedPBN = parsePBN(pbnContent);
+      
+      if (parsedPBN.hands.length === 0) {
+        return res.status(400).json({ error: "No valid hands found in PBN file" });
+      }
+
+      // Extract filename from URL for title
+      const urlPath = parsedUrl.pathname;
+      const filename = urlPath.split('/').pop() || 'Imported Game';
+      const titleFromUrl = filename.replace(/\.pbn$/i, '');
+
+      // Create game
+      const gameData = insertGameSchema.parse({
+        title: parsedPBN.title || titleFromUrl,
+        tournament: parsedPBN.tournament,
+        round: parsedPBN.round,
+        uploadedBy: userId,
+        pbnContent,
+      });
+
+      const game = await storage.createGame(gameData);
+
+      // Create hands
+      const hands = [];
+      for (const parsedHand of parsedPBN.hands) {
+        const handData = insertHandSchema.parse({
+          gameId: game.id,
+          ...parsedHand,
+        });
+        
+        const hand = await storage.createHand(handData);
+        hands.push(hand);
+      }
+
+      res.json({ game, hands });
+    } catch (error) {
+      console.error("Error importing PBN from URL:", error);
+      res.status(500).json({ error: "Failed to import PBN file from URL" });
+    }
+  });
+
   // Hands routes
   app.get("/api/hands/:id", async (req, res) => {
     try {
