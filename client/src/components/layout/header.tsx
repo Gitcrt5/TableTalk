@@ -20,7 +20,7 @@ export default function Header() {
             />
             <div>
               <h1 className="text-xl font-bold text-text-primary">TableTalk</h1>
-              <p className="text-xs text-text-secondary">Upload and review bridge games with bidding analysis</p>
+              <p className="text-xs text-text-secondary hidden sm:block">Upload and review bridge games with bidding analysis</p>
             </div>
           </Link>
           

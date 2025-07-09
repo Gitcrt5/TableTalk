@@ -174,6 +174,7 @@ TableTalk supports two authentication methods for maximum hosting flexibility:
 - July 8, 2025. **CHECKPOINT: UI Polish Complete** - Completed comprehensive UI cleanup including header consolidation, comment interface streamlining, result section removal, and vulnerability labeling. All authentication and core features working properly with clean, focused interface design.
 - July 9, 2025. **DEPLOYMENT FIXES** - Fixed deployment issues: added logo to landing page, corrected authentication redirect from `/api/login` to `/auth`, and ensured local auth is used by default. Requires re-deployment to take effect.
 - July 9, 2025. **AUTHENTICATION HARDCODED** - Hardcoded app to always use local email/password authentication regardless of environment variables. Reduced excessive whitespace above logo on landing page. App will now show login/register forms instead of Replit auth.
+- July 9, 2025. **MOBILE HEADER OPTIMIZATION** - Hidden tagline text on mobile screens to prevent wrapping and reduce space usage on narrow screens like iPhone.
 
 ## TODO List & Future Enhancements
 
