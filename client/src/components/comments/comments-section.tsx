@@ -107,12 +107,7 @@ export default function CommentsSection({ handId }: CommentsSectionProps) {
                 </div>
               ))}
             </div>
-          ) : validComments.length === 0 ? (
-            <div className="text-center py-8 text-text-secondary">
-              <MessageSquare className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>No comments yet. Be the first to share your analysis!</p>
-            </div>
-          ) : (
+          ) : validComments.length > 0 ? (
             validComments.map((comment: Comment) => (
               <div key={comment.id} className="border-l-4 border-primary pl-4 mb-4">
                 <div className="flex items-start space-x-3">
