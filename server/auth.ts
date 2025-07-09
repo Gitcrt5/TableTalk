@@ -40,17 +40,19 @@ export function setupLocalAuth(app: Express) {
     ttl: 30 * 24 * 60 * 60, // 30 days in seconds (long-lasting sessions)
   });
 
+  // Configure session based on environment
+  const isProduction = process.env.NODE_ENV === "production";
   const sessionSettings: session.SessionOptions = {
     secret: process.env.SESSION_SECRET || "fallback-secret-for-development",
     resave: false,
     saveUninitialized: false,
     store: sessionStore,
-    name: 'tabletalk.session', // Custom session name
+    name: 'tabletalk.session',
     cookie: {
       httpOnly: true,
-      secure: 'auto', // Let express-session decide based on connection
-      sameSite: 'lax', // Add sameSite for better cross-origin support
-      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days in milliseconds for persistence
+      secure: isProduction, // Only secure in production
+      sameSite: 'lax',
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days in milliseconds
     },
   };
 

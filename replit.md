@@ -180,6 +180,7 @@ TableTalk supports two authentication methods for maximum hosting flexibility:
 - July 9, 2025. **SESSION PERSISTENCE FIX** - Fixed session timeout issues by removing session expiration (maxAge) and implementing PostgreSQL session store for persistence across server restarts. Users will now remain logged in until they explicitly log out or close their browser.
 - July 9, 2025. **CONTRACT COLOR CODING** - Added red color coding for hearts and diamonds contracts throughout the application. Contract numbers and suit symbols display in red for hearts/diamonds while position text (e.g., "by East") remains black. Applied to game detail page, hand detail page, and bidding table components.
 - July 9, 2025. **SESSION CONFIGURATION FIX** - Fixed session persistence issues between development and deployed environments by setting cookie.secure to 'auto', adding 30-day maxAge, and configuring proper session store TTL. This should resolve logout issues on deployed apps while maintaining session persistence.
+- July 9, 2025. **SESSION PERSISTENCE IMPROVEMENT** - Fixed session configuration to prevent forced logout on dev server restart. Updated session settings to handle development/production environments properly with PostgreSQL session store and cleaned up invalid sessions. Users should now stay logged in across server restarts.
 
 ## TODO List & Future Enhancements
 
