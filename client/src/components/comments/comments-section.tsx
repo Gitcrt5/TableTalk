@@ -129,6 +129,11 @@ export default function CommentsSection({ handId }: CommentsSectionProps) {
                 </div>
               </div>
             ))
+          ) : (
+            <div className="text-center text-gray-500 py-8">
+              <MessageSquare className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+              <p>No comments yet. Be the first to share your analysis!</p>
+            </div>
           )}
         </div>
 
