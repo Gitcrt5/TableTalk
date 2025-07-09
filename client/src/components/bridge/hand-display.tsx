@@ -1,7 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import type { Hand } from "@shared/schema";
-import { formatCards } from "@/lib/bridge-utils";
+import { formatCards, calculateHandPoints } from "@/lib/bridge-utils";
 
 interface HandDisplayProps {
   hand: Hand;
@@ -48,7 +48,10 @@ export default function HandDisplay({ hand }: HandDisplayProps) {
           {/* North */}
           <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-44">
             <Card className="shadow-md">
-              <CardContent className="p-2">
+              <CardContent className="p-2 relative">
+                <div className="absolute top-1 right-1 text-xs font-bold text-gray-600">
+                  {calculateHandPoints(hand.northHand)}
+                </div>
                 <div className="text-center mb-1">
                   <Badge className={getPositionBadgeColor('North')}>North</Badge>
                 </div>
@@ -62,7 +65,10 @@ export default function HandDisplay({ hand }: HandDisplayProps) {
           {/* West */}
           <div className="absolute left-0 top-1/2 transform -translate-y-1/2 w-44">
             <Card className="shadow-md">
-              <CardContent className="p-2">
+              <CardContent className="p-2 relative">
+                <div className="absolute top-1 right-1 text-xs font-bold text-gray-600">
+                  {calculateHandPoints(hand.westHand)}
+                </div>
                 <div className="text-center mb-1">
                   <Badge className={getPositionBadgeColor('West')}>West</Badge>
                 </div>
@@ -76,7 +82,10 @@ export default function HandDisplay({ hand }: HandDisplayProps) {
           {/* East */}
           <div className="absolute right-0 top-1/2 transform -translate-y-1/2 w-44">
             <Card className="shadow-md">
-              <CardContent className="p-2">
+              <CardContent className="p-2 relative">
+                <div className="absolute top-1 right-1 text-xs font-bold text-gray-600">
+                  {calculateHandPoints(hand.eastHand)}
+                </div>
                 <div className="text-center mb-1">
                   <Badge className={getPositionBadgeColor('East')}>East</Badge>
                 </div>
@@ -90,7 +99,10 @@ export default function HandDisplay({ hand }: HandDisplayProps) {
           {/* South */}
           <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-44">
             <Card className="shadow-md">
-              <CardContent className="p-2">
+              <CardContent className="p-2 relative">
+                <div className="absolute top-1 right-1 text-xs font-bold text-gray-600">
+                  {calculateHandPoints(hand.southHand)}
+                </div>
                 <div className="text-center mb-1">
                   <Badge className={getPositionBadgeColor('South')}>South</Badge>
                 </div>
@@ -107,7 +119,10 @@ export default function HandDisplay({ hand }: HandDisplayProps) {
       <div className="md:hidden space-y-2">
         {/* North */}
         <Card className="shadow-sm">
-          <CardContent className="p-2">
+          <CardContent className="p-2 relative">
+            <div className="absolute top-1 right-1 text-xs font-bold text-gray-600">
+              {calculateHandPoints(hand.northHand)}
+            </div>
             <div className="text-center mb-1">
               <Badge className={getPositionBadgeColor('North')}>North</Badge>
             </div>
@@ -120,7 +135,10 @@ export default function HandDisplay({ hand }: HandDisplayProps) {
         {/* West and East side by side */}
         <div className="grid grid-cols-2 gap-2">
           <Card className="shadow-sm">
-            <CardContent className="p-2">
+            <CardContent className="p-2 relative">
+              <div className="absolute top-1 right-1 text-xs font-bold text-gray-600">
+                {calculateHandPoints(hand.westHand)}
+              </div>
               <div className="text-center mb-1">
                 <Badge className={getPositionBadgeColor('West')}>West</Badge>
               </div>
@@ -131,7 +149,10 @@ export default function HandDisplay({ hand }: HandDisplayProps) {
           </Card>
 
           <Card className="shadow-sm">
-            <CardContent className="p-2">
+            <CardContent className="p-2 relative">
+              <div className="absolute top-1 right-1 text-xs font-bold text-gray-600">
+                {calculateHandPoints(hand.eastHand)}
+              </div>
               <div className="text-center mb-1">
                 <Badge className={getPositionBadgeColor('East')}>East</Badge>
               </div>
@@ -144,7 +165,10 @@ export default function HandDisplay({ hand }: HandDisplayProps) {
 
         {/* South */}
         <Card className="shadow-sm">
-          <CardContent className="p-2">
+          <CardContent className="p-2 relative">
+            <div className="absolute top-1 right-1 text-xs font-bold text-gray-600">
+              {calculateHandPoints(hand.southHand)}
+            </div>
             <div className="text-center mb-1">
               <Badge className={getPositionBadgeColor('South')}>South</Badge>
             </div>

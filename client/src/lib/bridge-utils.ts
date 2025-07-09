@@ -110,3 +110,37 @@ export function formatCards(cardString: string): string {
   if (!cardString) return '';
   return cardString.replace(/10/g, 'T');
 }
+
+export function calculateHandPoints(handString: string | null | undefined): number {
+  if (!handString || typeof handString !== 'string') {
+    return 0;
+  }
+  
+  let points = 0;
+  const suits = handString.split('.');
+  
+  suits.forEach(suit => {
+    if (!suit) return;
+    
+    // Count high card points: A=4, K=3, Q=2, J=1
+    for (const card of suit) {
+      switch (card) {
+        case 'A':
+          points += 4;
+          break;
+        case 'K':
+          points += 3;
+          break;
+        case 'Q':
+          points += 2;
+          break;
+        case 'J':
+          points += 1;
+          break;
+        // T, 9, 8, 7, 6, 5, 4, 3, 2 = 0 points each
+      }
+    }
+  });
+  
+  return points;
+}
