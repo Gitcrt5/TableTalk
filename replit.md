@@ -183,6 +183,7 @@ TableTalk supports two authentication methods for maximum hosting flexibility:
 - July 9, 2025. **SESSION PERSISTENCE IMPROVEMENT** - Fixed session configuration to prevent forced logout on dev server restart. Updated session settings to handle development/production environments properly with PostgreSQL session store and cleaned up invalid sessions. Users should now stay logged in across server restarts.
 - July 9, 2025. **URL-BASED PBN IMPORT** - Added ability to import PBN files directly from URLs instead of just file uploads. Enhanced upload dialog with tabbed interface supporting both file upload and URL import methods. Users can now paste a direct link to a PBN file and import it seamlessly. Backend validates URLs and fetches content with proper error handling and 30-second timeout.
 - July 9, 2025. **UI SIMPLIFIED FOR NEWCASTLE BRIDGE CLUB** - Removed URL import option from the frontend UI while keeping backend functionality intact for future use. Newcastle Bridge Club URLs are protected by Cloudflare anti-bot security, so users must download files manually. Interface now shows only file upload option for immediate use case.
+- July 9, 2025. **IPAD COMPATIBILITY IMPROVEMENTS** - Enhanced file upload functionality for iPad users by expanding accepted file types to include .txt files and text/plain MIME types. Added alternative file selection button visible only on mobile devices to work around iPad file input limitations. Updated file validation to be more flexible while maintaining security.
 
 ## TODO List & Future Enhancements
 

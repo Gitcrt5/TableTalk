@@ -92,10 +92,15 @@ export default function PBNUpload({ open, onOpenChange }: PBNUploadProps) {
   };
 
   const handleFileSelect = (file: File) => {
-    if (!file.name.toLowerCase().endsWith('.pbn')) {
+    const fileName = file.name.toLowerCase();
+    const isValidExtension = fileName.endsWith('.pbn') || fileName.endsWith('.txt');
+    const isValidType = file.type === 'text/plain' || file.type === '' || file.type === 'application/octet-stream';
+    
+    // More flexible validation for mobile devices (iPad)
+    if (!isValidExtension && !isValidType) {
       toast({
         title: "Invalid File Type",
-        description: "Please select a PBN file (.pbn extension)",
+        description: "Please select a PBN file (.pbn or .txt extension)",
         variant: "destructive",
       });
       return;
@@ -185,16 +190,34 @@ export default function PBNUpload({ open, onOpenChange }: PBNUploadProps) {
                     or click to browse files
                   </p>
                 </div>
-                <Button
-                  variant="outline"
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  Browse Files
-                </Button>
+                <div className="flex gap-2 justify-center">
+                  <Button
+                    variant="outline"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    Browse Files
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      const input = document.createElement('input');
+                      input.type = 'file';
+                      input.accept = '.pbn,.txt,text/plain,*/*';
+                      input.onchange = (e) => {
+                        const file = (e.target as HTMLInputElement).files?.[0];
+                        if (file) handleFileSelect(file);
+                      };
+                      input.click();
+                    }}
+                    className="md:hidden"
+                  >
+                    Select File
+                  </Button>
+                </div>
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept=".pbn"
+                  accept=".pbn,text/plain,*/*"
                   onChange={handleFileInputChange}
                   className="hidden"
                 />
@@ -236,7 +259,7 @@ export default function PBNUpload({ open, onOpenChange }: PBNUploadProps) {
           <div className="text-xs text-text-secondary space-y-1">
             <p>• PBN files should contain bridge game data with hands and bidding</p>
             <p>• Maximum file size: 10MB</p>
-            <p>• Supported format: Portable Bridge Notation (.pbn)</p>
+            <p>• Supported formats: .pbn or .txt files containing PBN data</p>
           </div>
 
           {/* Action Buttons */}
