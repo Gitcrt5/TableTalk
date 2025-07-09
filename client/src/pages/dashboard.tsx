@@ -42,7 +42,7 @@ export default function Dashboard() {
             </div>
             <Button onClick={() => setShowUpload(true)} className="flex items-center space-x-2 whitespace-nowrap">
               <Upload className="h-4 w-4" />
-              <span>Import PBN</span>
+              <span>Upload PBN</span>
             </Button>
           </div>
         </CardContent>
@@ -70,13 +70,13 @@ export default function Dashboard() {
                 </h3>
                 <p className="mb-6 text-sm max-w-md mx-auto">
                   {searchQuery 
-                    ? `Try adjusting your search for "${searchQuery}" or import a new game`
-                    : "Import your first PBN file to start reviewing bridge games. PBN files contain bridge hand data and can be uploaded from file or imported from URL."
+                    ? `Try adjusting your search for "${searchQuery}" or upload a new game`
+                    : "Upload your first PBN file to start reviewing bridge games. PBN files contain bridge hand data and can be uploaded from your computer."
                   }
                 </p>
                 <Button onClick={() => setShowUpload(true)} size="lg">
                   <Upload className="mr-2 h-4 w-4" />
-                  Import PBN File
+                  Upload PBN File
                 </Button>
               </div>
             </CardContent>
