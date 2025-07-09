@@ -5,19 +5,19 @@ import logoUrl from "@/assets/tabletalk-logo.svg";
 export default function Landing() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      <div className="container mx-auto px-4 py-8">
-        <div className="text-center mb-12">
-          <div className="flex justify-center mb-4">
+      <div className="container mx-auto px-4 py-4">
+        <div className="text-center mb-8">
+          <div className="flex justify-center mb-3">
             <img 
               src={logoUrl} 
               alt="TableTalk Logo" 
               className="w-16 h-16 md:w-20 md:h-20"
             />
           </div>
-          <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
+          <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-4">
             Welcome to TableTalk
           </h1>
-          <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
+          <p className="text-xl text-gray-600 mb-6 max-w-2xl mx-auto">
             The premier platform for bridge players to analyze hands, share insights, and improve their game together.
           </p>
           <Button 
