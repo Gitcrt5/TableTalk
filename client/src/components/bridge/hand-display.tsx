@@ -49,11 +49,12 @@ export default function HandDisplay({ hand }: HandDisplayProps) {
           <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-44">
             <Card className="shadow-md">
               <CardContent className="p-2 relative">
-                <div className="absolute top-1 right-1 text-xs font-bold text-gray-600">
-                  {calculateHandPoints(hand.northHand)}
-                </div>
-                <div className="text-center mb-1">
+                <div className="flex justify-between items-center mb-1">
+                  <div></div>
                   <Badge className={getPositionBadgeColor('North')}>North</Badge>
+                  <div className="text-xs font-bold text-gray-600">
+                    {calculateHandPoints(hand.northHand)} pts
+                  </div>
                 </div>
                 <div className="space-y-1 text-xs">
                   {formatHand(hand.northHand)}
@@ -66,11 +67,12 @@ export default function HandDisplay({ hand }: HandDisplayProps) {
           <div className="absolute left-0 top-1/2 transform -translate-y-1/2 w-44">
             <Card className="shadow-md">
               <CardContent className="p-2 relative">
-                <div className="absolute top-1 right-1 text-xs font-bold text-gray-600">
-                  {calculateHandPoints(hand.westHand)}
-                </div>
-                <div className="text-center mb-1">
+                <div className="flex justify-between items-center mb-1">
+                  <div></div>
                   <Badge className={getPositionBadgeColor('West')}>West</Badge>
+                  <div className="text-xs font-bold text-gray-600">
+                    {calculateHandPoints(hand.westHand)} pts
+                  </div>
                 </div>
                 <div className="space-y-1 text-xs">
                   {formatHand(hand.westHand)}
@@ -83,11 +85,12 @@ export default function HandDisplay({ hand }: HandDisplayProps) {
           <div className="absolute right-0 top-1/2 transform -translate-y-1/2 w-44">
             <Card className="shadow-md">
               <CardContent className="p-2 relative">
-                <div className="absolute top-1 right-1 text-xs font-bold text-gray-600">
-                  {calculateHandPoints(hand.eastHand)}
-                </div>
-                <div className="text-center mb-1">
+                <div className="flex justify-between items-center mb-1">
+                  <div></div>
                   <Badge className={getPositionBadgeColor('East')}>East</Badge>
+                  <div className="text-xs font-bold text-gray-600">
+                    {calculateHandPoints(hand.eastHand)} pts
+                  </div>
                 </div>
                 <div className="space-y-1 text-xs">
                   {formatHand(hand.eastHand)}
@@ -100,11 +103,12 @@ export default function HandDisplay({ hand }: HandDisplayProps) {
           <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-44">
             <Card className="shadow-md">
               <CardContent className="p-2 relative">
-                <div className="absolute top-1 right-1 text-xs font-bold text-gray-600">
-                  {calculateHandPoints(hand.southHand)}
-                </div>
-                <div className="text-center mb-1">
+                <div className="flex justify-between items-center mb-1">
+                  <div></div>
                   <Badge className={getPositionBadgeColor('South')}>South</Badge>
+                  <div className="text-xs font-bold text-gray-600">
+                    {calculateHandPoints(hand.southHand)} pts
+                  </div>
                 </div>
                 <div className="space-y-1 text-xs">
                   {formatHand(hand.southHand)}
@@ -120,11 +124,12 @@ export default function HandDisplay({ hand }: HandDisplayProps) {
         {/* North */}
         <Card className="shadow-sm">
           <CardContent className="p-2 relative">
-            <div className="absolute top-1 right-1 text-xs font-bold text-gray-600">
-              {calculateHandPoints(hand.northHand)}
-            </div>
-            <div className="text-center mb-1">
+            <div className="flex justify-between items-center mb-1">
+              <div></div>
               <Badge className={getPositionBadgeColor('North')}>North</Badge>
+              <div className="text-xs font-bold text-gray-600">
+                {calculateHandPoints(hand.northHand)} pts
+              </div>
             </div>
             <div className="space-y-0.5 text-xs">
               {formatHand(hand.northHand)}
@@ -136,11 +141,12 @@ export default function HandDisplay({ hand }: HandDisplayProps) {
         <div className="grid grid-cols-2 gap-2">
           <Card className="shadow-sm">
             <CardContent className="p-2 relative">
-              <div className="absolute top-1 right-1 text-xs font-bold text-gray-600">
-                {calculateHandPoints(hand.westHand)}
-              </div>
-              <div className="text-center mb-1">
+              <div className="flex justify-between items-center mb-1">
+                <div></div>
                 <Badge className={getPositionBadgeColor('West')}>West</Badge>
+                <div className="text-xs font-bold text-gray-600">
+                  {calculateHandPoints(hand.westHand)} pts
+                </div>
               </div>
               <div className="space-y-0.5 text-xs">
                 {formatHand(hand.westHand)}
@@ -150,11 +156,12 @@ export default function HandDisplay({ hand }: HandDisplayProps) {
 
           <Card className="shadow-sm">
             <CardContent className="p-2 relative">
-              <div className="absolute top-1 right-1 text-xs font-bold text-gray-600">
-                {calculateHandPoints(hand.eastHand)}
-              </div>
-              <div className="text-center mb-1">
+              <div className="flex justify-between items-center mb-1">
+                <div></div>
                 <Badge className={getPositionBadgeColor('East')}>East</Badge>
+                <div className="text-xs font-bold text-gray-600">
+                  {calculateHandPoints(hand.eastHand)} pts
+                </div>
               </div>
               <div className="space-y-0.5 text-xs">
                 {formatHand(hand.eastHand)}
@@ -166,11 +173,12 @@ export default function HandDisplay({ hand }: HandDisplayProps) {
         {/* South */}
         <Card className="shadow-sm">
           <CardContent className="p-2 relative">
-            <div className="absolute top-1 right-1 text-xs font-bold text-gray-600">
-              {calculateHandPoints(hand.southHand)}
-            </div>
-            <div className="text-center mb-1">
+            <div className="flex justify-between items-center mb-1">
+              <div></div>
               <Badge className={getPositionBadgeColor('South')}>South</Badge>
+              <div className="text-xs font-bold text-gray-600">
+                {calculateHandPoints(hand.southHand)} pts
+              </div>
             </div>
             <div className="space-y-0.5 text-xs">
               {formatHand(hand.southHand)}

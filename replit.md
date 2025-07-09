@@ -176,6 +176,7 @@ TableTalk supports two authentication methods for maximum hosting flexibility:
 - July 9, 2025. **AUTHENTICATION HARDCODED** - Hardcoded app to always use local email/password authentication regardless of environment variables. Reduced excessive whitespace above logo on landing page. App will now show login/register forms instead of Replit auth.
 - July 9, 2025. **MOBILE HEADER OPTIMIZATION** - Hidden tagline text on mobile screens to prevent wrapping and reduce space usage on narrow screens like iPhone.
 - July 9, 2025. **HAND POINTS CALCULATION** - Added high card point calculation (A=4, K=3, Q=2, J=1) displayed in top right corner of each hand box. Points are calculated and shown for all four positions (North, South, East, West) on both desktop and mobile layouts.
+- July 9, 2025. **POINTS DISPLAY ALIGNMENT** - Improved points display to align vertically with position badges (North, South, East, West) and added "pts" text suffix for clarity (e.g., "12 pts").
 
 ## TODO List & Future Enhancements
 
