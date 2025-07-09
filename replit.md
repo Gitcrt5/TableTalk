@@ -208,6 +208,7 @@ TableTalk supports two authentication methods for maximum hosting flexibility:
 - [ ] Improved PBN upload with validation feedback
 
 ### Advanced Features (Future)
+- [ ] Automated game import from club websites - monitor results pages and automatically download PBN files when new games are added
 - [ ] Club website data import/scraping integration
 - [ ] Mobile app development
 - [ ] Real-time collaboration on hand analysis
