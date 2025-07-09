@@ -300,6 +300,7 @@ export default function PBNUpload({ open, onOpenChange }: PBNUploadProps) {
                 <p>• URL must be a direct link to a PBN file</p>
                 <p>• Only HTTP and HTTPS URLs are supported</p>
                 <p>• File must be accessible without authentication</p>
+                <p>• Some club websites block automated access - use file upload instead</p>
               </div>
             </TabsContent>
 

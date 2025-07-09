@@ -209,22 +209,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const response = await fetch(url, {
           method: 'GET',
           headers: {
-            'User-Agent': 'TableTalk Bridge App',
-            'Accept': 'text/plain,*/*',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept': 'text/plain, application/octet-stream, */*',
+            'Accept-Language': 'en-US,en;q=0.9',
+            'Accept-Encoding': 'gzip, deflate, br',
+            'Connection': 'keep-alive',
+            'Upgrade-Insecure-Requests': '1',
           },
           // Set timeout to prevent hanging
           signal: AbortSignal.timeout(30000), // 30 seconds
         });
 
         if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          // Provide more specific error messages for common HTTP status codes
+          let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+          
+          if (response.status === 403) {
+            errorMessage = 'Access forbidden - the website may be blocking automated requests or require authentication';
+          } else if (response.status === 404) {
+            errorMessage = 'File not found - please check the URL is correct';
+          } else if (response.status === 401) {
+            errorMessage = 'Authentication required - this URL requires login credentials';
+          } else if (response.status === 429) {
+            errorMessage = 'Too many requests - please try again later';
+          }
+          
+          throw new Error(errorMessage);
         }
 
         pbnContent = await response.text();
+        
+        // Check if response contains anti-bot protection (Cloudflare, etc.)
+        if (pbnContent.includes('Just a moment...') || 
+            pbnContent.includes('Please wait while we check your browser') ||
+            pbnContent.includes('DDoS protection') ||
+            pbnContent.includes('challenge-platform') ||
+            pbnContent.includes('cf-browser-verification')) {
+          throw new Error('Website is protected by anti-bot security. Please download the file manually and use the file upload option instead.');
+        }
+        
       } catch (error) {
         console.error("Error fetching PBN from URL:", error);
         return res.status(400).json({ 
           error: `Failed to fetch PBN file from URL: ${error.message}` 
+        });
+      }
+
+      // Basic validation - check if it contains PBN-like content
+      if (!pbnContent.includes('[') || !pbnContent.includes('Deal')) {
+        return res.status(400).json({ 
+          error: 'File does not appear to be a valid PBN file. Make sure the URL points directly to a .pbn file.' 
         });
       }
 
