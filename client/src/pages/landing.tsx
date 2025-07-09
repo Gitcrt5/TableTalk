@@ -5,13 +5,13 @@ import logoUrl from "@/assets/tabletalk-logo.svg";
 export default function Landing() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      <div className="container mx-auto px-4 py-16">
-        <div className="text-center mb-16">
-          <div className="flex justify-center mb-6">
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center mb-12">
+          <div className="flex justify-center mb-4">
             <img 
               src={logoUrl} 
               alt="TableTalk Logo" 
-              className="w-20 h-20 md:w-24 md:h-24"
+              className="w-16 h-16 md:w-20 md:h-20"
             />
           </div>
           <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">

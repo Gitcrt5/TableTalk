@@ -11,8 +11,8 @@ import { setupLocalAuth } from "./auth";
 import { config } from 'dotenv';
 config();
 
-// Configuration for authentication method - explicit setting takes precedence
-const USE_REPLIT_AUTH = process.env.USE_REPLIT_AUTH === "false" ? false : !!process.env.REPLIT_DOMAINS;
+// Always use local auth - only use Replit auth if explicitly enabled
+const USE_REPLIT_AUTH = process.env.USE_REPLIT_AUTH === "true";
 
 // Helper function to get user ID from request based on auth method
 function getUserId(req: any): string {

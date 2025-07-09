@@ -15,8 +15,8 @@ import { useAuth } from "@/hooks/useAuth";
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
   
-  // Check if we're using Replit auth - default to local auth unless explicitly set to use Replit
-  const isReplitAuth = import.meta.env.VITE_USE_REPLIT_AUTH === "true";
+  // Always use local auth by default - only use Replit auth if explicitly enabled
+  const isReplitAuth = false;
 
   if (isLoading) {
     return (
