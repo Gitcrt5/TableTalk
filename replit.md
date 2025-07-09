@@ -178,6 +178,7 @@ TableTalk supports two authentication methods for maximum hosting flexibility:
 - July 9, 2025. **HAND POINTS CALCULATION** - Added high card point calculation (A=4, K=3, Q=2, J=1) displayed in top right corner of each hand box. Points are calculated and shown for all four positions (North, South, East, West) on both desktop and mobile layouts.
 - July 9, 2025. **POINTS DISPLAY ALIGNMENT** - Improved points display to align vertically with position badges (North, South, East, West) and added "pts" text suffix for clarity (e.g., "12 pts").
 - July 9, 2025. **SESSION PERSISTENCE FIX** - Fixed session timeout issues by removing session expiration (maxAge) and implementing PostgreSQL session store for persistence across server restarts. Users will now remain logged in until they explicitly log out or close their browser.
+- July 9, 2025. **CONTRACT COLOR CODING** - Added red color coding for hearts and diamonds contracts throughout the application. Contract numbers and suit symbols display in red for hearts/diamonds while position text (e.g., "by East") remains black. Applied to game detail page, hand detail page, and bidding table components.
 
 ## TODO List & Future Enhancements
 

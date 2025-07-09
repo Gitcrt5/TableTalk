@@ -42,8 +42,7 @@ export default function BiddingTable({
   // Get the appropriate color class for a bid
   const getBidColor = (bid: string) => {
     if (bid.includes("♣") || bid.includes("♠")) return "text-black";
-    if (bid.includes("♥")) return "text-red-600";
-    if (bid.includes("♦")) return "text-orange-600";
+    if (bid.includes("♥") || bid.includes("♦")) return "text-red-600"; // Both hearts and diamonds red
     if (bid.includes("NT")) return "text-blue-700";
     if (bid === "Double" || bid === "Redouble") return "text-red-600";
     return "text-gray-700"; // For Pass

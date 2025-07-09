@@ -144,3 +144,18 @@ export function calculateHandPoints(handString: string | null | undefined): numb
   
   return points;
 }
+
+export function formatContract(contract: string): { contractPart: string; declarerPart: string; isRed: boolean } {
+  if (!contract) return { contractPart: '', declarerPart: '', isRed: false };
+  
+  // Split contract into parts (e.g., "4♥ by East" -> ["4♥", "by", "East"])
+  const parts = contract.split(' ');
+  const contractPart = parts[0] || '';
+  const declarerPart = parts.slice(1).join(' ') || '';
+  
+  // Check if contract contains hearts (♥) or diamonds (♦)
+  const isRed = contractPart.includes('♥') || contractPart.includes('♦') || 
+                contractPart.includes('H') || contractPart.includes('D');
+  
+  return { contractPart, declarerPart, isRed };
+}

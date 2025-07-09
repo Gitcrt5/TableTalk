@@ -8,6 +8,7 @@ import { ArrowLeft, Calendar, User, Eye } from "lucide-react";
 import { Link, useParams } from "wouter";
 import GameEditForm from "@/components/game-edit-form";
 import { useAuth } from "@/hooks/useAuth";
+import { formatContract } from "@/lib/bridge-utils";
 import type { Game, Hand } from "@shared/schema";
 
 export default function GameDetail() {
@@ -168,7 +169,20 @@ export default function GameDetail() {
                     {hand.finalContract && (
                       <div className="flex justify-between">
                         <span className="text-text-secondary">Contract:</span>
-                        <span className="font-medium">{hand.finalContract} by {hand.declarer}</span>
+                        <span className="font-medium">
+                          {(() => {
+                            const contractText = `${hand.finalContract} by ${hand.declarer}`;
+                            const { contractPart, declarerPart, isRed } = formatContract(contractText);
+                            return (
+                              <>
+                                <span className={isRed ? "text-red-600" : ""}>
+                                  {contractPart}
+                                </span>
+                                {declarerPart && <span> {declarerPart}</span>}
+                              </>
+                            );
+                          })()}
+                        </span>
                       </div>
                     )}
                     

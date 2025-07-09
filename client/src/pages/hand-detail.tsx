@@ -10,6 +10,7 @@ import CommentsSection from "@/components/comments/comments-section";
 import { ArrowLeft, Edit, ChevronLeft, ChevronRight } from "lucide-react";
 import { Link, useParams } from "wouter";
 import { apiRequest } from "@/lib/queryClient";
+import { formatContract } from "@/lib/bridge-utils";
 import type { Hand } from "@shared/schema";
 
 const BIDDING_LAYOUT = {
@@ -304,7 +305,20 @@ export default function HandDetail() {
               <Badge variant="outline" className="text-xs md:text-sm">Dealer: {hand.dealer}</Badge>
               <Badge variant="outline" className="text-xs md:text-sm">{hand.vulnerability}</Badge>
               {hand.finalContract && (
-                <Badge className="text-xs md:text-sm">Contract: {hand.finalContract} by {hand.declarer}</Badge>
+                <Badge className="text-xs md:text-sm">
+                  Contract: {(() => {
+                    const contractText = `${hand.finalContract} by ${hand.declarer}`;
+                    const { contractPart, declarerPart, isRed } = formatContract(contractText);
+                    return (
+                      <>
+                        <span className={isRed ? "text-red-600" : ""}>
+                          {contractPart}
+                        </span>
+                        {declarerPart && <span> {declarerPart}</span>}
+                      </>
+                    );
+                  })()}
+                </Badge>
               )}
             </div>
           </div>
@@ -393,8 +407,19 @@ export default function HandDetail() {
                 <Card className="bg-white">
                   <CardContent className="p-3">
                     <div className="text-sm text-text-secondary">Final Contract:</div>
-                    <div className={`font-semibold text-lg ${getBidColor(hand.finalContract)}`}>
-                      {hand.finalContract.replace(/S/g, '♠').replace(/H/g, '♥').replace(/D/g, '♦').replace(/C/g, '♣')} {hand.declarer ? `by ${hand.declarer}` : ''}
+                    <div className="font-semibold text-lg">
+                      {(() => {
+                        const contractText = `${hand.finalContract} by ${hand.declarer}`;
+                        const { contractPart, declarerPart, isRed } = formatContract(contractText);
+                        return (
+                          <>
+                            <span className={isRed ? "text-red-600" : ""}>
+                              {contractPart}
+                            </span>
+                            {declarerPart && <span> {declarerPart}</span>}
+                          </>
+                        );
+                      })()}
                     </div>
                   </CardContent>
                 </Card>
