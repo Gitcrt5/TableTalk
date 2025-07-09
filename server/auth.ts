@@ -2,6 +2,7 @@ import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import { Express } from "express";
 import session from "express-session";
+import connectPg from "connect-pg-simple";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 import { storage } from "./storage";
@@ -30,14 +31,24 @@ async function comparePasswords(supplied: string, stored: string): Promise<boole
 }
 
 export function setupLocalAuth(app: Express) {
+  // Use PostgreSQL session store for persistence
+  const PostgresStore = connectPg(session);
+  const sessionStore = new PostgresStore({
+    conString: process.env.DATABASE_URL,
+    tableName: 'sessions',
+    createTableIfMissing: false, // Table already exists in our schema
+  });
+
   const sessionSettings: session.SessionOptions = {
     secret: process.env.SESSION_SECRET || "fallback-secret-for-development",
     resave: false,
     saveUninitialized: false,
+    store: sessionStore,
     cookie: {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 1 week
+      // Remove maxAge to keep session active until browser closes or explicit logout
+      // maxAge: undefined means session cookie (no expiration)
     },
   };
 
