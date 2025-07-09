@@ -91,24 +91,24 @@ export default function CommentsSection({ handId }: CommentsSectionProps) {
       </CardHeader>
       <CardContent>
         {/* Comments List */}
-        <div className="space-y-4 mb-6">
-          {isLoading ? (
-            <div className="space-y-4">
-              {Array.from({ length: 2 }).map((_, i) => (
-                <div key={i} className="animate-pulse">
-                  <div className="flex items-start space-x-3">
-                    <div className="w-8 h-8 bg-gray-200 rounded-full"></div>
-                    <div className="flex-1 space-y-2">
-                      <div className="h-4 bg-gray-200 rounded w-1/4"></div>
-                      <div className="h-4 bg-gray-200 rounded w-full"></div>
-                      <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                    </div>
+        {isLoading ? (
+          <div className="space-y-4 mb-6">
+            {Array.from({ length: 2 }).map((_, i) => (
+              <div key={i} className="animate-pulse">
+                <div className="flex items-start space-x-3">
+                  <div className="w-8 h-8 bg-gray-200 rounded-full"></div>
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+                    <div className="h-4 bg-gray-200 rounded w-full"></div>
+                    <div className="h-4 bg-gray-200 rounded w-3/4"></div>
                   </div>
                 </div>
-              ))}
-            </div>
-          ) : validComments.length > 0 ? (
-            validComments.map((comment: Comment) => (
+              </div>
+            ))}
+          </div>
+        ) : validComments.length > 0 ? (
+          <div className="space-y-4 mb-6">
+            {validComments.map((comment: Comment) => (
               <div key={comment.id} className="border-l-4 border-primary pl-4 mb-4">
                 <div className="flex items-start space-x-3">
                   <Avatar className="w-8 h-8">
@@ -128,14 +128,9 @@ export default function CommentsSection({ handId }: CommentsSectionProps) {
                   </div>
                 </div>
               </div>
-            ))
-          ) : (
-            <div className="text-center text-gray-500 py-8">
-              <MessageSquare className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-              <p>No comments yet. Be the first to share your analysis!</p>
-            </div>
-          )}
-        </div>
+            ))}
+          </div>
+        ) : null}
 
         {/* Comment Input */}
         {isAuthenticated ? (
