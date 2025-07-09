@@ -172,6 +172,7 @@ TableTalk supports two authentication methods for maximum hosting flexibility:
 - July 8, 2025. **RESULT SECTION REMOVAL** - Removed redundant result display from hand listings in game detail page since there's no current capacity to enter results, creating cleaner and more focused interface.
 - July 8, 2025. **VULNERABILITY LABEL** - Added "Vul: " label to vulnerability display in hand listings for better clarity and consistency with bridge terminology.
 - July 8, 2025. **CHECKPOINT: UI Polish Complete** - Completed comprehensive UI cleanup including header consolidation, comment interface streamlining, result section removal, and vulnerability labeling. All authentication and core features working properly with clean, focused interface design.
+- July 9, 2025. **DEPLOYMENT FIXES** - Fixed deployment issues: added logo to landing page, corrected authentication redirect from `/api/login` to `/auth`, and ensured local auth is used by default. Requires re-deployment to take effect.
 
 ## TODO List & Future Enhancements
 
