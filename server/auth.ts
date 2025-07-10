@@ -133,6 +133,7 @@ export function setupLocalAuth(app: Express) {
           email: newUser.email,
           firstName: newUser.firstName,
           lastName: newUser.lastName,
+          displayName: newUser.displayName,
           authType: newUser.authType,
         });
       });
@@ -156,6 +157,7 @@ export function setupLocalAuth(app: Express) {
           email: user.email,
           firstName: user.firstName,
           lastName: user.lastName,
+          displayName: user.displayName,
           authType: user.authType,
         });
       });
@@ -180,6 +182,7 @@ export function setupLocalAuth(app: Express) {
       email: user.email,
       firstName: user.firstName,
       lastName: user.lastName,
+      displayName: user.displayName,
       authType: user.authType,
     });
   });

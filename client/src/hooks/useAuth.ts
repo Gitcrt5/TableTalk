@@ -45,7 +45,7 @@ export function useAuth() {
     refetchOnWindowFocus: false,
     refetchOnMount: true, // Allow initial mount check
     refetchOnReconnect: false,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 0, // Always fresh for immediate updates
   });
 
   const loginMutation = useMutation({

@@ -84,11 +84,14 @@ export default function AccountPage() {
       });
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (updatedUser) => {
       toast({
         title: "Profile Updated",
         description: "Your profile has been updated successfully.",
       });
+      // Update the cached user data immediately with the response
+      queryClient.setQueryData(["/api/user"], updatedUser);
+      // Also invalidate to ensure freshness
       queryClient.invalidateQueries({ queryKey: ["/api/user"] });
     },
     onError: (error: Error) => {
