@@ -5,6 +5,7 @@ export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
+  updateUser(id: string, updates: Partial<User>): Promise<User | undefined>;
 
   // Games
   createGame(game: InsertGame): Promise<Game>;
@@ -102,6 +103,21 @@ export class MemStorage implements IStorage {
     };
     this.users.set(user.id, user);
     return user;
+  }
+
+  async updateUser(id: string, updates: Partial<User>): Promise<User | undefined> {
+    const existingUser = this.users.get(id);
+    if (!existingUser) {
+      return undefined;
+    }
+    
+    const updatedUser: User = {
+      ...existingUser,
+      ...updates,
+      updatedAt: new Date(),
+    };
+    this.users.set(id, updatedUser);
+    return updatedUser;
   }
 
   private async initializeSampleData() {
@@ -380,6 +396,15 @@ export class DatabaseStorage implements IStorage {
       })
       .returning();
     return user;
+  }
+
+  async updateUser(id: string, updates: Partial<User>): Promise<User | undefined> {
+    const [updatedUser] = await db
+      .update(users)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(users.id, id))
+      .returning();
+    return updatedUser || undefined;
   }
 
   async createGame(insertGame: InsertGame): Promise<Game> {

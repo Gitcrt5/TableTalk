@@ -472,6 +472,92 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // User account management routes
+  app.get("/api/user/stats", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = getUserId(req);
+      const stats = await storage.getUserStats(userId);
+      res.json(stats);
+    } catch (error) {
+      console.error("Error fetching user stats:", error);
+      res.status(500).json({ error: "Failed to fetch stats" });
+    }
+  });
+
+  app.patch("/api/user/profile", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = getUserId(req);
+      const { firstName, lastName, displayName, email } = req.body;
+      
+      // Basic validation
+      if (!firstName || !lastName || !displayName || !email) {
+        return res.status(400).json({ error: "All fields are required" });
+      }
+      
+      if (displayName.length > 20) {
+        return res.status(400).json({ error: "Display name must be less than 20 characters" });
+      }
+      
+      // Check if email is already taken by another user
+      const existingUser = await storage.getUserByEmail(email);
+      if (existingUser && existingUser.id !== userId) {
+        return res.status(400).json({ error: "Email is already in use" });
+      }
+      
+      const updatedUser = await storage.updateUser(userId, {
+        firstName,
+        lastName,
+        displayName,
+        email,
+      });
+      
+      if (!updatedUser) {
+        return res.status(404).json({ error: "User not found" });
+      }
+      
+      res.json(updatedUser);
+    } catch (error) {
+      console.error("Error updating user profile:", error);
+      res.status(500).json({ error: "Failed to update profile" });
+    }
+  });
+
+  app.patch("/api/user/password", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = getUserId(req);
+      const { currentPassword, newPassword } = req.body;
+      
+      // Only allow password changes for local auth users
+      const user = await storage.getUser(userId);
+      if (!user || user.authType !== "local") {
+        return res.status(400).json({ error: "Password changes are only allowed for local accounts" });
+      }
+      
+      // Verify current password
+      const bcrypt = require("bcrypt");
+      const isValidPassword = await bcrypt.compare(currentPassword, user.password);
+      if (!isValidPassword) {
+        return res.status(400).json({ error: "Current password is incorrect" });
+      }
+      
+      // Hash new password
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+      
+      const updatedUser = await storage.updateUser(userId, {
+        password: hashedPassword,
+      });
+      
+      if (!updatedUser) {
+        return res.status(404).json({ error: "User not found" });
+      }
+      
+      res.json({ message: "Password updated successfully" });
+    } catch (error) {
+      console.error("Error updating password:", error);
+      res.status(500).json({ error: "Failed to update password" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

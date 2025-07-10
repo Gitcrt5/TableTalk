@@ -1,6 +1,7 @@
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
-import { LogOut, User } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { LogOut, User, Settings } from "lucide-react";
 import logoUrl from "@/assets/tabletalk-logo.svg";
 import { useAuth } from "@/hooks/useAuth";
 import type { User as UserType } from "@shared/schema";
@@ -27,30 +28,41 @@ export default function Header() {
           {isAuthenticated && (
             <div className="flex items-center space-x-4">
               {user && (
-                <div className="flex items-center space-x-2">
-                  {(user as UserType).profileImageUrl ? (
-                    <img 
-                      src={(user as UserType).profileImageUrl!} 
-                      alt="Profile" 
-                      className="w-8 h-8 rounded-full object-cover"
-                    />
-                  ) : (
-                    <User className="w-8 h-8 p-1 bg-gray-100 rounded-full" />
-                  )}
-                  <span className="text-sm font-medium">
-                    {(user as UserType).firstName ? `${(user as UserType).firstName} ${(user as UserType).lastName || ''}`.trim() : (user as UserType).email}
-                  </span>
-                </div>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="flex items-center space-x-2 hover:bg-gray-100">
+                      {(user as UserType).profileImageUrl ? (
+                        <img 
+                          src={(user as UserType).profileImageUrl!} 
+                          alt="Profile" 
+                          className="w-8 h-8 rounded-full object-cover"
+                        />
+                      ) : (
+                        <User className="w-8 h-8 p-1 bg-gray-100 rounded-full" />
+                      )}
+                      <span className="text-sm font-medium">
+                        {(user as UserType).firstName ? `${(user as UserType).firstName} ${(user as UserType).lastName || ''}`.trim() : (user as UserType).email}
+                      </span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem asChild>
+                      <Link href="/account" className="flex items-center cursor-pointer">
+                        <Settings className="w-4 h-4 mr-2" />
+                        Account Settings
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onClick={() => logoutMutation.mutate()}
+                      disabled={logoutMutation.isPending}
+                      className="cursor-pointer"
+                    >
+                      <LogOut className="w-4 h-4 mr-2" />
+                      {logoutMutation.isPending ? "Signing Out..." : "Sign Out"}
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               )}
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => logoutMutation.mutate()}
-                disabled={logoutMutation.isPending}
-              >
-                <LogOut className="w-4 h-4 mr-2" />
-                {logoutMutation.isPending ? "Signing Out..." : "Sign Out"}
-              </Button>
             </div>
           )}
         </div>
