@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -48,12 +48,24 @@ export default function AccountPage() {
   const profileForm = useForm<UpdateProfileFormData>({
     resolver: zodResolver(updateProfileSchema),
     defaultValues: {
-      firstName: user?.firstName || "",
-      lastName: user?.lastName || "",
-      displayName: user?.displayName || "",
-      email: user?.email || "",
+      firstName: "",
+      lastName: "",
+      displayName: "",
+      email: "",
     },
   });
+
+  // Update form values when user data is loaded
+  useEffect(() => {
+    if (user) {
+      profileForm.reset({
+        firstName: user.firstName || "",
+        lastName: user.lastName || "",
+        displayName: user.displayName || "",
+        email: user.email || "",
+      });
+    }
+  }, [user, profileForm]);
 
   const passwordForm = useForm<ChangePasswordFormData>({
     resolver: zodResolver(changePasswordSchema),

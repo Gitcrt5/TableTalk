@@ -15,9 +15,9 @@ type RegisterData = {
   displayName: string;
 };
 
-// Check if we're using Replit auth based on environment
-const isReplitAuth = import.meta.env.VITE_USE_REPLIT_AUTH !== "false";
-const userEndpoint = isReplitAuth ? "/api/auth/user" : "/api/user";
+// Always use local auth - hardcoded to avoid confusion
+const isReplitAuth = false;
+const userEndpoint = "/api/user";
 
 export function useAuth() {
   const { toast } = useToast();
@@ -50,7 +50,10 @@ export function useAuth() {
 
   const loginMutation = useMutation({
     mutationFn: async (credentials: LoginData) => {
-      const res = await apiRequest("POST", "/api/login", credentials);
+      const res = await apiRequest("/api/login", {
+        method: "POST",
+        body: JSON.stringify(credentials),
+      });
       return await res.json();
     },
     onSuccess: (user) => {
@@ -71,7 +74,10 @@ export function useAuth() {
 
   const registerMutation = useMutation({
     mutationFn: async (credentials: RegisterData) => {
-      const res = await apiRequest("POST", "/api/register", credentials);
+      const res = await apiRequest("/api/register", {
+        method: "POST",
+        body: JSON.stringify(credentials),
+      });
       return await res.json();
     },
     onSuccess: (user) => {
@@ -97,7 +103,9 @@ export function useAuth() {
         window.location.href = "/api/logout";
       } else {
         // For local auth, call logout API
-        await apiRequest("POST", "/api/logout");
+        await apiRequest("/api/logout", {
+          method: "POST",
+        });
       }
     },
     onSuccess: () => {

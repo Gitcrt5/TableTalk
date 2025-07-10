@@ -1,6 +1,8 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import multer from "multer";
+import { scrypt, randomBytes, timingSafeEqual } from "crypto";
+import { promisify } from "util";
 import { storage } from "./storage";
 import { parsePBN } from "./services/pbn-parser";
 import { insertGameSchema, insertHandSchema, insertUserBiddingSchema, insertCommentSchema } from "@shared/schema";
@@ -17,6 +19,22 @@ const USE_REPLIT_AUTH = process.env.USE_REPLIT_AUTH === "true";
 // Helper function to get user ID from request based on auth method
 function getUserId(req: any): string {
   return USE_REPLIT_AUTH ? req.user.claims.sub : req.user.id;
+}
+
+// Password hashing utilities (same as auth.ts)
+const scryptAsync = promisify(scrypt);
+
+async function hashPassword(password: string): Promise<string> {
+  const salt = randomBytes(16).toString("hex");
+  const buf = (await scryptAsync(password, salt, 64)) as Buffer;
+  return `${buf.toString("hex")}.${salt}`;
+}
+
+async function comparePasswords(supplied: string, stored: string): Promise<boolean> {
+  const [hashed, salt] = stored.split(".");
+  const hashedBuf = Buffer.from(hashed, "hex");
+  const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
+  return timingSafeEqual(hashedBuf, suppliedBuf);
 }
 
 const upload = multer({ storage: multer.memoryStorage() });
@@ -534,14 +552,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Verify current password
-      const bcrypt = require("bcrypt");
-      const isValidPassword = await bcrypt.compare(currentPassword, user.password);
+      const isValidPassword = await comparePasswords(currentPassword, user.password);
       if (!isValidPassword) {
         return res.status(400).json({ error: "Current password is incorrect" });
       }
       
       // Hash new password
-      const hashedPassword = await bcrypt.hash(newPassword, 10);
+      const hashedPassword = await hashPassword(newPassword);
       
       const updatedUser = await storage.updateUser(userId, {
         password: hashedPassword,
