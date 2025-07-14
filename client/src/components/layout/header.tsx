@@ -30,7 +30,7 @@ export default function Header() {
               {user && (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="flex items-center space-x-2 hover:bg-gray-100">
+                    <Button variant="ghost" className="flex items-center space-x-2 hover:bg-gray-100 hover:text-gray-900">
                       {(user as UserType).profileImageUrl ? (
                         <img 
                           src={(user as UserType).profileImageUrl!} 
@@ -40,8 +40,8 @@ export default function Header() {
                       ) : (
                         <User className="w-8 h-8 p-1 bg-gray-100 rounded-full" />
                       )}
-                      <span className="text-sm font-medium">
-                        {(user as UserType).firstName ? `${(user as UserType).firstName} ${(user as UserType).lastName || ''}`.trim() : (user as UserType).email}
+                      <span className="text-sm font-medium text-gray-900">
+                        {(user as UserType).displayName || (user as UserType).firstName ? `${(user as UserType).firstName} ${(user as UserType).lastName || ''}`.trim() : (user as UserType).email}
                       </span>
                     </Button>
                   </DropdownMenuTrigger>
