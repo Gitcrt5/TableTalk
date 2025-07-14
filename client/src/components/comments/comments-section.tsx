@@ -60,16 +60,26 @@ export default function CommentsSection({ handId }: CommentsSectionProps) {
           userLevel: "Player", // Default level for now
         }),
       });
+      if (!response.ok) {
+        throw new Error(`Failed to create comment: ${response.status}`);
+      }
       return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/hands", handId, "comments"] });
       setNewComment("");
     },
+    onError: (error) => {
+      console.error("Error creating comment:", error);
+    },
   });
 
   const handleSubmitComment = () => {
     if (!newComment.trim() || !isAuthenticated) return;
+    
+    console.log("Submitting comment:", newComment.trim());
+    console.log("User authenticated:", isAuthenticated);
+    console.log("User data:", user);
     
     createCommentMutation.mutate({
       content: newComment.trim(),
