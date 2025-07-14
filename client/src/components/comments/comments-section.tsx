@@ -53,9 +53,12 @@ export default function CommentsSection({ handId }: CommentsSectionProps) {
     mutationFn: async (commentData: {
       content: string;
     }) => {
-      const response = await apiRequest("POST", `/api/hands/${handId}/comments`, {
-        ...commentData,
-        userLevel: "Player", // Default level for now
+      const response = await apiRequest(`/api/hands/${handId}/comments`, {
+        method: "POST",
+        body: JSON.stringify({
+          ...commentData,
+          userLevel: "Player", // Default level for now
+        }),
       });
       return response.json();
     },
