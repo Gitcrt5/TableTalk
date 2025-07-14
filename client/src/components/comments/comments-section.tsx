@@ -77,10 +77,6 @@ export default function CommentsSection({ handId }: CommentsSectionProps) {
   const handleSubmitComment = () => {
     if (!newComment.trim() || !isAuthenticated) return;
     
-    console.log("Submitting comment:", newComment.trim());
-    console.log("User authenticated:", isAuthenticated);
-    console.log("User data:", user);
-    
     createCommentMutation.mutate({
       content: newComment.trim(),
     });
