@@ -126,7 +126,7 @@ export default function AuthPage() {
             </div>
           </div>
           <p className="text-gray-600 mb-2">
-            {isRegistering ? "Create your account to get started" : "Sign in to your account"}
+            {isRegistering ? "Create your account to get started" : ""}
           </p>
         </div>
 
