@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Calendar, User, Eye } from "lucide-react";
+import { ArrowLeft, Calendar, User } from "lucide-react";
 import { Link, useParams } from "wouter";
 import GameEditForm from "@/components/game-edit-form";
 import { useAuth } from "@/hooks/useAuth";
@@ -153,7 +153,11 @@ export default function GameDetail() {
                 <CardContent className="p-6">
                   <div className="flex justify-between items-start mb-4">
                     <div>
-                      <h3 className="font-semibold text-lg">Board {hand.boardNumber}</h3>
+                      <Link to={`/hands/${hand.id}`}>
+                        <h3 className="font-semibold text-lg hover:text-primary transition-colors cursor-pointer">
+                          Board {hand.boardNumber}
+                        </h3>
+                      </Link>
                       <p className="text-text-secondary text-sm">
                         Dealer: {hand.dealer} • Vul: {hand.vulnerability}
                       </p>
@@ -193,14 +197,7 @@ export default function GameDetail() {
                     )}
                   </div>
                   
-                  <div className="mt-4 pt-4 border-t border-gray-200">
-                    <Link to={`/hands/${hand.id}`}>
-                      <Button className="w-full hover:bg-primary/90 transition-colors">
-                        <Eye className="mr-2 h-4 w-4" />
-                        View Hand
-                      </Button>
-                    </Link>
-                  </div>
+
                 </CardContent>
               </Card>
             ))}
