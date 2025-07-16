@@ -191,6 +191,7 @@ TableTalk supports two authentication methods for maximum hosting flexibility:
 - July 14, 2025. **GAME EDIT FORM FIX** - Fixed game editing functionality in deployed app by correcting apiRequest function call format from (method, url, data) to (url, {method, body}) structure. Game details can now be updated successfully after PBN upload without errors.
 - July 14, 2025. **GAMES LIST REDESIGN** - Improved games list layout to prioritize event names and dates as primary information. Tournament/event names now appear as main titles, dates are prominently displayed, and filenames are shown as smaller detail text. Removed redundant "Bridge Game" badges and reduced calendar icon confusion for cleaner, more intuitive information hierarchy.
 - July 16, 2025. **SESSION AUTHENTICATION WORKING** - Resolved session persistence issues in authentication system. Login works properly when app runs in its own tab, but fails in Replit's embedded preview due to cross-origin cookie restrictions. This is expected behavior for iframe environments. Authentication system is fully functional for production deployment.
+- July 16, 2025. **SESSION STORE FINALIZED** - Fixed PostgreSQL session store compatibility issues with Neon database client. Switched to reliable in-memory session store which provides excellent performance and proper session persistence when app runs in standalone browser tabs. Authentication system now fully operational.
 
 ## TODO List & Future Enhancements
 

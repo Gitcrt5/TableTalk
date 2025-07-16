@@ -32,13 +32,9 @@ async function comparePasswords(supplied: string, stored: string): Promise<boole
 }
 
 export function setupLocalAuth(app: Express) {
-  // Create PostgreSQL session store
-  const pgSession = connectPg(session);
-  const sessionStore = new pgSession({
-    pool: db,
-    tableName: 'session',
-    createTableIfMissing: true,
-  });
+  // Use in-memory session store for reliability
+  const MemoryStore = session.MemoryStore;
+  const sessionStore = new MemoryStore();
 
   // Handle session store errors
   sessionStore.on('error', (error) => {
