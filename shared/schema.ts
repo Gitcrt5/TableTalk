@@ -32,12 +32,17 @@ export const users = pgTable("users", {
 
 export const games = pgTable("games", {
   id: serial("id").primaryKey(),
-  title: text("title").notNull(),
+  title: text("title").notNull(), // User-entered title (user.title)
   tournament: text("tournament"),
   round: text("round"),
-  date: text("date"), // Game date (e.g., "2025-07-04")
-  location: text("location"), // Where the game was played
+  date: text("date"), // User-entered date (user.date)
+  location: text("location"), // User-entered location (user.location)
   event: text("event"), // Type of event (e.g., "Club Championship", "Pairs Game")
+  // PBN-extracted fields
+  pbnEvent: text("pbn_event"), // Event from PBN file (pbn.event)
+  pbnSite: text("pbn_site"), // Site from PBN file (pbn.site)  
+  pbnDate: text("pbn_date"), // Date from PBN file (pbn.date)
+  filename: text("filename"), // Original filename
   uploadedBy: text("uploaded_by").notNull(),
   uploadedAt: timestamp("uploaded_at").notNull().defaultNow(),
   pbnContent: text("pbn_content").notNull(),

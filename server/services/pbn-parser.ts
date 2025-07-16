@@ -2,6 +2,9 @@ export interface ParsedPBN {
   title?: string;
   tournament?: string;
   round?: string;
+  event?: string;
+  site?: string;
+  date?: string;
   hands: ParsedHand[];
 }
 
@@ -25,6 +28,9 @@ export function parsePBN(pbnContent: string): ParsedPBN {
   let title = '';
   let tournament = '';
   let round = '';
+  let event = '';
+  let site = '';
+  let date = '';
   const hands: ParsedHand[] = [];
   
   let currentHand: Partial<ParsedHand> = {};
@@ -43,7 +49,14 @@ export function parsePBN(pbnContent: string): ParsedPBN {
         
         switch (tag) {
           case 'Event':
-            tournament = value;
+            event = value;
+            tournament = value; // Keep for backward compatibility
+            break;
+          case 'Site':
+            site = value;
+            break;
+          case 'Date':
+            date = value;
             break;
           case 'Round':
             round = value;
@@ -89,12 +102,15 @@ export function parsePBN(pbnContent: string): ParsedPBN {
     hands.push(currentHand as ParsedHand);
   }
   
-  title = tournament + (round ? ` - ${round}` : '');
+  title = event + (round ? ` - ${round}` : '');
   
   return {
     title,
     tournament,
     round,
+    event,
+    site,
+    date,
     hands,
   };
 }

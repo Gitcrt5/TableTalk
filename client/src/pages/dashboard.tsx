@@ -88,18 +88,23 @@ export default function Dashboard() {
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <h3 className="text-xl font-semibold text-text-primary mb-1 hover:text-primary transition-colors">
-                      {game.tournament || game.title}
+                      {game.title || game.pbnEvent || game.filename}
                     </h3>
                     
-                    {game.date && (
+                    {(game.date || game.pbnDate || game.uploadedAt) && (
                       <div className="text-lg text-text-secondary mb-3">
-                        {new Date(game.date).toLocaleDateString()}
+                        {game.date 
+                          ? new Date(game.date).toLocaleDateString()
+                          : game.pbnDate 
+                          ? new Date(game.pbnDate).toLocaleDateString()
+                          : new Date(game.uploadedAt).toLocaleDateString()
+                        }
                       </div>
                     )}
                     
                     <div className="flex flex-wrap items-center gap-4 text-sm text-text-secondary mb-2">
-                      {game.location && (
-                        <span>{game.location}</span>
+                      {(game.location || game.pbnSite) && (
+                        <span>{game.location || game.pbnSite}</span>
                       )}
                       
                       {game.round && (
@@ -110,7 +115,7 @@ export default function Dashboard() {
                     </div>
 
                     <div className="text-xs text-text-secondary">
-                      <span>File: {game.title}</span>
+                      <span>File: {game.filename || game.title}</span>
                       {game.uploaderName && (
                         <span> • Uploaded by {game.uploaderName}</span>
                       )}

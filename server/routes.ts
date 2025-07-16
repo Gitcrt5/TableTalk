@@ -173,6 +173,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         title: parsedPBN.title || req.file.originalname,
         tournament: parsedPBN.tournament,
         round: parsedPBN.round,
+        pbnEvent: parsedPBN.event,
+        pbnSite: parsedPBN.site,
+        pbnDate: parsedPBN.date,
+        filename: req.file.originalname,
         uploadedBy: userId,
         pbnContent,
       });
