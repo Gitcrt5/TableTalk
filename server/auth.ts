@@ -8,6 +8,7 @@ import { promisify } from "util";
 import { storage } from "./storage";
 import { User as SelectUser } from "@shared/schema";
 import { v4 as uuidv4 } from "uuid";
+import { db } from "./db";
 
 declare global {
   namespace Express {
@@ -31,9 +32,13 @@ async function comparePasswords(supplied: string, stored: string): Promise<boole
 }
 
 export function setupLocalAuth(app: Express) {
-  // Use in-memory session store for development debugging
-  const MemoryStore = session.MemoryStore;
-  const sessionStore = new MemoryStore();
+  // Create PostgreSQL session store
+  const pgSession = connectPg(session);
+  const sessionStore = new pgSession({
+    pool: db,
+    tableName: 'session',
+    createTableIfMissing: true,
+  });
 
   // Handle session store errors
   sessionStore.on('error', (error) => {

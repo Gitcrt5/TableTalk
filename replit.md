@@ -190,12 +190,16 @@ TableTalk supports two authentication methods for maximum hosting flexibility:
 - July 14, 2025. **COMMENT SYSTEM FIXES** - Fixed comment submission issue by correcting apiRequest function calls and session authentication. Comments now properly submit and display immediately. Streamlined comment UI by removing redundant avatar initials while keeping display names. Fixed username disappearing on hover in header dropdown by adding proper text colors.
 - July 14, 2025. **GAME EDIT FORM FIX** - Fixed game editing functionality in deployed app by correcting apiRequest function call format from (method, url, data) to (url, {method, body}) structure. Game details can now be updated successfully after PBN upload without errors.
 - July 14, 2025. **GAMES LIST REDESIGN** - Improved games list layout to prioritize event names and dates as primary information. Tournament/event names now appear as main titles, dates are prominently displayed, and filenames are shown as smaller detail text. Removed redundant "Bridge Game" badges and reduced calendar icon confusion for cleaner, more intuitive information hierarchy.
+- July 16, 2025. **SESSION AUTHENTICATION WORKING** - Resolved session persistence issues in authentication system. Login works properly when app runs in its own tab, but fails in Replit's embedded preview due to cross-origin cookie restrictions. This is expected behavior for iframe environments. Authentication system is fully functional for production deployment.
 
 ## TODO List & Future Enhancements
 
 ### Current Issues to Fix
 - [ ] Resolve LSP errors in server/storage.ts (database insertion type mismatch)
 - [ ] Fix server/vite.ts allowedHosts configuration warning
+
+### Known Limitations
+- **Replit Preview Environment**: Login works in standalone tabs but not in Replit's embedded preview due to iframe cookie restrictions. This is expected behavior and will work correctly in production deployment.
 
 ### Core Features to Add
 - [ ] Add tags to hands and games for better organization and filtering
