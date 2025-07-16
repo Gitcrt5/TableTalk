@@ -172,7 +172,7 @@ export default function GameDetail() {
                   <div className="space-y-2 text-sm">
                     {hand.finalContract && (
                       <div className="flex justify-between">
-                        <span className="text-text-secondary">Contract:</span>
+                        <span className="text-text-secondary">Contract: </span>
                         <span className="font-medium">
                           {(() => {
                             const contractText = `${hand.finalContract} by ${hand.declarer}`;

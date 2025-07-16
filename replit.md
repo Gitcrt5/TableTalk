@@ -198,6 +198,7 @@ TableTalk supports two authentication methods for maximum hosting flexibility:
 - July 16, 2025. **DUPLICATE PBN DETECTION SYSTEM** - Implemented comprehensive duplicate detection using first hand comparison (board number, dealer, vulnerability, and all four hands). System detects duplicates during upload and presents user with options to view existing game or upload anyway. Backend includes findDuplicateByFirstHand method and force upload capability. Frontend shows duplicate confirmation dialog with existing game details.
 - July 16, 2025. **DOUBLED CONTRACT NOTATION** - Added proper bridge notation for doubled contracts. System now appends "X" for doubled contracts (e.g., "5NTX") and "XX" for redoubled contracts. Updated contract determination logic to check for Double/Redouble after final bid and enhanced formatContract and formatBid functions throughout the application.
 - July 16, 2025. **HAND NAVIGATION IMPROVEMENT** - Removed large "View Hand" button from game detail page and made board numbers clickable instead. Board numbers now serve as both headings and navigation links with hover effects, saving space while maintaining functionality.
+- July 16, 2025. **CONTRACT DISPLAY SPACING FIX** - Added proper spacing after colon in contract display on game detail page. Contract now shows "Contract: 2♥X by West" instead of "Contract:2♥X by West" for better readability.
 
 ## TODO List & Future Enhancements
 
