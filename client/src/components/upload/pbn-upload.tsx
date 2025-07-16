@@ -1,13 +1,14 @@
 import { useState, useRef } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Upload, FileText, CheckCircle, AlertCircle } from "lucide-react";
+import { Upload, FileText, CheckCircle, AlertCircle, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
+import type { Game } from "@shared/schema";
 
 interface PBNUploadProps {
   open: boolean;
@@ -18,6 +19,8 @@ export default function PBNUpload({ open, onOpenChange }: PBNUploadProps) {
   const [dragActive, setDragActive] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [duplicateGame, setDuplicateGame] = useState<Game | null>(null);
+  const [showDuplicateDialog, setShowDuplicateDialog] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -31,6 +34,62 @@ export default function PBNUpload({ open, onOpenChange }: PBNUploadProps) {
       formData.append('userId', user?.id || 'current-user');
 
       // Simulate progress
+      setUploadProgress(25);
+      
+      const response = await fetch('/api/games/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      setUploadProgress(75);
+
+      if (response.status === 409) {
+        // Handle duplicate game
+        const errorData = await response.json();
+        setDuplicateGame(errorData.duplicateGame);
+        setShowDuplicateDialog(true);
+        setUploadProgress(0);
+        return null; // Don't proceed with success
+      }
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Upload failed');
+      }
+
+      setUploadProgress(100);
+      return response.json();
+    },
+    onSuccess: (data) => {
+      if (!data) return; // Skip success handling for duplicates
+      
+      toast({
+        title: "Upload Successful",
+        description: `Successfully uploaded ${data.hands.length} hands from ${data.game.title}`,
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/games"] });
+      // Redirect to the game page for immediate editing
+      setLocation(`/games/${data.game.id}?edit=true`);
+      // Close dialog after redirect
+      setTimeout(() => handleClose(), 100);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Upload Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+      setUploadProgress(0);
+    },
+  });
+
+  const forceUploadMutation = useMutation({
+    mutationFn: async (file: File) => {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('userId', user?.id || 'current-user');
+      formData.append('force', 'true'); // Add force flag
+
       setUploadProgress(25);
       
       const response = await fetch('/api/games/upload', {
@@ -54,9 +113,7 @@ export default function PBNUpload({ open, onOpenChange }: PBNUploadProps) {
         description: `Successfully uploaded ${data.hands.length} hands from ${data.game.title}`,
       });
       queryClient.invalidateQueries({ queryKey: ["/api/games"] });
-      // Redirect to the game page for immediate editing
       setLocation(`/games/${data.game.id}?edit=true`);
-      // Close dialog after redirect
       setTimeout(() => handleClose(), 100);
     },
     onError: (error: Error) => {
@@ -134,20 +191,37 @@ export default function PBNUpload({ open, onOpenChange }: PBNUploadProps) {
     setSelectedFile(null);
     setUploadProgress(0);
     setDragActive(false);
+    setDuplicateGame(null);
+    setShowDuplicateDialog(false);
     onOpenChange(false);
+  };
+
+  const handleDuplicateConfirm = () => {
+    if (selectedFile) {
+      setShowDuplicateDialog(false);
+      forceUploadMutation.mutate(selectedFile);
+    }
+  };
+
+  const handleViewExisting = () => {
+    if (duplicateGame) {
+      setLocation(`/games/${duplicateGame.id}`);
+      handleClose();
+    }
   };
 
   const isUploading = uploadMutation.isPending;
 
   return (
-    <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle className="flex items-center space-x-2">
-            <Upload className="h-5 w-5" />
-            <span>Upload PBN File</span>
-          </DialogTitle>
-        </DialogHeader>
+    <>
+      <Dialog open={open} onOpenChange={handleClose}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center space-x-2">
+              <Upload className="h-5 w-5" />
+              <span>Upload PBN File</span>
+            </DialogTitle>
+          </DialogHeader>
 
         <div className="space-y-6">
           {/* File Upload Area */}
@@ -277,5 +351,61 @@ export default function PBNUpload({ open, onOpenChange }: PBNUploadProps) {
         </div>
       </DialogContent>
     </Dialog>
+
+    {/* Duplicate Game Dialog */}
+    {duplicateGame && (
+      <Dialog open={showDuplicateDialog} onOpenChange={setShowDuplicateDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center space-x-2">
+              <AlertTriangle className="h-5 w-5 text-orange-500" />
+              <span>Duplicate Game Detected</span>
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <Alert>
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>
+                A game with the same first hand already exists in the system. 
+                This might be the same game uploaded with a different filename.
+              </AlertDescription>
+            </Alert>
+            
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <h4 className="font-medium mb-2">Existing Game:</h4>
+              <p className="text-sm"><strong>Title:</strong> {duplicateGame.title}</p>
+              {duplicateGame.tournament && (
+                <p className="text-sm"><strong>Tournament:</strong> {duplicateGame.tournament}</p>
+              )}
+              {duplicateGame.date && (
+                <p className="text-sm"><strong>Date:</strong> {duplicateGame.date}</p>
+              )}
+              {duplicateGame.filename && (
+                <p className="text-sm"><strong>Filename:</strong> {duplicateGame.filename}</p>
+              )}
+            </div>
+          </div>
+          
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button 
+              variant="outline" 
+              onClick={handleViewExisting}
+              className="w-full sm:w-auto"
+            >
+              View Existing Game
+            </Button>
+            <Button 
+              onClick={handleDuplicateConfirm}
+              disabled={forceUploadMutation.isPending}
+              className="w-full sm:w-auto"
+            >
+              {forceUploadMutation.isPending ? "Uploading..." : "Upload Anyway"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    )}
+    </>
   );
 }

@@ -13,6 +13,15 @@ export interface IStorage {
   updateGame(id: number, updates: Partial<Game>): Promise<Game | undefined>;
   getAllGames(): Promise<Game[]>;
   searchGames(query: string): Promise<Game[]>;
+  findDuplicateByFirstHand(firstHand: {
+    boardNumber: number;
+    dealer: string;
+    vulnerability: string;
+    northHand: string;
+    southHand: string;
+    eastHand: string;
+    westHand: string;
+  }): Promise<Game | undefined>;
 
   // Hands
   createHand(hand: InsertHand): Promise<Hand>;
@@ -234,6 +243,31 @@ export class MemStorage implements IStorage {
       game.tournament?.toLowerCase().includes(lowercaseQuery) ||
       game.round?.toLowerCase().includes(lowercaseQuery)
     );
+  }
+
+  async findDuplicateByFirstHand(firstHand: {
+    boardNumber: number;
+    dealer: string;
+    vulnerability: string;
+    northHand: string;
+    southHand: string;
+    eastHand: string;
+    westHand: string;
+  }): Promise<Game | undefined> {
+    // Find all hands with the same first hand characteristics
+    for (const hand of Array.from(this.hands.values())) {
+      if (hand.boardNumber === firstHand.boardNumber &&
+          hand.dealer === firstHand.dealer &&
+          hand.vulnerability === firstHand.vulnerability &&
+          hand.northHand === firstHand.northHand &&
+          hand.southHand === firstHand.southHand &&
+          hand.eastHand === firstHand.eastHand &&
+          hand.westHand === firstHand.westHand) {
+        // Return the game associated with this hand
+        return this.games.get(hand.gameId);
+      }
+    }
+    return undefined;
   }
 
   async createHand(insertHand: InsertHand): Promise<Hand> {
@@ -488,6 +522,38 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(games)
       .where(like(games.title, `%${query}%`))
       .orderBy(desc(games.uploadedAt));
+  }
+
+  async findDuplicateByFirstHand(firstHand: {
+    boardNumber: number;
+    dealer: string;
+    vulnerability: string;
+    northHand: string;
+    southHand: string;
+    eastHand: string;
+    westHand: string;
+  }): Promise<Game | undefined> {
+    // Find hands with matching first hand characteristics
+    const [matchingHand] = await db
+      .select({ gameId: hands.gameId })
+      .from(hands)
+      .where(
+        and(
+          eq(hands.boardNumber, firstHand.boardNumber),
+          eq(hands.dealer, firstHand.dealer),
+          eq(hands.vulnerability, firstHand.vulnerability),
+          eq(hands.northHand, firstHand.northHand),
+          eq(hands.southHand, firstHand.southHand),
+          eq(hands.eastHand, firstHand.eastHand),
+          eq(hands.westHand, firstHand.westHand)
+        )
+      )
+      .limit(1);
+
+    if (!matchingHand) return undefined;
+
+    // Return the associated game
+    return this.getGame(matchingHand.gameId);
   }
 
   async createHand(insertHand: InsertHand): Promise<Hand> {

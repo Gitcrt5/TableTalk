@@ -168,6 +168,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "No valid hands found in PBN file" });
       }
 
+      // Check for duplicate using first hand data (unless forced)
+      const isForced = req.body.force === 'true';
+      if (!isForced) {
+        const firstHand = parsedPBN.hands[0];
+        const duplicateGame = await storage.findDuplicateByFirstHand({
+          boardNumber: firstHand.boardNumber,
+          dealer: firstHand.dealer,
+          vulnerability: firstHand.vulnerability,
+          northHand: firstHand.northHand,
+          southHand: firstHand.southHand,
+          eastHand: firstHand.eastHand,
+          westHand: firstHand.westHand,
+        });
+
+        if (duplicateGame) {
+          return res.status(409).json({ 
+            error: "Duplicate game detected",
+            duplicateGame,
+            message: "This game appears to already exist in the system. The first hand matches an existing game."
+          });
+        }
+      }
+
       // Create game
       const gameData = insertGameSchema.parse({
         title: parsedPBN.title || req.file.originalname,
