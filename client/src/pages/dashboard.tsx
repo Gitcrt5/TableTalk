@@ -87,20 +87,21 @@ export default function Dashboard() {
               <CardContent className="p-6">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <h3 className="text-xl font-semibold text-text-primary mb-1 hover:text-primary transition-colors">
-                      {game.title || game.pbnEvent || game.filename}
-                    </h3>
-                    
-                    {(game.date || game.pbnDate || game.uploadedAt) && (
-                      <div className="text-lg text-text-secondary mb-3">
-                        {game.date 
-                          ? new Date(game.date).toLocaleDateString()
-                          : game.pbnDate 
-                          ? new Date(game.pbnDate).toLocaleDateString()
-                          : new Date(game.uploadedAt).toLocaleDateString()
-                        }
-                      </div>
-                    )}
+                    <div className="flex items-center justify-between mb-1">
+                      <h3 className="text-xl font-semibold text-text-primary hover:text-primary transition-colors">
+                        {game.title || game.pbnEvent || game.filename}
+                      </h3>
+                      {(game.date || game.pbnDate || game.uploadedAt) && (
+                        <div className="text-lg text-text-secondary">
+                          {game.date 
+                            ? new Date(game.date).toLocaleDateString()
+                            : game.pbnDate 
+                            ? new Date(game.pbnDate).toLocaleDateString()
+                            : new Date(game.uploadedAt).toLocaleDateString()
+                          }
+                        </div>
+                      )}
+                    </div>
                     
                     <div className="flex flex-wrap items-center gap-4 text-sm text-text-secondary mb-2">
                       {(game.location || game.pbnSite) && (
