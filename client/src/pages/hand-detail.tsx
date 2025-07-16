@@ -149,7 +149,10 @@ export default function HandDetail() {
       declarer?: string;
       result?: string;
     }) => {
-      const response = await apiRequest("PUT", `/api/hands/${handId}/bidding`, biddingData);
+      const response = await apiRequest(`/api/hands/${handId}/bidding`, {
+        method: "PUT",
+        body: JSON.stringify(biddingData),
+      });
       return response.json();
     },
     onSuccess: () => {

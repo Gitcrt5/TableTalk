@@ -36,10 +36,13 @@ export default function BiddingPractice({ hand, userId }: BiddingPracticeProps) 
       bidding: string[];
       accuracy: number;
     }) => {
-      const response = await apiRequest("POST", `/api/hands/${hand.id}/bidding`, {
-        userId,
-        bidding: biddingData.bidding,
-        accuracy: biddingData.accuracy,
+      const response = await apiRequest(`/api/hands/${hand.id}/bidding`, {
+        method: "POST",
+        body: JSON.stringify({
+          userId,
+          bidding: biddingData.bidding,
+          accuracy: biddingData.accuracy,
+        }),
       });
       return response.json();
     },

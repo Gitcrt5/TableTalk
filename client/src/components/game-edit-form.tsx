@@ -65,7 +65,10 @@ export default function GameEditForm({ game, autoOpen = false }: GameEditFormPro
 
   const updateGameMutation = useMutation({
     mutationFn: async (data: GameEditFormData) => {
-      const response = await apiRequest("PUT", `/api/games/${game.id}`, data);
+      const response = await apiRequest(`/api/games/${game.id}`, {
+        method: "PUT",
+        body: JSON.stringify(data),
+      });
       return response.json();
     },
     onSuccess: () => {
