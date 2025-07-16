@@ -188,6 +188,63 @@ function parseAuction(auctionString: string): string[] {
   return bids;
 }
 
+function determineDoubledContract(contract: string, bidding: string[]): string {
+  if (!contract || !bidding || bidding.length === 0) {
+    return contract;
+  }
+
+  // Find the last bid that matches the contract
+  let lastContractBidIndex = -1;
+  for (let i = bidding.length - 1; i >= 0; i--) {
+    const bid = bidding[i];
+    if (bid !== "Pass" && bid !== "Double" && bid !== "Redouble") {
+      // Check if this bid matches the contract (remove suit symbols for comparison)
+      const normalizedBid = bid.replace(/[♠♥♦♣]/g, match => {
+        return match === '♠' ? 'S' : match === '♥' ? 'H' : match === '♦' ? 'D' : 'C';
+      });
+      const normalizedContract = contract.replace(/[♠♥♦♣]/g, match => {
+        return match === '♠' ? 'S' : match === '♥' ? 'H' : match === '♦' ? 'D' : 'C';
+      });
+      
+      if (normalizedBid === normalizedContract) {
+        lastContractBidIndex = i;
+        break;
+      }
+    }
+  }
+
+  if (lastContractBidIndex === -1) {
+    return contract;
+  }
+
+  // Check what comes after the contract bid
+  let doubled = false;
+  let redoubled = false;
+  
+  for (let i = lastContractBidIndex + 1; i < bidding.length; i++) {
+    const bid = bidding[i];
+    if (bid === "Double") {
+      doubled = true;
+      redoubled = false; // Reset redoubled if there was a double
+    } else if (bid === "Redouble") {
+      redoubled = true;
+      doubled = false; // Reset doubled if there was a redouble
+    } else if (bid !== "Pass") {
+      // If there's another bid after the contract, this contract is not the final one
+      break;
+    }
+  }
+
+  // Add the appropriate notation
+  if (redoubled) {
+    return contract + "XX";
+  } else if (doubled) {
+    return contract + "X";
+  }
+
+  return contract;
+}
+
 function normalizeVulnerability(vul: string): string {
   switch (vul.toLowerCase()) {
     case 'none':
@@ -211,6 +268,11 @@ function isValidHand(hand: Partial<ParsedHand>): hand is ParsedHand {
   // Ensure actualBidding is always initialized
   if (!hand.actualBidding) {
     hand.actualBidding = [];
+  }
+  
+  // Process doubled contracts if we have both finalContract and actualBidding
+  if (hand.finalContract && hand.actualBidding) {
+    hand.finalContract = determineDoubledContract(hand.finalContract, hand.actualBidding);
   }
   
   return !!(
