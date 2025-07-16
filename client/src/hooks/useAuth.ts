@@ -43,10 +43,10 @@ export function useAuth() {
     },
     retry: false,
     refetchOnWindowFocus: false,
-    refetchOnMount: true,
+    refetchOnMount: false, // Don't refetch on every mount
     refetchOnReconnect: false,
-    staleTime: 5000, // Cache for 5 seconds to prevent rapid refetches
-    gcTime: 10000, // Keep in cache for 10 seconds
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes to prevent frequent requests
+    gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
   });
 
   const loginMutation = useMutation({
