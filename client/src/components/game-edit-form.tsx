@@ -71,9 +71,17 @@ export default function GameEditForm({ game, autoOpen = false }: GameEditFormPro
       });
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (updatedGame) => {
+      // Update the cache with the new data immediately
+      queryClient.setQueryData([`/api/games/${game.id}`], updatedGame);
+      
+      // Invalidate all games queries to refresh dashboard
       queryClient.invalidateQueries({ queryKey: ["/api/games"] });
-      queryClient.invalidateQueries({ queryKey: [`/api/games/${game.id}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/games/${game.id}/hands`] });
+      
+      // Force refetch of games list to ensure fresh data
+      queryClient.refetchQueries({ queryKey: ["/api/games"] });
+      
       toast({
         title: "Game Updated",
         description: "Game details have been successfully updated.",
@@ -106,6 +114,11 @@ export default function GameEditForm({ game, autoOpen = false }: GameEditFormPro
           <DialogTitle>Edit Game Details</DialogTitle>
           <DialogDescription>
             Update the game information such as date, location, and event details.
+            {game.filename && (
+              <div className="mt-2 text-sm text-muted-foreground">
+                File: {game.filename}
+              </div>
+            )}
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>

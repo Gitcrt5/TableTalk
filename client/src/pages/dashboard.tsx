@@ -15,6 +15,8 @@ export default function Dashboard() {
 
   const { data: games, isLoading: gamesLoading } = useQuery<Game[]>({
     queryKey: ["/api/games"],
+    staleTime: 0, // Always refetch on page load to get fresh data
+    refetchOnWindowFocus: true, // Refetch when window regains focus
   });
 
   const filteredGames = games?.filter(game => 
