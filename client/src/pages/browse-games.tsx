@@ -100,40 +100,33 @@ export default function BrowseGames() {
                       <div className="flex-1">
                         <div className="flex items-start space-x-4">
                           <div className="flex-1">
-                            <h3 className="text-xl font-semibold text-text-primary mb-2">
-                              {game.title}
+                            <h3 className="text-xl font-semibold text-text-primary mb-1">
+                              {game.tournament || game.title}
                             </h3>
                             
-                            <div className="flex flex-wrap items-center gap-4 text-sm text-text-secondary mb-4">
-                              {game.tournament && (
-                                <div className="flex items-center space-x-1">
-                                  <Calendar className="h-4 w-4" />
-                                  <span>{game.tournament}</span>
-                                </div>
-                              )}
-                              
-                              <div className="flex items-center space-x-1">
-                                <User className="h-4 w-4" />
-                                <span>Uploaded by {game.uploadedBy}</span>
+                            {game.date && (
+                              <div className="text-lg text-text-secondary mb-3">
+                                {new Date(game.date).toLocaleDateString()}
                               </div>
-                              
-                              <div className="flex items-center space-x-1">
-                                <Calendar className="h-4 w-4" />
-                                <span>{new Date(game.uploadedAt).toLocaleDateString()}</span>
-                              </div>
-                            </div>
-
-                            {game.round && (
-                              <Badge variant="outline" className="mb-4">
-                                {game.round}
-                              </Badge>
                             )}
                             
-                            <div className="flex items-center space-x-4 text-sm text-text-secondary">
-                              <span className="flex items-center space-x-1">
-                                <Eye className="h-4 w-4" />
-                                <span>View hands</span>
-                              </span>
+                            <div className="flex flex-wrap items-center gap-4 text-sm text-text-secondary mb-2">
+                              {game.location && (
+                                <span>{game.location}</span>
+                              )}
+                              
+                              {game.round && (
+                                <Badge variant="outline" className="text-xs">
+                                  {game.round}
+                                </Badge>
+                              )}
+                            </div>
+
+                            <div className="text-xs text-text-secondary">
+                              <span>File: {game.title}</span>
+                              {game.uploaderName && (
+                                <span> • Uploaded by {game.uploaderName}</span>
+                              )}
                             </div>
                           </div>
                         </div>

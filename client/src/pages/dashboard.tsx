@@ -87,38 +87,33 @@ export default function Dashboard() {
               <CardContent className="p-6">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <h3 className="text-xl font-semibold text-text-primary mb-2 hover:text-primary transition-colors">
-                      {game.title}
+                    <h3 className="text-xl font-semibold text-text-primary mb-1 hover:text-primary transition-colors">
+                      {game.tournament || game.title}
                     </h3>
                     
-                    <div className="flex flex-wrap items-center gap-4 text-sm text-text-secondary mb-4">
-                      {game.tournament && (
-                        <div className="flex items-center space-x-1">
-                          <Calendar className="h-4 w-4" />
-                          <span>{game.tournament}</span>
-                        </div>
+                    {game.date && (
+                      <div className="text-lg text-text-secondary mb-3">
+                        {new Date(game.date).toLocaleDateString()}
+                      </div>
+                    )}
+                    
+                    <div className="flex flex-wrap items-center gap-4 text-sm text-text-secondary mb-2">
+                      {game.location && (
+                        <span>{game.location}</span>
                       )}
                       
-                      <div className="flex items-center space-x-1">
-                        <User className="h-4 w-4" />
-                        <span>Uploaded by {game.uploaderName || game.uploadedBy}</span>
-                      </div>
-                      
-                      <div className="flex items-center space-x-1">
-                        <Calendar className="h-4 w-4" />
-                        <span>{new Date(game.uploadedAt).toLocaleDateString()}</span>
-                      </div>
-                    </div>
-
-                    <div className="flex flex-wrap gap-2 mb-4">
                       {game.round && (
-                        <Badge variant="outline">
+                        <Badge variant="outline" className="text-xs">
                           {game.round}
                         </Badge>
                       )}
-                      <Badge variant="secondary" className="text-xs">
-                        Bridge Game
-                      </Badge>
+                    </div>
+
+                    <div className="text-xs text-text-secondary">
+                      <span>File: {game.title}</span>
+                      {game.uploaderName && (
+                        <span> • Uploaded by {game.uploaderName}</span>
+                      )}
                     </div>
                   </div>
                   

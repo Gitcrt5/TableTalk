@@ -189,6 +189,7 @@ TableTalk supports two authentication methods for maximum hosting flexibility:
 - July 10, 2025. **DISPLAY NAME UPDATE FIX** - Fixed display name field not updating in account management by adding displayName field to all user API responses in auth.ts. The /api/user endpoint now properly returns displayName field, allowing profile updates to show immediately in the UI. Enhanced cache management with immediate data updates and proper invalidation.
 - July 14, 2025. **COMMENT SYSTEM FIXES** - Fixed comment submission issue by correcting apiRequest function calls and session authentication. Comments now properly submit and display immediately. Streamlined comment UI by removing redundant avatar initials while keeping display names. Fixed username disappearing on hover in header dropdown by adding proper text colors.
 - July 14, 2025. **GAME EDIT FORM FIX** - Fixed game editing functionality in deployed app by correcting apiRequest function call format from (method, url, data) to (url, {method, body}) structure. Game details can now be updated successfully after PBN upload without errors.
+- July 14, 2025. **GAMES LIST REDESIGN** - Improved games list layout to prioritize event names and dates as primary information. Tournament/event names now appear as main titles, dates are prominently displayed, and filenames are shown as smaller detail text. Removed redundant "Bridge Game" badges and reduced calendar icon confusion for cleaner, more intuitive information hierarchy.
 
 ## TODO List & Future Enhancements
 
