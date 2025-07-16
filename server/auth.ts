@@ -53,6 +53,7 @@ export function setupLocalAuth(app: Express) {
       secure: false, // Always false for development environment
       sameSite: 'lax',
       maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days in milliseconds
+      domain: undefined, // Don't set domain for development
     },
   };
 
@@ -97,10 +98,10 @@ export function setupLocalAuth(app: Express) {
       console.log("Deserializing user:", id);
       const user = await storage.getUser(id);
       console.log("Found user:", user ? user.id : "null");
-      done(null, user);
+      done(null, user || false);
     } catch (error) {
       console.error("Error deserializing user:", error);
-      done(error);
+      done(null, false);
     }
   });
 
@@ -186,6 +187,7 @@ export function setupLocalAuth(app: Express) {
     console.log("User auth check - session ID:", req.sessionID);
     console.log("User auth check - isAuthenticated:", req.isAuthenticated());
     console.log("User auth check - user:", req.user ? req.user.id : "null");
+    console.log("User auth check - session:", req.session);
     
     if (!req.isAuthenticated() || !req.user) {
       return res.sendStatus(401);
