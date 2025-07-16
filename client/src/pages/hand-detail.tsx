@@ -186,8 +186,34 @@ export default function HandDetail() {
     
     if (finalBid) {
       finalContract = finalBid;
-      // Find who made the final contract bid
+      
+      // Check if the final bid was doubled or redoubled
       const finalBidIndex = newBidding.lastIndexOf(finalBid);
+      
+      // Look for Double or Redouble after the final bid
+      let isDoubled = false;
+      let isRedoubled = false;
+      
+      for (let i = finalBidIndex + 1; i < newBidding.length; i++) {
+        if (newBidding[i] === "Double") {
+          isDoubled = true;
+          isRedoubled = false; // Reset redouble if we find a new double
+        } else if (newBidding[i] === "Redouble") {
+          isRedoubled = true;
+        } else if (newBidding[i] !== "Pass") {
+          // If we hit another bid, stop looking
+          break;
+        }
+      }
+      
+      // Add X for doubled or XX for redoubled
+      if (isRedoubled) {
+        finalContract += "XX";
+      } else if (isDoubled) {
+        finalContract += "X";
+      }
+      
+      // Find who made the final contract bid
       declarer = positions[finalBidIndex % 4];
     }
     
@@ -381,8 +407,16 @@ export default function HandDetail() {
                         // Handle special bids that shouldn't be converted
                         if (bid === "Double" || bid === "Redouble") return bid;
                         
-                        // Convert suit letters to symbols only for actual suit bids (number + suit)
-                        return bid.replace(/(\d)S/g, '$1♠').replace(/(\d)H/g, '$1♥').replace(/(\d)D/g, '$1♦').replace(/(\d)C/g, '$1♣');
+                        // Convert suit letters to symbols while preserving X/XX annotations
+                        let formattedBid = bid.replace(/(\d)([SHDC])(X*)/g, (match, level, suit, doubleMarker) => {
+                          const suitSymbol = suit === 'S' ? '♠' : suit === 'H' ? '♥' : suit === 'D' ? '♦' : suit === 'C' ? '♣' : suit;
+                          return level + suitSymbol + doubleMarker;
+                        });
+                        
+                        // Handle NT with X/XX
+                        formattedBid = formattedBid.replace(/(\d)NT(X*)/g, '$1NT$2');
+                        
+                        return formattedBid;
                       };
                       
                       return biddingRounds.map((round, index) => (

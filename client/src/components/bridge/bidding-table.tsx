@@ -35,8 +35,16 @@ export default function BiddingTable({
       return bid;
     }
     
-    // Convert suit letters to symbols only for actual suit bids (number + suit)
-    return bid.replace(/(\d)S/g, '$1♠').replace(/(\d)H/g, '$1♥').replace(/(\d)D/g, '$1♦').replace(/(\d)C/g, '$1♣');
+    // Convert suit letters to symbols while preserving X/XX annotations
+    let formattedBid = bid.replace(/(\d)([SHDC])(X*)/g, (match, level, suit, doubleMarker) => {
+      const suitSymbol = suit === 'S' ? '♠' : suit === 'H' ? '♥' : suit === 'D' ? '♦' : suit === 'C' ? '♣' : suit;
+      return level + suitSymbol + doubleMarker;
+    });
+    
+    // Handle NT with X/XX
+    formattedBid = formattedBid.replace(/(\d)NT(X*)/g, '$1NT$2');
+    
+    return formattedBid;
   };
 
   // Get the appropriate color class for a bid

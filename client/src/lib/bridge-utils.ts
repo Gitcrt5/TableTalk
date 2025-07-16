@@ -148,10 +148,19 @@ export function calculateHandPoints(handString: string | null | undefined): numb
 export function formatContract(contract: string): { contractPart: string; declarerPart: string; isRed: boolean } {
   if (!contract) return { contractPart: '', declarerPart: '', isRed: false };
   
-  // Split contract into parts (e.g., "4♥ by East" -> ["4♥", "by", "East"])
+  // Split contract into parts (e.g., "4♥X by East" -> ["4♥X", "by", "East"])
   const parts = contract.split(' ');
-  const contractPart = parts[0] || '';
+  let contractPart = parts[0] || '';
   const declarerPart = parts.slice(1).join(' ') || '';
+  
+  // Convert suit letters to symbols while preserving X/XX annotations
+  contractPart = contractPart.replace(/(\d)([SHDC])(X*)/g, (match, level, suit, doubleMarker) => {
+    const suitSymbol = suit === 'S' ? '♠' : suit === 'H' ? '♥' : suit === 'D' ? '♦' : suit === 'C' ? '♣' : suit;
+    return level + suitSymbol + doubleMarker;
+  });
+  
+  // Handle NT with X/XX
+  contractPart = contractPart.replace(/(\d)NT(X*)/g, '$1NT$2');
   
   // Check if contract contains hearts (♥) or diamonds (♦)
   const isRed = contractPart.includes('♥') || contractPart.includes('♦') || 
