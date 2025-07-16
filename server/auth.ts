@@ -50,7 +50,7 @@ export function setupLocalAuth(app: Express) {
     name: 'tabletalk.session',
     cookie: {
       httpOnly: true,
-      secure: isProduction, // Only secure in production
+      secure: false, // Always false for development environment
       sameSite: 'lax',
       maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days in milliseconds
     },
@@ -88,12 +88,18 @@ export function setupLocalAuth(app: Express) {
     )
   );
 
-  passport.serializeUser((user, done) => done(null, user.id));
+  passport.serializeUser((user, done) => {
+    console.log("Serializing user:", user.id);
+    done(null, user.id);
+  });
   passport.deserializeUser(async (id: string, done) => {
     try {
+      console.log("Deserializing user:", id);
       const user = await storage.getUser(id);
+      console.log("Found user:", user ? user.id : "null");
       done(null, user);
     } catch (error) {
+      console.error("Error deserializing user:", error);
       done(error);
     }
   });
@@ -151,7 +157,12 @@ export function setupLocalAuth(app: Express) {
       }
 
       req.login(user, (err) => {
-        if (err) return next(err);
+        if (err) {
+          console.error("Login error:", err);
+          return next(err);
+        }
+        console.log("User logged in successfully:", user.id);
+        console.log("Session ID:", req.sessionID);
         res.json({
           id: user.id,
           email: user.email,
@@ -172,6 +183,10 @@ export function setupLocalAuth(app: Express) {
   });
 
   app.get("/api/user", (req, res) => {
+    console.log("User auth check - session ID:", req.sessionID);
+    console.log("User auth check - isAuthenticated:", req.isAuthenticated());
+    console.log("User auth check - user:", req.user ? req.user.id : "null");
+    
     if (!req.isAuthenticated() || !req.user) {
       return res.sendStatus(401);
     }
