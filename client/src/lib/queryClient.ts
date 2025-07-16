@@ -56,7 +56,9 @@ export const queryClient = new QueryClient({
       refetchInterval: false,
       refetchOnWindowFocus: false,
       refetchOnMount: false, // Prevent automatic refetch on component mount
-      staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+      refetchOnReconnect: false, // Don't refetch on reconnect
+      staleTime: 30 * 60 * 1000, // Cache for 30 minutes
+      gcTime: 60 * 60 * 1000, // Keep in cache for 1 hour
       retry: false,
     },
     mutations: {
