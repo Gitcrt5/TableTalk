@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import PBNUpload from "@/components/upload/pbn-upload";
-import { Search, Upload, Calendar, User } from "lucide-react";
+import { Search, Upload, Calendar, User, FileText, MapPin } from "lucide-react";
 import { Link } from "wouter";
 import type { Game } from "@shared/schema";
 
@@ -87,25 +87,33 @@ export default function Dashboard() {
               <CardContent className="p-6">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <div className="flex items-center justify-between mb-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <FileText className="w-5 h-5 text-text-secondary" />
                       <h3 className="text-xl font-semibold text-text-primary hover:text-primary transition-colors">
                         {game.title || game.pbnEvent || game.filename}
                       </h3>
-                      {(game.date || game.pbnDate || game.uploadedAt) && (
-                        <div className="text-lg text-text-secondary">
-                          {game.date 
-                            ? new Date(game.date).toLocaleDateString()
-                            : game.pbnDate 
-                            ? new Date(game.pbnDate).toLocaleDateString()
-                            : new Date(game.uploadedAt).toLocaleDateString()
-                          }
-                        </div>
-                      )}
                     </div>
                     
                     <div className="flex flex-wrap items-center gap-4 text-sm text-text-secondary mb-2">
+                      {(game.date || game.pbnDate || game.uploadedAt) && (
+                        <div className="flex items-center gap-1">
+                          <Calendar className="w-4 h-4" />
+                          <span>
+                            {game.date 
+                              ? new Date(game.date).toLocaleDateString()
+                              : game.pbnDate 
+                              ? new Date(game.pbnDate).toLocaleDateString()
+                              : new Date(game.uploadedAt).toLocaleDateString()
+                            }
+                          </span>
+                        </div>
+                      )}
+                      
                       {(game.location || game.pbnSite) && (
-                        <span>{game.location || game.pbnSite}</span>
+                        <div className="flex items-center gap-1">
+                          <MapPin className="w-4 h-4" />
+                          <span>{game.location || game.pbnSite}</span>
+                        </div>
                       )}
                       
                       {game.round && (
