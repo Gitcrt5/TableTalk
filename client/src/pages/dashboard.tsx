@@ -124,7 +124,7 @@ export default function Dashboard() {
                     </div>
 
                     <div className="text-xs text-text-secondary">
-                      <span>File: {game.filename || game.title}</span>
+                      <span>File: {game.filename}</span>
                       {game.uploaderName && (
                         <span> • Uploaded by {game.uploaderName}</span>
                       )}
