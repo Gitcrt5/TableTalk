@@ -216,10 +216,13 @@ export function setupLocalAuth(app: Express) {
     
     const user = req.user;
     
-    // Add cache headers to prevent 1Password from treating this as a login form
-    res.set('Cache-Control', 'private, max-age=300'); // Cache for 5 minutes
+    // Add strong cache headers to prevent 1Password from treating this as a login form
+    res.set('Cache-Control', 'private, max-age=1800, must-revalidate'); // Cache for 30 minutes
     res.set('X-Content-Type-Options', 'nosniff');
     res.set('X-Frame-Options', 'DENY');
+    res.set('Pragma', 'no-cache');
+    res.set('X-Robots-Tag', 'noindex, nofollow');
+    res.set('Referrer-Policy', 'same-origin');
     
     res.json({
       id: user.id,
