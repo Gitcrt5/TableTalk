@@ -43,9 +43,10 @@ export function useAuth() {
     },
     retry: false,
     refetchOnWindowFocus: false,
-    refetchOnMount: true, // Allow initial mount check
+    refetchOnMount: true,
     refetchOnReconnect: false,
-    staleTime: 0, // Always fresh for immediate updates
+    staleTime: 5000, // Cache for 5 seconds to prevent rapid refetches
+    gcTime: 10000, // Keep in cache for 10 seconds
   });
 
   const loginMutation = useMutation({
@@ -58,6 +59,8 @@ export function useAuth() {
     },
     onSuccess: (user) => {
       queryClient.setQueryData([userEndpoint], user);
+      // Force a refetch to ensure we get the latest auth state
+      queryClient.invalidateQueries({ queryKey: [userEndpoint] });
       toast({
         title: "Success",
         description: "You have been logged in successfully",

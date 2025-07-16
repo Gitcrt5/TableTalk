@@ -43,16 +43,16 @@ export function setupLocalAuth(app: Express) {
   // Configure session based on environment
   const sessionSettings: session.SessionOptions = {
     secret: process.env.SESSION_SECRET || "fallback-secret-for-development",
-    resave: false, // Don't force session save back to store
-    saveUninitialized: false, // Don't save uninitialized sessions
+    resave: false,
+    saveUninitialized: false,
     store: sessionStore,
-    name: 'connect.sid', // Use standard session name
-    rolling: false, // Don't renew session on each request
+    name: 'connect.sid',
     cookie: {
       httpOnly: true,
-      secure: false, // Always false for development environment
+      secure: false,
       sameSite: 'lax',
-      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days in milliseconds
+      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      path: '/',
     },
   };
 
@@ -63,15 +63,6 @@ export function setupLocalAuth(app: Express) {
   app.use(session(sessionSettings));
   app.use(passport.initialize());
   app.use(passport.session());
-
-  // Add session debugging middleware
-  app.use((req, res, next) => {
-    console.log('Session debug - URL:', req.url);
-    console.log('Session debug - Session ID:', req.sessionID);
-    console.log('Session debug - Session exists:', !!req.session);
-    console.log('Session debug - User authenticated:', req.isAuthenticated && req.isAuthenticated());
-    next();
-  });
 
   // Local strategy for email/password authentication
   passport.use(
@@ -218,11 +209,6 @@ export function setupLocalAuth(app: Express) {
   });
 
   app.get("/api/user", (req, res) => {
-    console.log("User auth check - session ID:", req.sessionID);
-    console.log("User auth check - isAuthenticated:", req.isAuthenticated());
-    console.log("User auth check - user:", req.user ? req.user.id : "null");
-    console.log("User auth check - session:", req.session);
-    
     if (!req.isAuthenticated() || !req.user) {
       return res.sendStatus(401);
     }
