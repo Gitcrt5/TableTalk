@@ -149,13 +149,25 @@ export function setupLocalAuth(app: Express) {
       // Log the user in
       req.login(newUser, (err) => {
         if (err) return next(err);
-        res.status(201).json({
-          id: newUser.id,
-          email: newUser.email,
-          firstName: newUser.firstName,
-          lastName: newUser.lastName,
-          displayName: newUser.displayName,
-          authType: newUser.authType,
+        
+        // Ensure session is saved before responding
+        req.session.save((saveErr) => {
+          if (saveErr) {
+            console.error("Session save error during registration:", saveErr);
+            return next(saveErr);
+          }
+          
+          console.log("User registered and logged in successfully:", newUser.id);
+          console.log("Session ID after registration:", req.sessionID);
+          
+          res.status(201).json({
+            id: newUser.id,
+            email: newUser.email,
+            firstName: newUser.firstName,
+            lastName: newUser.lastName,
+            displayName: newUser.displayName,
+            authType: newUser.authType,
+          });
         });
       });
     } catch (error) {
@@ -176,15 +188,26 @@ export function setupLocalAuth(app: Express) {
           console.error("Login error:", err);
           return next(err);
         }
-        console.log("User logged in successfully:", user.id);
-        console.log("Session ID:", req.sessionID);
-        res.json({
-          id: user.id,
-          email: user.email,
-          firstName: user.firstName,
-          lastName: user.lastName,
-          displayName: user.displayName,
-          authType: user.authType,
+        
+        // Ensure session is saved before responding
+        req.session.save((saveErr) => {
+          if (saveErr) {
+            console.error("Session save error:", saveErr);
+            return next(saveErr);
+          }
+          
+          console.log("User logged in successfully:", user.id);
+          console.log("Session ID after login:", req.sessionID);
+          console.log("Session saved successfully");
+          
+          res.json({
+            id: user.id,
+            email: user.email,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            displayName: user.displayName,
+            authType: user.authType,
+          });
         });
       });
     })(req, res, next);
