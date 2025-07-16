@@ -31,14 +31,9 @@ async function comparePasswords(supplied: string, stored: string): Promise<boole
 }
 
 export function setupLocalAuth(app: Express) {
-  // Use PostgreSQL session store for persistence
-  const PostgresStore = connectPg(session);
-  const sessionStore = new PostgresStore({
-    conString: process.env.DATABASE_URL,
-    tableName: 'sessions',
-    createTableIfMissing: false, // Table already exists in our schema
-    ttl: 30 * 24 * 60 * 60, // 30 days in seconds (long-lasting sessions)
-  });
+  // Use in-memory session store for development debugging
+  const MemoryStore = session.MemoryStore;
+  const sessionStore = new MemoryStore();
 
   // Handle session store errors
   sessionStore.on('error', (error) => {
@@ -48,21 +43,23 @@ export function setupLocalAuth(app: Express) {
   // Configure session based on environment
   const sessionSettings: session.SessionOptions = {
     secret: process.env.SESSION_SECRET || "fallback-secret-for-development",
-    resave: true, // Force session save back to store
-    saveUninitialized: true, // Save uninitialized sessions
+    resave: false, // Don't force session save back to store
+    saveUninitialized: false, // Don't save uninitialized sessions
     store: sessionStore,
-    name: 'tabletalk.session',
-    rolling: true, // Renew session on each request
+    name: 'connect.sid', // Use standard session name
+    rolling: false, // Don't renew session on each request
     cookie: {
       httpOnly: true,
       secure: false, // Always false for development environment
       sameSite: 'lax',
       maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days in milliseconds
-      domain: undefined, // Don't set domain for development
     },
   };
 
-  app.set("trust proxy", 1); // Trust Replit's proxy for session handling
+  // Don't trust proxy for development to avoid session issues
+  if (process.env.NODE_ENV === "production") {
+    app.set("trust proxy", 1);
+  }
   app.use(session(sessionSettings));
   app.use(passport.initialize());
   app.use(passport.session());
