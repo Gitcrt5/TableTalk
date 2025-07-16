@@ -40,14 +40,19 @@ export function setupLocalAuth(app: Express) {
     ttl: 30 * 24 * 60 * 60, // 30 days in seconds (long-lasting sessions)
   });
 
+  // Handle session store errors
+  sessionStore.on('error', (error) => {
+    console.error('Session store error:', error);
+  });
+
   // Configure session based on environment
-  const isProduction = process.env.NODE_ENV === "production";
   const sessionSettings: session.SessionOptions = {
     secret: process.env.SESSION_SECRET || "fallback-secret-for-development",
-    resave: false,
-    saveUninitialized: false,
+    resave: true, // Force session save back to store
+    saveUninitialized: true, // Save uninitialized sessions
     store: sessionStore,
     name: 'tabletalk.session',
+    rolling: true, // Renew session on each request
     cookie: {
       httpOnly: true,
       secure: false, // Always false for development environment
@@ -61,6 +66,15 @@ export function setupLocalAuth(app: Express) {
   app.use(session(sessionSettings));
   app.use(passport.initialize());
   app.use(passport.session());
+
+  // Add session debugging middleware
+  app.use((req, res, next) => {
+    console.log('Session debug - URL:', req.url);
+    console.log('Session debug - Session ID:', req.sessionID);
+    console.log('Session debug - Session exists:', !!req.session);
+    console.log('Session debug - User authenticated:', req.isAuthenticated && req.isAuthenticated());
+    next();
+  });
 
   // Local strategy for email/password authentication
   passport.use(
