@@ -202,6 +202,7 @@ TableTalk supports two authentication methods for maximum hosting flexibility:
 - July 16, 2025. **HAND DETAIL CONTRACT FORMATTING FIX** - Fixed contract display formatting in hand detail page badges and final contract display. Simplified contract formatting logic to ensure proper spacing between contract amount and declarer information, eliminating newline issues in contract text display.
 - July 16, 2025. **WHITESPACE PRESERVATION FIX** - Fixed HTML whitespace stripping issue in contract display by using React's {' '} syntax for preserved spaces. Contract badges now properly display "Contract: 2♥X by West" with correct spacing after colon and before "by" text, resolving rendering issues where leading/trailing spaces were being stripped.
 - July 16, 2025. **DOUBLED CONTRACT DATABASE FIX** - Fixed missing doubled contract notation (X/XX) in existing database records. Updated hands 693 and 477 to show correct doubled notation (5NTX and 3NTX respectively). Enhanced PBN parser logic to properly detect and apply doubled contract notation for future uploads.
+- July 17, 2025. **GAME DETAILS IN HAND VIEW** - Added game information display to hand detail page. Game details (title, date, location, tournament, round) now appear in a highlighted section between the board number and dealer/vulnerability information for better context when viewing individual hands.
 
 ## TODO List & Future Enhancements
 

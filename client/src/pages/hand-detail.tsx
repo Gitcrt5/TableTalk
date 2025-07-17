@@ -7,7 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import HandDisplay from "@/components/bridge/hand-display";
 import BiddingTable from "@/components/bridge/bidding-table";
 import CommentsSection from "@/components/comments/comments-section";
-import { ArrowLeft, Edit, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowLeft, Edit, ChevronLeft, ChevronRight, Calendar } from "lucide-react";
 import { Link, useParams } from "wouter";
 import { apiRequest } from "@/lib/queryClient";
 import { formatContract } from "@/lib/bridge-utils";
@@ -139,6 +139,11 @@ export default function HandDetail() {
 
   const { data: gameHands } = useQuery<Hand[]>({
     queryKey: [`/api/games/${hand?.gameId}/hands`],
+    enabled: !!hand?.gameId,
+  });
+
+  const { data: game } = useQuery({
+    queryKey: [`/api/games/${hand?.gameId}`],
     enabled: !!hand?.gameId,
   });
 
@@ -330,6 +335,28 @@ export default function HandDetail() {
             <h1 className="text-2xl md:text-3xl font-bold text-text-primary mb-2">
               Board {hand.boardNumber}
             </h1>
+            
+            {/* Game Information */}
+            {game && (
+              <div className="mb-3 p-3 bg-gray-50 rounded-lg border">
+                <div className="flex flex-wrap items-center gap-3 text-sm">
+                  <span className="font-semibold text-text-primary">{game.title}</span>
+                  {game.date && (
+                    <span className="text-text-secondary">📅 {game.date}</span>
+                  )}
+                  {game.location && (
+                    <span className="text-text-secondary">📍 {game.location}</span>
+                  )}
+                  {game.tournament && (
+                    <span className="text-text-secondary">🏆 {game.tournament}</span>
+                  )}
+                  {game.round && (
+                    <Badge variant="outline" className="text-xs">{game.round}</Badge>
+                  )}
+                </div>
+              </div>
+            )}
+            
             <div className="flex flex-wrap items-center gap-2 md:gap-4 text-text-secondary">
               <Badge variant="outline" className="text-xs md:text-sm">Dealer: {hand.dealer}</Badge>
               <Badge variant="outline" className="text-xs md:text-sm">{hand.vulnerability}</Badge>
