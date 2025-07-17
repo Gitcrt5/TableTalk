@@ -198,7 +198,7 @@ function determineDoubledContract(contract: string, bidding: string[]): string {
   for (let i = bidding.length - 1; i >= 0; i--) {
     const bid = bidding[i];
     if (bid !== "Pass" && bid !== "Double" && bid !== "Redouble") {
-      // Check if this bid matches the contract (remove suit symbols for comparison)
+      // Check if this bid matches the contract (normalize both for comparison)
       const normalizedBid = bid.replace(/[♠♥♦♣]/g, match => {
         return match === '♠' ? 'S' : match === '♥' ? 'H' : match === '♦' ? 'D' : 'C';
       });
