@@ -409,4 +409,105 @@ export function setupLocalAuth(app: Express) {
       res.status(500).json({ message: "Internal server error" });
     }
   });
+
+  // Password reset routes
+  app.post("/api/forgot-password", async (req, res) => {
+    try {
+      const { email } = req.body;
+
+      if (!email) {
+        return res.status(400).json({ message: "Email is required" });
+      }
+
+      // Validate email format
+      if (!isValidEmail(email)) {
+        return res.status(400).json({ message: "Please enter a valid email address" });
+      }
+
+      // Find user by email
+      const [user] = await db.select().from(users).where(eq(users.email, email));
+      
+      if (!user) {
+        // Don't reveal if email exists or not for security
+        return res.json({ message: "If that email exists, we've sent a password reset link." });
+      }
+
+      // Only allow password reset for local auth users
+      if (user.authType !== "local") {
+        return res.status(400).json({ message: "Password reset is only available for local accounts" });
+      }
+
+      // Generate password reset token
+      const resetToken = generateEmailToken();
+      const resetExpires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+      // Update user with reset token
+      await db.update(users)
+        .set({ 
+          passwordResetToken: resetToken, 
+          passwordResetExpires: resetExpires 
+        })
+        .where(eq(users.id, user.id));
+
+      // Send password reset email
+      try {
+        await emailService.sendPasswordResetEmail(
+          user.email!, 
+          resetToken, 
+          user.firstName || undefined
+        );
+      } catch (emailError) {
+        console.error("Failed to send password reset email:", emailError);
+        return res.status(500).json({ message: "Failed to send password reset email" });
+      }
+
+      res.json({ message: "If that email exists, we've sent a password reset link." });
+    } catch (error) {
+      console.error("Forgot password error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.post("/api/reset-password", async (req, res) => {
+    try {
+      const { token, newPassword } = req.body;
+
+      if (!token || !newPassword) {
+        return res.status(400).json({ message: "Token and new password are required" });
+      }
+
+      if (newPassword.length < 6) {
+        return res.status(400).json({ message: "Password must be at least 6 characters long" });
+      }
+
+      // Find user by reset token
+      const [user] = await db.select().from(users).where(eq(users.passwordResetToken, token));
+      
+      if (!user) {
+        return res.status(400).json({ message: "Invalid or expired reset token" });
+      }
+
+      // Check if token is expired
+      if (user.passwordResetExpires && user.passwordResetExpires < new Date()) {
+        return res.status(400).json({ message: "Reset token has expired" });
+      }
+
+      // Hash new password
+      const hashedPassword = await hashPassword(newPassword);
+
+      // Update user password and clear reset token
+      await db.update(users)
+        .set({ 
+          password: hashedPassword,
+          passwordResetToken: null, 
+          passwordResetExpires: null 
+        })
+        .where(eq(users.id, user.id));
+
+      res.json({ message: "Password has been reset successfully" });
+    } catch (error) {
+      console.error("Reset password error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
 }

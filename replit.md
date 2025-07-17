@@ -204,13 +204,14 @@ TableTalk supports two authentication methods for maximum hosting flexibility:
 - July 16, 2025. **DOUBLED CONTRACT DATABASE FIX** - Fixed missing doubled contract notation (X/XX) in existing database records. Updated hands 693 and 477 to show correct doubled notation (5NTX and 3NTX respectively). Enhanced PBN parser logic to properly detect and apply doubled contract notation for future uploads.
 - July 17, 2025. **GAME DETAILS IN HAND VIEW** - Added game information display to hand detail page. Game details (title, date, location, tournament, round) now appear in a highlighted section between the board number and dealer/vulnerability information for better context when viewing individual hands.
 - July 17, 2025. **EMAIL VERIFICATION SYSTEM** - Implemented comprehensive email verification during user registration. Users receive verification emails upon signup with 24-hour expiration tokens. Added email verification banner, resend verification functionality, and dedicated verification success page. Mock email service logs verification emails to console for development. System validates email format and prepares foundation for future email alerts feature.
+- July 17, 2025. **SENDGRID INTEGRATION AND PASSWORD RESET** - Integrated SendGrid email service for production-ready email delivery with professional HTML templates. Added complete password reset functionality with 1-hour token expiration, forgot password page, and reset password page. Email service automatically switches between SendGrid (production) and mock console logging (development) based on API key availability. All email templates include proper branding and secure token-based authentication.
 
 ## TODO List & Future Enhancements
 
 ### Current Issues to Fix
 - [ ] Resolve LSP errors in server/storage.ts (database insertion type mismatch)
 - [ ] Fix server/vite.ts allowedHosts configuration warning
-- [ ] Replace mock email service with real email provider (SendGrid, Mailgun, etc.) for production
+
 
 ### Known Limitations
 - **Replit Preview Environment**: Login works in standalone tabs but not in Replit's embedded preview due to iframe cookie restrictions. This is expected behavior and will work correctly in production deployment.

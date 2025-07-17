@@ -12,6 +12,8 @@ import AuthPage from "@/pages/auth-page";
 import AccountPage from "@/pages/account";
 import AdminPage from "@/pages/admin";
 import VerifyEmailPage from "@/pages/verify-email";
+import ForgotPasswordPage from "@/pages/forgot-password";
+import ResetPasswordPage from "@/pages/reset-password";
 import NotFound from "@/pages/not-found";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -44,6 +46,8 @@ function Router() {
         <Route path="/account" component={AccountPage} />
         <Route path="/admin" component={AdminPage} />
         <Route path="/verify-email" component={VerifyEmailPage} />
+        <Route path="/forgot-password" component={ForgotPasswordPage} />
+        <Route path="/reset-password" component={ResetPasswordPage} />
         <Route path="/auth" component={AuthPage} />
         <Route component={NotFound} />
       </Switch>

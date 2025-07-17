@@ -115,6 +115,8 @@ export class MemStorage implements IStorage {
       emailVerified: userData.emailVerified || false,
       emailVerificationToken: userData.emailVerificationToken || null,
       emailVerificationExpires: userData.emailVerificationExpires || null,
+      passwordResetToken: userData.passwordResetToken || null,
+      passwordResetExpires: userData.passwordResetExpires || null,
     };
     this.users.set(user.id, user);
     return user;

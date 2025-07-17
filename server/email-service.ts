@@ -1,9 +1,98 @@
 import { randomBytes } from "crypto";
+import { MailService } from '@sendgrid/mail';
 
 export interface EmailService {
   sendVerificationEmail(email: string, token: string, name?: string): Promise<void>;
   sendPasswordResetEmail(email: string, token: string, name?: string): Promise<void>;
   sendWelcomeEmail(email: string, name?: string): Promise<void>;
+}
+
+// SendGrid email service for production
+export class SendGridEmailService implements EmailService {
+  private mailService: MailService;
+  private fromEmail: string;
+
+  constructor(apiKey: string, fromEmail: string = 'noreply@tabletalk.com') {
+    this.mailService = new MailService();
+    this.mailService.setApiKey(apiKey);
+    this.fromEmail = fromEmail;
+  }
+
+  async sendVerificationEmail(email: string, token: string, name?: string): Promise<void> {
+    const verificationUrl = `${process.env.BASE_URL || 'http://localhost:5000'}/verify-email?token=${token}`;
+    
+    await this.mailService.send({
+      to: email,
+      from: this.fromEmail,
+      subject: 'Verify your TableTalk account',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #333;">Welcome to TableTalk!</h2>
+          <p>Hello ${name || 'there'},</p>
+          <p>Welcome to TableTalk! Please verify your email address by clicking the button below:</p>
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${verificationUrl}" style="background-color: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">Verify Email Address</a>
+          </div>
+          <p>Or copy and paste this link into your browser:</p>
+          <p style="word-break: break-all; color: #666;">${verificationUrl}</p>
+          <p style="color: #666; font-size: 14px;">This link will expire in 24 hours.</p>
+          <p>If you didn't create this account, please ignore this email.</p>
+          <p>Best regards,<br>The TableTalk Team</p>
+        </div>
+      `,
+    });
+  }
+
+  async sendPasswordResetEmail(email: string, token: string, name?: string): Promise<void> {
+    const resetUrl = `${process.env.BASE_URL || 'http://localhost:5000'}/reset-password?token=${token}`;
+    
+    await this.mailService.send({
+      to: email,
+      from: this.fromEmail,
+      subject: 'Reset your TableTalk password',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #333;">Reset Your Password</h2>
+          <p>Hello ${name || 'there'},</p>
+          <p>You requested to reset your password for TableTalk. Click the button below to set a new password:</p>
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${resetUrl}" style="background-color: #dc3545; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">Reset Password</a>
+          </div>
+          <p>Or copy and paste this link into your browser:</p>
+          <p style="word-break: break-all; color: #666;">${resetUrl}</p>
+          <p style="color: #666; font-size: 14px;">This link will expire in 1 hour.</p>
+          <p>If you didn't request this reset, please ignore this email.</p>
+          <p>Best regards,<br>The TableTalk Team</p>
+        </div>
+      `,
+    });
+  }
+
+  async sendWelcomeEmail(email: string, name?: string): Promise<void> {
+    await this.mailService.send({
+      to: email,
+      from: this.fromEmail,
+      subject: 'Welcome to TableTalk!',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #333;">Welcome to TableTalk!</h2>
+          <p>Hello ${name || 'there'},</p>
+          <p>Welcome to TableTalk! Your email has been verified and your account is ready to use.</p>
+          <h3>You can now:</h3>
+          <ul>
+            <li>Upload PBN files to analyze bridge games</li>
+            <li>View and comment on bridge hands</li>
+            <li>Practice bidding sequences</li>
+            <li>Connect with other bridge players</li>
+          </ul>
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${process.env.BASE_URL || 'http://localhost:5000'}" style="background-color: #28a745; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">Get Started</a>
+          </div>
+          <p>Best regards,<br>The TableTalk Team</p>
+        </div>
+      `,
+    });
+  }
 }
 
 // Mock email service for development - logs emails to console
@@ -93,4 +182,6 @@ export function isValidEmail(email: string): boolean {
 }
 
 // Create email service instance
-export const emailService: EmailService = new MockEmailService();
+export const emailService: EmailService = process.env.SENDGRID_API_KEY 
+  ? new SendGridEmailService(process.env.SENDGRID_API_KEY)
+  : new MockEmailService();

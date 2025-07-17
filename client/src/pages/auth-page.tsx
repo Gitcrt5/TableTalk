@@ -8,7 +8,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Redirect } from "wouter";
+import { Redirect, Link } from "wouter";
 import logoUrl from "@/assets/tabletalk-logo.svg";
 
 const loginSchema = z.object({
@@ -281,6 +281,14 @@ export default function AuthPage() {
                       >
                         {loginMutation.isPending ? "Signing In..." : "Sign In"}
                       </Button>
+
+                      <div className="text-center mt-4">
+                        <Link href="/forgot-password">
+                          <Button variant="ghost" className="text-sm">
+                            Forgot password?
+                          </Button>
+                        </Link>
+                      </div>
                     </form>
                   </Form>
                 )}
