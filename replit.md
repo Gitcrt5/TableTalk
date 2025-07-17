@@ -200,6 +200,7 @@ TableTalk supports two authentication methods for maximum hosting flexibility:
 - July 16, 2025. **HAND NAVIGATION IMPROVEMENT** - Removed large "View Hand" button from game detail page and made board numbers clickable instead. Board numbers now serve as both headings and navigation links with hover effects, saving space while maintaining functionality.
 - July 16, 2025. **CONTRACT DISPLAY SPACING FIX** - Added proper spacing after colon in contract display on game detail page. Contract now shows "Contract: 2♥X by West" instead of "Contract:2♥X by West" for better readability.
 - July 16, 2025. **HAND DETAIL CONTRACT FORMATTING FIX** - Fixed contract display formatting in hand detail page badges and final contract display. Simplified contract formatting logic to ensure proper spacing between contract amount and declarer information, eliminating newline issues in contract text display.
+- July 16, 2025. **WHITESPACE PRESERVATION FIX** - Fixed HTML whitespace stripping issue in contract display by using React's {' '} syntax for preserved spaces. Contract badges now properly display "Contract: 2♥X by West" with correct spacing after colon and before "by" text, resolving rendering issues where leading/trailing spaces were being stripped.
 
 ## TODO List & Future Enhancements
 
