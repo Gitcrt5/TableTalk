@@ -374,11 +374,15 @@ export function setupLocalAuth(app: Express) {
 
   app.post("/api/resend-verification", async (req, res) => {
     try {
+      console.log("Resend verification request - isAuthenticated:", req.isAuthenticated());
+      console.log("Resend verification request - user:", req.user ? "present" : "not present");
+      
       if (!req.isAuthenticated() || !req.user) {
         return res.status(401).json({ message: "Unauthorized" });
       }
 
       const user = req.user;
+      console.log("User email verified status:", user.emailVerified);
       
       if (user.emailVerified) {
         return res.status(400).json({ message: "Email is already verified" });
@@ -397,11 +401,17 @@ export function setupLocalAuth(app: Express) {
         .where(eq(users.id, user.id));
 
       // Send verification email
-      await emailService.sendVerificationEmail(
-        user.email!, 
-        verificationToken, 
-        user.firstName || undefined
-      );
+      try {
+        await emailService.sendVerificationEmail(
+          user.email!, 
+          verificationToken, 
+          user.firstName || undefined
+        );
+        console.log("Verification email sent successfully to:", user.email);
+      } catch (emailError) {
+        console.error("Failed to send verification email:", emailError);
+        return res.status(500).json({ message: "Failed to send verification email" });
+      }
 
       res.json({ message: "Verification email sent successfully" });
     } catch (error) {
