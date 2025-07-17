@@ -336,14 +336,13 @@ export default function HandDetail() {
               {hand.finalContract && (
                 <Badge className="text-xs md:text-sm">
                   Contract: {(() => {
-                    const contractText = `${hand.finalContract} by ${hand.declarer}`;
-                    const { contractPart, declarerPart, isRed } = formatContract(contractText);
+                    const { contractPart, declarerPart, isRed } = formatContract(hand.finalContract);
                     return (
                       <>
                         <span className={isRed ? "text-red-600" : ""}>
                           {contractPart}
                         </span>
-                        {declarerPart && <span> {declarerPart}</span>}
+                        {hand.declarer && <span> by {hand.declarer}</span>}
                       </>
                     );
                   })()}
@@ -446,14 +445,13 @@ export default function HandDetail() {
                     <div className="text-sm text-text-secondary">Final Contract:</div>
                     <div className="font-semibold text-lg">
                       {(() => {
-                        const contractText = `${hand.finalContract} by ${hand.declarer}`;
-                        const { contractPart, declarerPart, isRed } = formatContract(contractText);
+                        const { contractPart, declarerPart, isRed } = formatContract(hand.finalContract);
                         return (
                           <>
                             <span className={isRed ? "text-red-600" : ""}>
                               {contractPart}
                             </span>
-                            {declarerPart && <span> {declarerPart}</span>}
+                            {hand.declarer && <span> by {hand.declarer}</span>}
                           </>
                         );
                       })()}
