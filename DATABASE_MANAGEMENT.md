@@ -33,17 +33,23 @@ DEV_DATABASE_URL=postgresql://...
 # Push schema changes to development database
 npm run db:push
 
-# Seed development database with test data
-tsx scripts/seed-dev-data.ts
+# Reset development database (clean slate + admin user)
+NODE_ENV=development tsx scripts/reset-dev-database.ts
 
-# Reset development database (push schema + seed data)
-tsx scripts/reset-dev-database.ts
+# Seed development database with test data (after reset)
+NODE_ENV=development tsx scripts/seed-dev-data.ts
+
+# Quick reset with test data
+NODE_ENV=development tsx scripts/reset-dev-database.ts && NODE_ENV=development tsx scripts/seed-dev-data.ts
 ```
 
 ### Production Environment
 
 ```bash
-# Setup production database with admin user
+# Reset production database (clean slate + admin user)
+tsx scripts/reset-production-db.ts
+
+# Setup production database with admin user (alternative)
 ADMIN_PASSWORD=your_password tsx scripts/setup-production-db.ts
 
 # Generate migration files (run after schema changes)
