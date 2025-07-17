@@ -117,6 +117,8 @@ export class MemStorage implements IStorage {
       emailVerificationExpires: userData.emailVerificationExpires || null,
       passwordResetToken: userData.passwordResetToken || null,
       passwordResetExpires: userData.passwordResetExpires || null,
+      isActive: userData.isActive !== undefined ? userData.isActive : true,
+      deactivatedAt: userData.deactivatedAt || null,
     };
     this.users.set(user.id, user);
     return user;
@@ -713,6 +715,43 @@ export class DatabaseStorage implements IStorage {
       averageBiddingAccuracy,
       commentsMade: userComments.length,
     };
+  }
+
+  // Admin user management methods
+  async deactivateUser(userId: string, reason?: string): Promise<boolean> {
+    try {
+      const [updatedUser] = await db
+        .update(users)
+        .set({ 
+          isActive: false, 
+          deactivatedAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .where(eq(users.id, userId))
+        .returning();
+      return !!updatedUser;
+    } catch (error) {
+      console.error("Error deactivating user:", error);
+      return false;
+    }
+  }
+
+  async reactivateUser(userId: string): Promise<boolean> {
+    try {
+      const [updatedUser] = await db
+        .update(users)
+        .set({ 
+          isActive: true, 
+          deactivatedAt: null,
+          updatedAt: new Date(),
+        })
+        .where(eq(users.id, userId))
+        .returning();
+      return !!updatedUser;
+    } catch (error) {
+      console.error("Error reactivating user:", error);
+      return false;
+    }
   }
 }
 

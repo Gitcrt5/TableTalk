@@ -505,6 +505,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/admin/users", isAuthenticated, async (req: any, res) => {
+    try {
+      const user = req.user;
+      if (user.role !== "admin") {
+        return res.status(403).json({ error: "Admin access required" });
+      }
+
+      const users = await storage.getAllUsers();
+      res.json(users);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      res.status(500).json({ error: "Failed to fetch users" });
+    }
+  });
+
+  app.post("/api/admin/users/:id/deactivate", isAuthenticated, async (req: any, res) => {
+    try {
+      const user = req.user;
+      if (user.role !== "admin") {
+        return res.status(403).json({ error: "Admin access required" });
+      }
+
+      const userId = req.params.id;
+      const { reason } = req.body;
+      
+      // Prevent admin from deactivating themselves
+      if (userId === getUserId(req)) {
+        return res.status(400).json({ error: "Cannot deactivate your own account" });
+      }
+
+      const success = await storage.deactivateUser(userId, reason);
+      if (success) {
+        res.json({ message: "User deactivated successfully" });
+      } else {
+        res.status(404).json({ error: "User not found" });
+      }
+    } catch (error) {
+      console.error("Error deactivating user:", error);
+      res.status(500).json({ error: "Failed to deactivate user" });
+    }
+  });
+
+  app.post("/api/admin/users/:id/reactivate", isAuthenticated, async (req: any, res) => {
+    try {
+      const user = req.user;
+      if (user.role !== "admin") {
+        return res.status(403).json({ error: "Admin access required" });
+      }
+
+      const userId = req.params.id;
+      
+      const success = await storage.reactivateUser(userId);
+      if (success) {
+        res.json({ message: "User reactivated successfully" });
+      } else {
+        res.status(404).json({ error: "User not found" });
+      }
+    } catch (error) {
+      console.error("Error reactivating user:", error);
+      res.status(500).json({ error: "Failed to reactivate user" });
+    }
+  });
+
   app.post("/api/hands/:handId/comments", isAuthenticated, async (req: any, res) => {
     try {
       const handId = parseInt(req.params.handId);

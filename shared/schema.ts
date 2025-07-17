@@ -35,6 +35,9 @@ export const users = pgTable("users", {
   // Password reset functionality
   passwordResetToken: varchar("password_reset_token"),
   passwordResetExpires: timestamp("password_reset_expires"),
+  // User status for soft deletion
+  isActive: boolean("is_active").default(true),
+  deactivatedAt: timestamp("deactivated_at"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
