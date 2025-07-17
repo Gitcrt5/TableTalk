@@ -9,6 +9,8 @@ import { storage } from "./storage";
 import { User as SelectUser } from "@shared/schema";
 import { v4 as uuidv4 } from "uuid";
 import { db } from "./db";
+import { users } from "@shared/schema";
+import { eq, and } from "drizzle-orm";
 
 declare global {
   namespace Express {
@@ -29,6 +31,64 @@ async function comparePasswords(supplied: string, stored: string): Promise<boole
   const hashedBuf = Buffer.from(hashed, "hex");
   const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
   return timingSafeEqual(hashedBuf, suppliedBuf);
+}
+
+// Bootstrap admin user based on environment variables or make first user admin
+export async function bootstrapAdmin() {
+  const adminEmail = process.env.ADMIN_EMAIL || "craig@craigandlee.com";
+  const adminPassword = process.env.ADMIN_PASSWORD;
+  
+  // Check if admin user already exists
+  const existingAdmin = await db.select().from(users).where(eq(users.email, adminEmail)).limit(1);
+  
+  if (existingAdmin.length > 0) {
+    // If admin exists but doesn't have admin role, update it
+    if (existingAdmin[0].role !== "admin") {
+      await db.update(users).set({ role: "admin" }).where(eq(users.email, adminEmail));
+      console.log(`Updated ${adminEmail} to admin role`);
+    }
+    return;
+  }
+  
+  // If admin email is set but no password, don't auto-create
+  if (!adminPassword) {
+    console.log(`Admin email ${adminEmail} set but no ADMIN_PASSWORD provided. Admin will be created when user registers.`);
+    return;
+  }
+  
+  // Create admin user
+  const hashedPassword = await hashPassword(adminPassword);
+  const adminUser = {
+    id: uuidv4(),
+    email: adminEmail,
+    firstName: "Craig",
+    lastName: "Admin",
+    displayName: "Craig",
+    password: hashedPassword,
+    authType: "local" as const,
+    role: "admin" as const,
+  };
+  
+  await db.insert(users).values(adminUser);
+  console.log(`Created admin user: ${adminEmail}`);
+}
+
+// Check if user should be made admin (first user or specific email)
+export async function checkForAutoAdmin(email: string) {
+  const adminEmail = process.env.ADMIN_EMAIL || "craig@craigandlee.com";
+  
+  // Make specific email admin
+  if (email === adminEmail) {
+    return "admin";
+  }
+  
+  // Check if this is the first user (fallback)
+  const userCount = await db.select().from(users).limit(2);
+  if (userCount.length === 0) {
+    return "admin";
+  }
+  
+  return "player";
 }
 
 export function setupLocalAuth(app: Express) {
@@ -125,6 +185,7 @@ export function setupLocalAuth(app: Express) {
 
       // Create new user with local auth
       const hashedPassword = await hashPassword(password);
+      const userRole = await checkForAutoAdmin(email);
       const newUser = await storage.upsertUser({
         id: uuidv4(),
         email,
@@ -133,6 +194,7 @@ export function setupLocalAuth(app: Express) {
         lastName: lastName || null,
         authType: "local",
         profileImageUrl: null,
+        role: userRole,
       });
 
       // Log the user in
@@ -156,6 +218,7 @@ export function setupLocalAuth(app: Express) {
             lastName: newUser.lastName,
             displayName: newUser.displayName,
             authType: newUser.authType,
+            role: newUser.role,
           });
         });
       });
@@ -196,6 +259,7 @@ export function setupLocalAuth(app: Express) {
             lastName: user.lastName,
             displayName: user.displayName,
             authType: user.authType,
+            role: user.role,
           });
         });
       });
@@ -231,6 +295,7 @@ export function setupLocalAuth(app: Express) {
       lastName: user.lastName,
       displayName: user.displayName,
       authType: user.authType,
+      role: user.role,
     });
   });
 }

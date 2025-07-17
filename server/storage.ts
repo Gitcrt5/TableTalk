@@ -6,6 +6,8 @@ export interface IStorage {
   getUserByEmail(email: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
   updateUser(id: string, updates: Partial<User>): Promise<User | undefined>;
+  getAllUsers(): Promise<User[]>;
+  getAllHands(): Promise<Hand[]>;
 
   // Games
   createGame(game: InsertGame): Promise<Game>;
@@ -109,6 +111,7 @@ export class MemStorage implements IStorage {
       authType: userData.authType || "replit",
       createdAt: userData.createdAt || new Date(),
       updatedAt: new Date(),
+      role: userData.role || "player",
     };
     this.users.set(user.id, user);
     return user;
@@ -127,6 +130,14 @@ export class MemStorage implements IStorage {
     };
     this.users.set(id, updatedUser);
     return updatedUser;
+  }
+
+  async getAllUsers(): Promise<User[]> {
+    return Array.from(this.users.values());
+  }
+
+  async getAllHands(): Promise<Hand[]> {
+    return Array.from(this.hands.values());
   }
 
   private async initializeSampleData() {
@@ -439,6 +450,14 @@ export class DatabaseStorage implements IStorage {
       .where(eq(users.id, id))
       .returning();
     return updatedUser || undefined;
+  }
+
+  async getAllUsers(): Promise<User[]> {
+    return await db.select().from(users).orderBy(users.createdAt);
+  }
+
+  async getAllHands(): Promise<Hand[]> {
+    return await db.select().from(hands).orderBy(hands.id);
   }
 
   async createGame(insertGame: InsertGame): Promise<Game> {

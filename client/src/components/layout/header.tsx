@@ -1,7 +1,7 @@
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { LogOut, User, Settings } from "lucide-react";
+import { LogOut, User, Settings, Shield } from "lucide-react";
 import logoUrl from "@/assets/tabletalk-logo.svg";
 import { useAuth } from "@/hooks/useAuth";
 import type { User as UserType } from "@shared/schema";
@@ -52,6 +52,14 @@ export default function Header() {
                         Account Settings
                       </Link>
                     </DropdownMenuItem>
+                    {user && (user as any).role === "admin" && (
+                      <DropdownMenuItem asChild>
+                        <Link href="/admin" className="flex items-center cursor-pointer">
+                          <Shield className="w-4 h-4 mr-2" />
+                          Admin Panel
+                        </Link>
+                      </DropdownMenuItem>
+                    )}
                     <DropdownMenuItem 
                       onClick={() => logoutMutation.mutate()}
                       disabled={logoutMutation.isPending}

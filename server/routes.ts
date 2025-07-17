@@ -7,7 +7,7 @@ import { storage } from "./storage";
 import { parsePBN } from "./services/pbn-parser";
 import { insertGameSchema, insertHandSchema, insertUserBiddingSchema, insertCommentSchema } from "@shared/schema";
 import { setupAuth as setupReplitAuth, isAuthenticated as isReplitAuthenticated } from "./replitAuth";
-import { setupLocalAuth } from "./auth";
+import { setupLocalAuth, bootstrapAdmin } from "./auth";
 
 // Load environment variables early
 import { config } from 'dotenv';
@@ -47,6 +47,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   } else {
     console.log("Using local email/password authentication");
     setupLocalAuth(app);
+  }
+
+  // Bootstrap admin user after authentication setup
+  try {
+    await bootstrapAdmin();
+  } catch (error) {
+    console.error("Error bootstrapping admin user:", error);
   }
 
   // Create unified authentication middleware
@@ -469,6 +476,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching comments:", error);
       res.status(500).json({ error: "Failed to fetch comments" });
+    }
+  });
+
+  // Admin routes
+  app.get("/api/admin/stats", isAuthenticated, async (req: any, res) => {
+    try {
+      const user = req.user;
+      if (user.role !== "admin") {
+        return res.status(403).json({ error: "Admin access required" });
+      }
+
+      // Get basic system statistics
+      const allUsers = await storage.getAllUsers();
+      const allGames = await storage.getAllGames();
+      const allHands = await storage.getAllHands();
+
+      const stats = {
+        totalUsers: allUsers.length,
+        totalGames: allGames.length,
+        totalHands: allHands.length,
+      };
+
+      res.json(stats);
+    } catch (error) {
+      console.error("Error fetching admin stats:", error);
+      res.status(500).json({ error: "Failed to fetch admin stats" });
     }
   });
 

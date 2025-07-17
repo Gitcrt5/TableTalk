@@ -10,6 +10,7 @@ import HandDetail from "@/pages/hand-detail";
 import Landing from "@/pages/landing";
 import AuthPage from "@/pages/auth-page";
 import AccountPage from "@/pages/account";
+import AdminPage from "@/pages/admin";
 import NotFound from "@/pages/not-found";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -40,6 +41,7 @@ function Router() {
         <Route path="/games/:id" component={GameDetail} />
         <Route path="/hands/:id" component={HandDetail} />
         <Route path="/account" component={AccountPage} />
+        <Route path="/admin" component={AdminPage} />
         <Route path="/auth" component={AuthPage} />
         <Route component={NotFound} />
       </Switch>

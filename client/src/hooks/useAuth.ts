@@ -15,6 +15,16 @@ type RegisterData = {
   displayName: string;
 };
 
+type User = {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  displayName: string;
+  authType: string;
+  role: string;
+};
+
 // Always use local auth - hardcoded to avoid confusion
 const isReplitAuth = false;
 const userEndpoint = "/api/user";

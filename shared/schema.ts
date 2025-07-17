@@ -26,6 +26,8 @@ export const users = pgTable("users", {
   password: varchar("password"),
   // Auth type to distinguish between Replit OAuth and local auth
   authType: varchar("auth_type").notNull().default("replit"), // "replit" or "local"
+  // User role for permissions
+  role: varchar("role").notNull().default("player"), // "admin", "teacher", "player", "viewer"
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
