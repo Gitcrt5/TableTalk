@@ -28,6 +28,10 @@ export const users = pgTable("users", {
   authType: varchar("auth_type").notNull().default("replit"), // "replit" or "local"
   // User role for permissions
   role: varchar("role").notNull().default("player"), // "admin", "teacher", "player", "viewer"
+  // Email verification for future email alerts
+  emailVerified: boolean("email_verified").default(false),
+  emailVerificationToken: varchar("email_verification_token"),
+  emailVerificationExpires: timestamp("email_verification_expires"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

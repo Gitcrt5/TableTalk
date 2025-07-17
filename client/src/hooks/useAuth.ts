@@ -23,6 +23,7 @@ type User = {
   displayName: string;
   authType: string;
   role: string;
+  emailVerified: boolean;
 };
 
 // Always use local auth - hardcoded to avoid confusion

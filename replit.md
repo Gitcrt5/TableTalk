@@ -203,19 +203,20 @@ TableTalk supports two authentication methods for maximum hosting flexibility:
 - July 16, 2025. **WHITESPACE PRESERVATION FIX** - Fixed HTML whitespace stripping issue in contract display by using React's {' '} syntax for preserved spaces. Contract badges now properly display "Contract: 2♥X by West" with correct spacing after colon and before "by" text, resolving rendering issues where leading/trailing spaces were being stripped.
 - July 16, 2025. **DOUBLED CONTRACT DATABASE FIX** - Fixed missing doubled contract notation (X/XX) in existing database records. Updated hands 693 and 477 to show correct doubled notation (5NTX and 3NTX respectively). Enhanced PBN parser logic to properly detect and apply doubled contract notation for future uploads.
 - July 17, 2025. **GAME DETAILS IN HAND VIEW** - Added game information display to hand detail page. Game details (title, date, location, tournament, round) now appear in a highlighted section between the board number and dealer/vulnerability information for better context when viewing individual hands.
+- July 17, 2025. **EMAIL VERIFICATION SYSTEM** - Implemented comprehensive email verification during user registration. Users receive verification emails upon signup with 24-hour expiration tokens. Added email verification banner, resend verification functionality, and dedicated verification success page. Mock email service logs verification emails to console for development. System validates email format and prepares foundation for future email alerts feature.
 
 ## TODO List & Future Enhancements
 
 ### Current Issues to Fix
 - [ ] Resolve LSP errors in server/storage.ts (database insertion type mismatch)
 - [ ] Fix server/vite.ts allowedHosts configuration warning
+- [ ] Replace mock email service with real email provider (SendGrid, Mailgun, etc.) for production
 
 ### Known Limitations
 - **Replit Preview Environment**: Login works in standalone tabs but not in Replit's embedded preview due to iframe cookie restrictions. This is expected behavior and will work correctly in production deployment.
 
 ### Core Features to Add
 - [ ] Add tags to hands and games for better organization and filtering
-- [ ] Add users with varying levels of ability (Admin, Teacher, Player, Kibbitzer)
 - [ ] Add way for users to manually enter a game and/or hand (form-based input)
 - [ ] Bidding sequence input functionality (partially implemented, needs completion)
 - [ ] Comment system improvements: add like, reply, and report functionality (UI removed for MVP)
@@ -223,6 +224,9 @@ TableTalk supports two authentication methods for maximum hosting flexibility:
 - [ ] Search and filter hands by criteria (dealer, vulnerability, convention)
 - [ ] User profiles and statistics dashboard
 - [ ] Hand statistics and analysis
+- [ ] Email notifications for new comments, game uploads, and system announcements
+- [ ] Password reset functionality via email
+- [ ] User management interface for admin users
 
 ### UI/UX Improvements
 - [ ] Add option for more compact view of the games list

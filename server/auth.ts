@@ -11,6 +11,7 @@ import { v4 as uuidv4 } from "uuid";
 import { db } from "./db";
 import { users } from "@shared/schema";
 import { eq, and } from "drizzle-orm";
+import { emailService, generateEmailToken, isValidEmail } from "./email-service";
 
 declare global {
   namespace Express {
@@ -177,11 +178,20 @@ export function setupLocalAuth(app: Express) {
         return res.status(400).json({ message: "Email and password are required" });
       }
 
+      // Validate email format
+      if (!isValidEmail(email)) {
+        return res.status(400).json({ message: "Please enter a valid email address" });
+      }
+
       // Check if user already exists
       const existingUser = await storage.getUserByEmail(email);
       if (existingUser) {
         return res.status(400).json({ message: "Email already exists" });
       }
+
+      // Generate email verification token
+      const verificationToken = generateEmailToken();
+      const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
       // Create new user with local auth
       const hashedPassword = await hashPassword(password);
@@ -195,9 +205,24 @@ export function setupLocalAuth(app: Express) {
         authType: "local",
         profileImageUrl: null,
         role: userRole,
+        emailVerified: false,
+        emailVerificationToken: verificationToken,
+        emailVerificationExpires: verificationExpires,
       });
 
-      // Log the user in
+      // Send verification email
+      try {
+        await emailService.sendVerificationEmail(
+          email, 
+          verificationToken, 
+          firstName || undefined
+        );
+      } catch (emailError) {
+        console.error("Failed to send verification email:", emailError);
+        // Continue with registration even if email fails
+      }
+
+      // Log the user in (they can use the app but will see verification prompt)
       req.login(newUser, (err) => {
         if (err) return next(err);
         
@@ -219,6 +244,8 @@ export function setupLocalAuth(app: Express) {
             displayName: newUser.displayName,
             authType: newUser.authType,
             role: newUser.role,
+            emailVerified: newUser.emailVerified,
+            message: "Account created successfully. Please check your email to verify your account.",
           });
         });
       });
@@ -260,6 +287,7 @@ export function setupLocalAuth(app: Express) {
             displayName: user.displayName,
             authType: user.authType,
             role: user.role,
+            emailVerified: user.emailVerified,
           });
         });
       });
@@ -296,6 +324,89 @@ export function setupLocalAuth(app: Express) {
       displayName: user.displayName,
       authType: user.authType,
       role: user.role,
+      emailVerified: user.emailVerified,
     });
+  });
+
+  // Email verification routes
+  app.get("/verify-email", async (req, res) => {
+    try {
+      const { token } = req.query;
+      
+      if (!token) {
+        return res.status(400).json({ message: "Verification token is required" });
+      }
+
+      // Find user by verification token
+      const [user] = await db.select().from(users).where(eq(users.emailVerificationToken, token as string));
+      
+      if (!user) {
+        return res.status(400).json({ message: "Invalid or expired verification token" });
+      }
+
+      // Check if token is expired
+      if (user.emailVerificationExpires && user.emailVerificationExpires < new Date()) {
+        return res.status(400).json({ message: "Verification token has expired" });
+      }
+
+      // Update user as verified
+      await db.update(users)
+        .set({ 
+          emailVerified: true, 
+          emailVerificationToken: null, 
+          emailVerificationExpires: null 
+        })
+        .where(eq(users.id, user.id));
+
+      // Send welcome email
+      try {
+        await emailService.sendWelcomeEmail(user.email!, user.firstName || undefined);
+      } catch (emailError) {
+        console.error("Failed to send welcome email:", emailError);
+      }
+
+      res.json({ message: "Email verified successfully!" });
+    } catch (error) {
+      console.error("Email verification error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.post("/api/resend-verification", async (req, res) => {
+    try {
+      if (!req.isAuthenticated() || !req.user) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const user = req.user;
+      
+      if (user.emailVerified) {
+        return res.status(400).json({ message: "Email is already verified" });
+      }
+
+      // Generate new verification token
+      const verificationToken = generateEmailToken();
+      const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
+      // Update user with new token
+      await db.update(users)
+        .set({ 
+          emailVerificationToken: verificationToken, 
+          emailVerificationExpires: verificationExpires 
+        })
+        .where(eq(users.id, user.id));
+
+      // Send verification email
+      await emailService.sendVerificationEmail(
+        user.email!, 
+        verificationToken, 
+        user.firstName || undefined
+      );
+
+      res.json({ message: "Verification email sent successfully" });
+    } catch (error) {
+      console.error("Resend verification error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
   });
 }
