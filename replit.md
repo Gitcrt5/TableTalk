@@ -24,10 +24,11 @@ TableTalk is a simplified bridge review platform built with a modern full-stack 
 - **Error Handling**: Centralized error handling middleware
 
 ### Data Storage
-- **Primary Database**: PostgreSQL 16
+- **Primary Database**: PostgreSQL 16 with dual-database architecture
 - **ORM**: Drizzle ORM with code-first schema approach
-- **Migration Strategy**: Drizzle Kit for schema migrations
+- **Migration Strategy**: Drizzle Kit for schema migrations with production safety
 - **Connection Pool**: Neon Database serverless connection pooling
+- **Environment Separation**: Development database with test data, production database starts clean
 
 ## Key Components
 
@@ -206,6 +207,7 @@ TableTalk supports two authentication methods for maximum hosting flexibility:
 - July 17, 2025. **EMAIL VERIFICATION SYSTEM** - Implemented comprehensive email verification during user registration. Users receive verification emails upon signup with 24-hour expiration tokens. Added email verification banner, resend verification functionality, and dedicated verification success page. Mock email service logs verification emails to console for development. System validates email format and prepares foundation for future email alerts feature.
 - July 17, 2025. **SENDGRID INTEGRATION AND PASSWORD RESET** - Integrated SendGrid email service for production-ready email delivery with professional HTML templates. Added complete password reset functionality with 1-hour token expiration, forgot password page, and reset password page. Email service automatically switches between SendGrid (production) and mock console logging (development) based on API key availability. All email templates include proper branding and secure token-based authentication.
 - July 17, 2025. **ADMIN USER MANAGEMENT SYSTEM** - Implemented comprehensive admin user management with soft-delete functionality. Added tabbed admin dashboard with Overview and User Management sections. Created user search and filtering interface showing user details, roles, email verification status, and activity. Admins can deactivate/reactivate users while preserving data integrity. System prevents self-deactivation and includes confirmation dialogs with optional reason tracking.
+- July 17, 2025. **DUAL-DATABASE ARCHITECTURE** - Implemented separate development and production databases for clean user experience. Development database maintains rich test data for feature development, while production database starts clean for real users. Added environment-based database selection, migration scripts, and automated admin setup. Created comprehensive database management system with seeding scripts and production deployment tools.
 
 ## TODO List & Future Enhancements
 
