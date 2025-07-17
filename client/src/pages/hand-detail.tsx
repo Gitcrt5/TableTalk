@@ -335,15 +335,15 @@ export default function HandDetail() {
               <Badge variant="outline" className="text-xs md:text-sm">{hand.vulnerability}</Badge>
               {hand.finalContract && (
                 <Badge className="text-xs md:text-sm">
-                  Contract:{' '}
+                  Contract:{'\u00A0'}
                   {(() => {
-                    const { contractPart, declarerPart, isRed } = formatContract(hand.finalContract);
+                    const { contractPart, isRed } = formatContract(hand.finalContract);
                     return (
                       <>
                         <span className={isRed ? "text-red-600" : ""}>
                           {contractPart}
                         </span>
-                        {hand.declarer && <>{' '}by {hand.declarer}</>}
+                        {hand.declarer && <>{'\u00A0'}by{'\u00A0'}{hand.declarer}</>}
                       </>
                     );
                   })()}
@@ -446,13 +446,13 @@ export default function HandDetail() {
                     <div className="text-sm text-text-secondary">Final Contract:</div>
                     <div className="font-semibold text-lg">
                       {(() => {
-                        const { contractPart, declarerPart, isRed } = formatContract(hand.finalContract);
+                        const { contractPart, isRed } = formatContract(hand.finalContract);
                         return (
                           <>
                             <span className={isRed ? "text-red-600" : ""}>
                               {contractPart}
                             </span>
-                            {hand.declarer && <>{' '}by {hand.declarer}</>}
+                            {hand.declarer && <>{'\u00A0'}by{'\u00A0'}{hand.declarer}</>}
                           </>
                         );
                       })()}
