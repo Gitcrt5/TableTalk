@@ -205,6 +205,7 @@ TableTalk supports two authentication methods for maximum hosting flexibility:
 - July 17, 2025. **GAME DETAILS IN HAND VIEW** - Added game information display to hand detail page. Game details (title, date, location, tournament, round) now appear in a highlighted section between the board number and dealer/vulnerability information for better context when viewing individual hands.
 - July 17, 2025. **EMAIL VERIFICATION SYSTEM** - Implemented comprehensive email verification during user registration. Users receive verification emails upon signup with 24-hour expiration tokens. Added email verification banner, resend verification functionality, and dedicated verification success page. Mock email service logs verification emails to console for development. System validates email format and prepares foundation for future email alerts feature.
 - July 17, 2025. **SENDGRID INTEGRATION AND PASSWORD RESET** - Integrated SendGrid email service for production-ready email delivery with professional HTML templates. Added complete password reset functionality with 1-hour token expiration, forgot password page, and reset password page. Email service automatically switches between SendGrid (production) and mock console logging (development) based on API key availability. All email templates include proper branding and secure token-based authentication.
+- July 17, 2025. **ADMIN USER MANAGEMENT SYSTEM** - Implemented comprehensive admin user management with soft-delete functionality. Added tabbed admin dashboard with Overview and User Management sections. Created user search and filtering interface showing user details, roles, email verification status, and activity. Admins can deactivate/reactivate users while preserving data integrity. System prevents self-deactivation and includes confirmation dialogs with optional reason tracking.
 
 ## TODO List & Future Enhancements
 
@@ -226,8 +227,8 @@ TableTalk supports two authentication methods for maximum hosting flexibility:
 - [ ] User profiles and statistics dashboard
 - [ ] Hand statistics and analysis
 - [ ] Email notifications for new comments, game uploads, and system announcements
-- [ ] Password reset functionality via email
-- [ ] User management interface for admin users
+- [x] Password reset functionality via email
+- [x] User management interface for admin users
 
 ### UI/UX Improvements
 - [ ] Add option for more compact view of the games list
