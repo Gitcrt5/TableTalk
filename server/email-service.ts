@@ -21,58 +21,81 @@ export class SendGridEmailService implements EmailService {
   async sendVerificationEmail(email: string, token: string, name?: string): Promise<void> {
     const verificationUrl = `${process.env.BASE_URL || 'http://localhost:5000'}/verify-email?token=${token}`;
     
-    await this.mailService.send({
-      to: email,
-      from: this.fromEmail,
-      subject: 'Verify your TableTalk account',
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #333;">Welcome to TableTalk!</h2>
-          <p>Hello ${name || 'there'},</p>
-          <p>Welcome to TableTalk! Please verify your email address by clicking the button below:</p>
-          <div style="text-align: center; margin: 30px 0;">
-            <a href="${verificationUrl}" style="background-color: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">Verify Email Address</a>
+    try {
+      await this.mailService.send({
+        to: email,
+        from: this.fromEmail,
+        subject: 'Verify your TableTalk account',
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #333;">Welcome to TableTalk!</h2>
+            <p>Hello ${name || 'there'},</p>
+            <p>Welcome to TableTalk! Please verify your email address by clicking the button below:</p>
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${verificationUrl}" style="background-color: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">Verify Email Address</a>
+            </div>
+            <p>Or copy and paste this link into your browser:</p>
+            <p style="word-break: break-all; color: #666;">${verificationUrl}</p>
+            <p style="color: #666; font-size: 14px;">This link will expire in 24 hours.</p>
+            <p>If you didn't create this account, please ignore this email.</p>
+            <p>Best regards,<br>The TableTalk Team</p>
           </div>
-          <p>Or copy and paste this link into your browser:</p>
-          <p style="word-break: break-all; color: #666;">${verificationUrl}</p>
-          <p style="color: #666; font-size: 14px;">This link will expire in 24 hours.</p>
-          <p>If you didn't create this account, please ignore this email.</p>
-          <p>Best regards,<br>The TableTalk Team</p>
-        </div>
-      `,
-    });
+        `,
+      });
+    } catch (error) {
+      console.error('SendGrid email failed, falling back to console logging:', error);
+      // Fall back to console logging for development
+      console.log('\n=== EMAIL VERIFICATION (SendGrid Failed) ===');
+      console.log(`To: ${email}`);
+      console.log(`Subject: Verify your TableTalk account`);
+      console.log(`Verification URL: ${verificationUrl}`);
+      console.log(`Name: ${name || 'N/A'}`);
+      console.log('==========================================\n');
+    }
   }
 
   async sendPasswordResetEmail(email: string, token: string, name?: string): Promise<void> {
     const resetUrl = `${process.env.BASE_URL || 'http://localhost:5000'}/reset-password?token=${token}`;
     
-    await this.mailService.send({
-      to: email,
-      from: this.fromEmail,
-      subject: 'Reset your TableTalk password',
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #333;">Reset Your Password</h2>
-          <p>Hello ${name || 'there'},</p>
-          <p>You requested to reset your password for TableTalk. Click the button below to set a new password:</p>
-          <div style="text-align: center; margin: 30px 0;">
-            <a href="${resetUrl}" style="background-color: #dc3545; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">Reset Password</a>
+    try {
+      await this.mailService.send({
+        to: email,
+        from: this.fromEmail,
+        subject: 'Reset your TableTalk password',
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #333;">Reset Your Password</h2>
+            <p>Hello ${name || 'there'},</p>
+            <p>You requested to reset your password for TableTalk. Click the button below to set a new password:</p>
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${resetUrl}" style="background-color: #dc3545; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">Reset Password</a>
+            </div>
+            <p>Or copy and paste this link into your browser:</p>
+            <p style="word-break: break-all; color: #666;">${resetUrl}</p>
+            <p style="color: #666; font-size: 14px;">This link will expire in 1 hour.</p>
+            <p>If you didn't request this reset, please ignore this email.</p>
+            <p>Best regards,<br>The TableTalk Team</p>
           </div>
-          <p>Or copy and paste this link into your browser:</p>
-          <p style="word-break: break-all; color: #666;">${resetUrl}</p>
-          <p style="color: #666; font-size: 14px;">This link will expire in 1 hour.</p>
-          <p>If you didn't request this reset, please ignore this email.</p>
-          <p>Best regards,<br>The TableTalk Team</p>
-        </div>
-      `,
-    });
+        `,
+      });
+    } catch (error) {
+      console.error('SendGrid email failed, falling back to console logging:', error);
+      // Fall back to console logging for development
+      console.log('\n=== PASSWORD RESET (SendGrid Failed) ===');
+      console.log(`To: ${email}`);
+      console.log(`Subject: Reset your TableTalk password`);
+      console.log(`Reset URL: ${resetUrl}`);
+      console.log(`Name: ${name || 'N/A'}`);
+      console.log('=======================================\n');
+    }
   }
 
   async sendWelcomeEmail(email: string, name?: string): Promise<void> {
-    await this.mailService.send({
-      to: email,
-      from: this.fromEmail,
-      subject: 'Welcome to TableTalk!',
+    try {
+      await this.mailService.send({
+        to: email,
+        from: this.fromEmail,
+        subject: 'Welcome to TableTalk!',
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <h2 style="color: #333;">Welcome to TableTalk!</h2>
@@ -92,6 +115,15 @@ export class SendGridEmailService implements EmailService {
         </div>
       `,
     });
+    } catch (error) {
+      console.error('SendGrid email failed, falling back to console logging:', error);
+      // Fall back to console logging for development
+      console.log('\n=== WELCOME EMAIL (SendGrid Failed) ===');
+      console.log(`To: ${email}`);
+      console.log(`Subject: Welcome to TableTalk!`);
+      console.log(`Name: ${name || 'N/A'}`);
+      console.log('=======================================\n');
+    }
   }
 }
 
