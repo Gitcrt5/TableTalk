@@ -32,8 +32,21 @@ function Router() {
   }
 
   if (!isAuthenticated) {
-    // Use different landing pages based on auth method
-    return isReplitAuth ? <Landing /> : <AuthPage />;
+    // Special routes that should work without authentication
+    return (
+      <div className="min-h-screen bg-surface">
+        <Switch>
+          <Route path="/verify-email" component={VerifyEmailPage} />
+          <Route path="/forgot-password" component={ForgotPasswordPage} />
+          <Route path="/reset-password" component={ResetPasswordPage} />
+          <Route path="/auth" component={AuthPage} />
+          <Route>
+            {/* Default route for unauthenticated users */}
+            {isReplitAuth ? <Landing /> : <AuthPage />}
+          </Route>
+        </Switch>
+      </div>
+    );
   }
 
   return (
@@ -45,9 +58,6 @@ function Router() {
         <Route path="/hands/:id" component={HandDetail} />
         <Route path="/account" component={AccountPage} />
         <Route path="/admin" component={AdminPage} />
-        <Route path="/verify-email" component={VerifyEmailPage} />
-        <Route path="/forgot-password" component={ForgotPasswordPage} />
-        <Route path="/reset-password" component={ResetPasswordPage} />
         <Route path="/auth" component={AuthPage} />
         <Route component={NotFound} />
       </Switch>
