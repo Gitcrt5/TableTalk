@@ -97,8 +97,8 @@ export function useAuth() {
     onSuccess: (user) => {
       queryClient.setQueryData([userEndpoint], user);
       toast({
-        title: "Success",
-        description: "Your account has been created successfully",
+        title: "Welcome to TableTalk!",
+        description: "Your account has been created successfully. You can now upload and analyze bridge games.",
       });
     },
     onError: (error: Error) => {
