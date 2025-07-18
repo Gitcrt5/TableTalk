@@ -194,7 +194,7 @@ export function setupLocalAuth(app: Express) {
       const verificationToken = generateEmailToken();
       const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
-      // Create new user with local auth
+      // Create new user with local auth (no email verification required)
       const hashedPassword = await hashPassword(password);
       const userRole = await checkForAutoAdmin(email);
       const newUser = await storage.upsertUser({
@@ -207,24 +207,10 @@ export function setupLocalAuth(app: Express) {
         authType: "local",
         profileImageUrl: null,
         role: userRole,
-        emailVerified: false,
-        emailVerificationToken: verificationToken,
-        emailVerificationExpires: verificationExpires,
+        emailVerified: true, // Skip verification for now
+        emailVerificationToken: null,
+        emailVerificationExpires: null,
       });
-
-      // Send verification email
-      console.log("Attempting to send verification email to:", email);
-      try {
-        await emailService.sendVerificationEmail(
-          email, 
-          verificationToken, 
-          firstName || undefined
-        );
-        console.log("Verification email sent successfully");
-      } catch (emailError) {
-        console.error("Failed to send verification email:", emailError);
-        // Continue with registration even if email fails
-      }
 
       // Log the user in (they can use the app but will see verification prompt)
       req.login(newUser, (err) => {
@@ -249,7 +235,7 @@ export function setupLocalAuth(app: Express) {
             authType: newUser.authType,
             role: newUser.role,
             emailVerified: newUser.emailVerified,
-            message: "Account created successfully. Please check your email to verify your account.",
+            message: "Account created successfully. Welcome to TableTalk!",
           });
         });
       });

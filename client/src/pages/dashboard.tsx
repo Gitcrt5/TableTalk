@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import PBNUpload from "@/components/upload/pbn-upload";
-import EmailVerificationBanner from "@/components/ui/email-verification-banner";
+
 import { Search, Upload, Calendar, User, FileText, MapPin } from "lucide-react";
 import { Link } from "wouter";
 import type { Game } from "@shared/schema";
@@ -31,11 +31,6 @@ export default function Dashboard() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Email Verification Banner */}
-      {user && (
-        <EmailVerificationBanner user={user} />
-      )}
-
       {/* Action Bar */}
       <Card className="mb-6">
         <CardContent className="p-4">

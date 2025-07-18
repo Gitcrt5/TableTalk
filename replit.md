@@ -213,6 +213,7 @@ TableTalk supports two authentication methods for maximum hosting flexibility:
 - July 18, 2025. **DISPLAY NAME REGISTRATION FIX** - Fixed display name not being saved during user registration. The registration endpoint was not extracting the displayName field from the request body, causing it to be null in the database. Added proper displayName extraction and storage in the registration process.
 - July 18, 2025. **EMAIL VERIFICATION ROUTING FIX** - Fixed email verification links showing raw JSON instead of the proper verification page. Moved email verification, password reset, and forgot password routes to the unauthenticated section of the router so users can access these pages without being logged in. Email verification now displays the proper UI with success/error messages.
 - July 18, 2025. **ENHANCED EMAIL VERIFICATION LANDING PAGE** - Created a professional, user-friendly email verification landing page with TableTalk branding, clear status indicators, and helpful next steps. The page includes animated loading states, success celebrations with feature highlights, and informative error handling with guidance. Users now get a welcoming experience when verifying their email addresses.
+- July 18, 2025. **EMAIL VERIFICATION REMOVED** - Temporarily removed email verification requirement due to SendGrid delivery issues. Users can now register and immediately use the application without email verification. Updated all existing users to verified status and removed verification banner from dashboard. Added email verification back to TODO list for future implementation with proper email infrastructure.
 
 ## TODO List & Future Enhancements
 
@@ -233,6 +234,7 @@ TableTalk supports two authentication methods for maximum hosting flexibility:
 - [ ] Search and filter hands by criteria (dealer, vulnerability, convention)
 - [ ] User profiles and statistics dashboard
 - [ ] Hand statistics and analysis
+- [ ] Email verification system with proper SendGrid configuration and domain verification
 - [ ] Email notifications for new comments, game uploads, and system announcements
 - [x] Password reset functionality via email
 - [x] User management interface for admin users
