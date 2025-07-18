@@ -36,7 +36,7 @@ export async function comparePasswords(supplied: string, stored: string): Promis
 
 // Bootstrap admin user based on environment variables or make first user admin
 export async function bootstrapAdmin() {
-  const adminEmail = process.env.ADMIN_EMAIL || "craig@craigandlee.com";
+  const adminEmail = process.env.ADMIN_EMAIL || "admin@tabletalk.cards";
   const adminPassword = process.env.ADMIN_PASSWORD;
   
   // Check if admin user already exists
@@ -62,12 +62,13 @@ export async function bootstrapAdmin() {
   const adminUser = {
     id: uuidv4(),
     email: adminEmail,
-    firstName: "Craig",
+    firstName: "TableTalk",
     lastName: "Admin",
-    displayName: "Craig",
+    displayName: "Admin",
     password: hashedPassword,
     authType: "local" as const,
     role: "admin" as const,
+    emailVerified: true,
   };
   
   await db.insert(users).values(adminUser);

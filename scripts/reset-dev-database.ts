@@ -18,7 +18,7 @@ async function resetDevDatabase() {
     console.log("✅ All data cleared successfully");
     
     // Create admin user
-    const adminEmail = "craig@craigandlee.com";
+    const adminEmail = "admin@tabletalk.cards";
     const adminPassword = "TabletalkAdmin2025!";
     
     console.log("👤 Creating admin user...");
@@ -27,9 +27,9 @@ async function resetDevDatabase() {
     await db.insert(users).values({
       id: uuidv4(),
       email: adminEmail,
-      firstName: "Craig",
-      lastName: "RT",
-      displayName: "CRT",
+      firstName: "TableTalk",
+      lastName: "Admin",
+      displayName: "Admin",
       password: hashedPassword,
       authType: "local",
       role: "admin",

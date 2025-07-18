@@ -12,7 +12,7 @@ async function setupProductionDb() {
   console.log("🔧 Setting up production database...");
   
   // Get admin credentials from environment
-  const adminEmail = process.env.ADMIN_EMAIL || "craig@craigandlee.com";
+  const adminEmail = process.env.ADMIN_EMAIL || "admin@tabletalk.cards";
   const adminPassword = process.env.ADMIN_PASSWORD;
   
   if (!adminPassword) {
@@ -48,8 +48,8 @@ async function setupProductionDb() {
       await db.insert(users).values({
         id: `admin-${Date.now()}`,
         email: adminEmail,
-        firstName: "Admin",
-        lastName: "User",
+        firstName: "TableTalk",
+        lastName: "Admin",
         displayName: "Admin",
         password: await hashPassword(adminPassword),
         role: "admin",

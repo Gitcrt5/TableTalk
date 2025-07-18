@@ -4,7 +4,7 @@ import { eq } from "drizzle-orm";
 import { hashPassword } from "../server/auth";
 
 async function updateAdminPassword() {
-  const adminEmail = "craig@craigandlee.com";
+  const adminEmail = "admin@tabletalk.cards";
   const newPassword = "TabletalkAdmin2025!";
   
   try {

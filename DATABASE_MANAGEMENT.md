@@ -94,7 +94,7 @@ david@example.com / password123 (Player)
 ### Admin User
 
 ```
-craig@craigandlee.com / [Set via ADMIN_PASSWORD]
+admin@tabletalk.cards / [Set via ADMIN_PASSWORD]
 ```
 
 ## Production Database Setup

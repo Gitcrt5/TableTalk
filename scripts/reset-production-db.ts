@@ -18,7 +18,7 @@ async function resetProductionDatabase() {
     console.log("✅ All data cleared successfully");
     
     // Create admin user
-    const adminEmail = process.env.ADMIN_EMAIL || "craig@craigandlee.com";
+    const adminEmail = process.env.ADMIN_EMAIL || "admin@tabletalk.cards";
     const adminPassword = process.env.ADMIN_PASSWORD || "TabletalkAdmin2025!";
     
     console.log("👤 Creating admin user...");
@@ -27,9 +27,9 @@ async function resetProductionDatabase() {
     await db.insert(users).values({
       id: uuidv4(),
       email: adminEmail,
-      firstName: "Craig",
-      lastName: "RT",
-      displayName: "CRT",
+      firstName: "TableTalk",
+      lastName: "Admin",
+      displayName: "Admin",
       password: hashedPassword,
       authType: "local",
       role: "admin",
