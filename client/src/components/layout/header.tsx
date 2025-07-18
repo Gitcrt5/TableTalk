@@ -2,7 +2,6 @@ import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { LogOut, User, Settings, Shield } from "lucide-react";
-import logoUrl from "@/assets/tabletalk-logo.svg";
 import { useAuth } from "@/hooks/useAuth";
 import type { User as UserType } from "@shared/schema";
 
@@ -14,11 +13,9 @@ export default function Header() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <Link href="/" className="flex items-center space-x-3">
-            <img 
-              src={logoUrl} 
-              alt="TableTalk Logo" 
-              className="w-10 h-10"
-            />
+            <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
+              <span className="text-white font-bold text-sm">TT</span>
+            </div>
             <div>
               <h1 className="text-xl font-bold text-text-primary">TableTalk</h1>
               <p className="text-xs text-text-secondary hidden sm:block">Upload and review bridge games with bidding analysis</p>

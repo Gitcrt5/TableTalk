@@ -1,6 +1,5 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import logoUrl from "@/assets/tabletalk-logo.svg";
 
 export default function Landing() {
   return (
@@ -8,11 +7,9 @@ export default function Landing() {
       <div className="container mx-auto px-4 py-4">
         <div className="text-center mb-8">
           <div className="flex justify-center mb-3">
-            <img 
-              src={logoUrl} 
-              alt="TableTalk Logo" 
-              className="w-16 h-16 md:w-20 md:h-20"
-            />
+            <div className="w-16 h-16 md:w-20 md:h-20 bg-blue-600 rounded-full flex items-center justify-center">
+              <span className="text-white font-bold text-xl md:text-2xl">TT</span>
+            </div>
           </div>
           <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-4">
             Welcome to TableTalk

@@ -3,7 +3,6 @@ import { useLocation, Link } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CheckCircle, XCircle, Loader2, Mail, ArrowRight, Home } from "lucide-react";
-import logoUrl from "@/assets/tabletalk-logo.svg";
 
 export default function VerifyEmailPage() {
   const [location] = useLocation();
@@ -52,11 +51,9 @@ export default function VerifyEmailPage() {
         {/* Header with logo */}
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
-            <img 
-              src={logoUrl} 
-              alt="TableTalk Logo" 
-              className="w-20 h-20"
-            />
+            <div className="w-20 h-20 bg-blue-600 rounded-full flex items-center justify-center">
+              <span className="text-white font-bold text-2xl">TT</span>
+            </div>
           </div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">TableTalk</h1>
           <p className="text-gray-600">Bridge Analysis Platform</p>

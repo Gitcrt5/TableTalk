@@ -9,7 +9,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Redirect, Link } from "wouter";
-import logoUrl from "@/assets/tabletalk-logo.svg";
 
 const loginSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -93,11 +92,9 @@ export default function AuthPage() {
         {/* Header with logo and description */}
         <div className="text-center">
           <div className="flex justify-center mb-4">
-            <img 
-              src={logoUrl} 
-              alt="TableTalk Logo" 
-              className="w-28 h-28"
-            />
+            <div className="w-28 h-28 bg-blue-600 rounded-full flex items-center justify-center">
+              <span className="text-white font-bold text-4xl">TT</span>
+            </div>
           </div>
           <h1 className="text-4xl font-bold text-gray-900 mb-2">TableTalk</h1>
           <p className="text-lg text-gray-700 mb-4">
