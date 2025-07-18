@@ -264,30 +264,12 @@ export default function PBNUpload({ open, onOpenChange }: PBNUploadProps) {
                     or click to browse files
                   </p>
                 </div>
-                <div className="flex gap-2 justify-center">
-                  <Button
-                    variant="outline"
-                    onClick={() => fileInputRef.current?.click()}
-                  >
-                    Browse Files
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      const input = document.createElement('input');
-                      input.type = 'file';
-                      input.accept = '.pbn,.txt,text/plain,*/*';
-                      input.onchange = (e) => {
-                        const file = (e.target as HTMLInputElement).files?.[0];
-                        if (file) handleFileSelect(file);
-                      };
-                      input.click();
-                    }}
-                    className="md:hidden"
-                  >
-                    Select File
-                  </Button>
-                </div>
+                <Button
+                  variant="outline"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  Browse Files
+                </Button>
                 <input
                   ref={fileInputRef}
                   type="file"
