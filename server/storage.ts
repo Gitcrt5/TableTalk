@@ -545,9 +545,33 @@ export class DatabaseStorage implements IStorage {
   }
 
   async searchGames(query: string): Promise<Game[]> {
-    return await db.select().from(games)
+    const gamesWithUsers = await db
+      .select({
+        id: games.id,
+        title: games.title,
+        tournament: games.tournament,
+        round: games.round,
+        date: games.date,
+        location: games.location,
+        event: games.event,
+        pbnEvent: games.pbnEvent,
+        pbnSite: games.pbnSite,
+        pbnDate: games.pbnDate,
+        filename: games.filename,
+        uploadedBy: games.uploadedBy,
+        uploadedAt: games.uploadedAt,
+        pbnContent: games.pbnContent,
+        uploaderName: sql<string>`COALESCE(${users.firstName} || ' ' || ${users.lastName}, ${users.email})`,
+      })
+      .from(games)
+      .leftJoin(users, eq(games.uploadedBy, users.id))
       .where(like(games.title, `%${query}%`))
       .orderBy(desc(games.uploadedAt));
+
+    return gamesWithUsers.map(game => ({
+      ...game,
+      uploaderName: game.uploaderName || game.uploadedBy,
+    }));
   }
 
   async findDuplicateByFirstHand(firstHand: {
