@@ -492,7 +492,7 @@ export class DatabaseStorage implements IStorage {
         uploadedBy: games.uploadedBy,
         uploadedAt: games.uploadedAt,
         pbnContent: games.pbnContent,
-        uploaderName: sql<string>`COALESCE(${users.firstName} || ' ' || ${users.lastName}, ${users.email})`,
+        uploaderName: sql<string>`COALESCE(${users.displayName}, ${users.firstName} || ' ' || ${users.lastName}, ${users.email})`,
       })
       .from(games)
       .leftJoin(users, eq(games.uploadedBy, users.id))
@@ -532,7 +532,7 @@ export class DatabaseStorage implements IStorage {
         uploadedBy: games.uploadedBy,
         uploadedAt: games.uploadedAt,
         pbnContent: games.pbnContent,
-        uploaderName: sql<string>`COALESCE(${users.firstName} || ' ' || ${users.lastName}, ${users.email})`,
+        uploaderName: sql<string>`COALESCE(${users.displayName}, ${users.firstName} || ' ' || ${users.lastName}, ${users.email})`,
       })
       .from(games)
       .leftJoin(users, eq(games.uploadedBy, users.id))
@@ -561,7 +561,7 @@ export class DatabaseStorage implements IStorage {
         uploadedBy: games.uploadedBy,
         uploadedAt: games.uploadedAt,
         pbnContent: games.pbnContent,
-        uploaderName: sql<string>`COALESCE(${users.firstName} || ' ' || ${users.lastName}, ${users.email})`,
+        uploaderName: sql<string>`COALESCE(${users.displayName}, ${users.firstName} || ' ' || ${users.lastName}, ${users.email})`,
       })
       .from(games)
       .leftJoin(users, eq(games.uploadedBy, users.id))
