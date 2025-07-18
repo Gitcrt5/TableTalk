@@ -10,39 +10,35 @@ export default function VerifyEmailPage() {
   const [message, setMessage] = useState('');
 
   useEffect(() => {
-    const verifyEmail = async () => {
-      // Extract token from URL query parameters
-      const urlParams = new URLSearchParams(location.split('?')[1]);
-      const token = urlParams.get('token');
+    const urlParams = new URLSearchParams(location.split('?')[1]);
+    const success = urlParams.get('success');
+    const error = urlParams.get('error');
 
-      if (!token) {
-        setStatus('error');
-        setMessage('No verification token found in the URL');
-        return;
+    if (success === 'true') {
+      setStatus('success');
+      setMessage('Email verified successfully!');
+    } else if (error) {
+      setStatus('error');
+      switch (error) {
+        case 'missing_token':
+          setMessage('No verification token found in the URL');
+          break;
+        case 'invalid_token':
+          setMessage('Invalid or expired verification token');
+          break;
+        case 'expired_token':
+          setMessage('Verification token has expired');
+          break;
+        case 'server_error':
+          setMessage('Server error occurred during verification');
+          break;
+        default:
+          setMessage('Failed to verify email');
       }
-
-      try {
-        const response = await fetch(`/verify-email?token=${token}`, {
-          method: 'GET',
-          credentials: 'include',
-        });
-
-        const data = await response.json();
-
-        if (response.ok) {
-          setStatus('success');
-          setMessage(data.message || 'Email verified successfully!');
-        } else {
-          setStatus('error');
-          setMessage(data.message || 'Failed to verify email');
-        }
-      } catch (error) {
-        setStatus('error');
-        setMessage('Network error occurred while verifying email');
-      }
-    };
-
-    verifyEmail();
+    } else {
+      // If no success or error parameter, we're still loading
+      setStatus('loading');
+    }
   }, [location]);
 
   return (

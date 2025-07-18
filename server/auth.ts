@@ -336,19 +336,19 @@ export function setupLocalAuth(app: Express) {
       const { token } = req.query;
       
       if (!token) {
-        return res.status(400).json({ message: "Verification token is required" });
+        return res.redirect("/verify-email?error=missing_token");
       }
 
       // Find user by verification token
       const [user] = await db.select().from(users).where(eq(users.emailVerificationToken, token as string));
       
       if (!user) {
-        return res.status(400).json({ message: "Invalid or expired verification token" });
+        return res.redirect("/verify-email?error=invalid_token");
       }
 
       // Check if token is expired
       if (user.emailVerificationExpires && user.emailVerificationExpires < new Date()) {
-        return res.status(400).json({ message: "Verification token has expired" });
+        return res.redirect("/verify-email?error=expired_token");
       }
 
       // Update user as verified
@@ -367,10 +367,10 @@ export function setupLocalAuth(app: Express) {
         console.error("Failed to send welcome email:", emailError);
       }
 
-      res.json({ message: "Email verified successfully!" });
+      res.redirect("/verify-email?success=true");
     } catch (error) {
       console.error("Email verification error:", error);
-      res.status(500).json({ message: "Internal server error" });
+      res.redirect("/verify-email?error=server_error");
     }
   });
 

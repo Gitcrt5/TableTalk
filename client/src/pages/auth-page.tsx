@@ -143,7 +143,12 @@ export default function AuthPage() {
             // Local email/password authentication
             <Card>
               <CardHeader>
-                <CardTitle>{isRegistering ? "Create Account" : "Sign In"}</CardTitle>
+                <CardTitle className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+                    <span className="text-white font-bold text-xs">TT</span>
+                  </div>
+                  {isRegistering ? "Create Account" : "Sign In"}
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 {isRegistering ? (
