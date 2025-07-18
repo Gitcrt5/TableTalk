@@ -213,12 +213,14 @@ export function setupLocalAuth(app: Express) {
       });
 
       // Send verification email
+      console.log("Attempting to send verification email to:", email);
       try {
         await emailService.sendVerificationEmail(
           email, 
           verificationToken, 
           firstName || undefined
         );
+        console.log("Verification email sent successfully");
       } catch (emailError) {
         console.error("Failed to send verification email:", emailError);
         // Continue with registration even if email fails

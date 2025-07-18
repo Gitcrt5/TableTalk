@@ -37,8 +37,10 @@ export class SendGridEmailService implements EmailService {
   async sendVerificationEmail(email: string, token: string, name?: string): Promise<void> {
     const verificationUrl = `${getBaseUrl()}/verify-email?token=${token}`;
     
+    console.log(`Attempting to send verification email to: ${email} from: ${this.fromEmail}`);
+    
     try {
-      await this.mailService.send({
+      const result = await this.mailService.send({
         to: email,
         from: this.fromEmail,
         subject: 'Verify your TableTalk account',
@@ -58,8 +60,9 @@ export class SendGridEmailService implements EmailService {
           </div>
         `,
       });
+      console.log('SendGrid email sent successfully:', result);
     } catch (error) {
-      console.error('SendGrid email failed, falling back to console logging:', error);
+      console.error('SendGrid email failed with detailed error:', error);
       // Fall back to console logging for development
       console.log('\n=== EMAIL VERIFICATION (SendGrid Failed) ===');
       console.log(`To: ${email}`);
@@ -67,6 +70,7 @@ export class SendGridEmailService implements EmailService {
       console.log(`Verification URL: ${verificationUrl}`);
       console.log(`Name: ${name || 'N/A'}`);
       console.log('==========================================\n');
+      // Don't re-throw the error - continue with fallback logging
     }
   }
 
@@ -229,7 +233,7 @@ export function isValidEmail(email: string): boolean {
   return emailRegex.test(email);
 }
 
-// Create email service instance
+// Create email service instance with fallback to console logging
 export const emailService: EmailService = process.env.SENDGRID_API_KEY 
-  ? new SendGridEmailService(process.env.SENDGRID_API_KEY, 'admin@tabletalk.cards')
+  ? new SendGridEmailService(process.env.SENDGRID_API_KEY, 'noreply@tabletalk.com')
   : new MockEmailService();
