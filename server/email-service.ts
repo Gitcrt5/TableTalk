@@ -1,6 +1,22 @@
 import { randomBytes } from "crypto";
 import { MailService } from '@sendgrid/mail';
 
+// Helper function to get the correct base URL for different environments
+function getBaseUrl(): string {
+  // Check if we're in production environment
+  if (process.env.NODE_ENV === 'production') {
+    return 'https://tabletalk.cards';
+  }
+  
+  // Check if we're running in Replit (has specific env variables)
+  if (process.env.REPLIT_DOMAINS) {
+    return `https://${process.env.REPLIT_DOMAINS.split(',')[0]}`;
+  }
+  
+  // Default to localhost for local development
+  return process.env.BASE_URL || 'http://localhost:5000';
+}
+
 export interface EmailService {
   sendVerificationEmail(email: string, token: string, name?: string): Promise<void>;
   sendPasswordResetEmail(email: string, token: string, name?: string): Promise<void>;
@@ -19,7 +35,7 @@ export class SendGridEmailService implements EmailService {
   }
 
   async sendVerificationEmail(email: string, token: string, name?: string): Promise<void> {
-    const verificationUrl = `${process.env.BASE_URL || 'http://localhost:5000'}/verify-email?token=${token}`;
+    const verificationUrl = `${getBaseUrl()}/verify-email?token=${token}`;
     
     try {
       await this.mailService.send({
@@ -55,7 +71,7 @@ export class SendGridEmailService implements EmailService {
   }
 
   async sendPasswordResetEmail(email: string, token: string, name?: string): Promise<void> {
-    const resetUrl = `${process.env.BASE_URL || 'http://localhost:5000'}/reset-password?token=${token}`;
+    const resetUrl = `${getBaseUrl()}/reset-password?token=${token}`;
     
     try {
       await this.mailService.send({
@@ -109,7 +125,7 @@ export class SendGridEmailService implements EmailService {
             <li>Connect with other bridge players</li>
           </ul>
           <div style="text-align: center; margin: 30px 0;">
-            <a href="${process.env.BASE_URL || 'http://localhost:5000'}" style="background-color: #28a745; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">Get Started</a>
+            <a href="${getBaseUrl()}" style="background-color: #28a745; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">Get Started</a>
           </div>
           <p>Best regards,<br>The TableTalk Team</p>
         </div>
@@ -130,7 +146,7 @@ export class SendGridEmailService implements EmailService {
 // Mock email service for development - logs emails to console
 export class MockEmailService implements EmailService {
   async sendVerificationEmail(email: string, token: string, name?: string): Promise<void> {
-    const verificationUrl = `${process.env.BASE_URL || 'http://localhost:5000'}/verify-email?token=${token}`;
+    const verificationUrl = `${getBaseUrl()}/verify-email?token=${token}`;
     
     console.log(`
 ========== EMAIL VERIFICATION ==========
@@ -154,7 +170,7 @@ The TableTalk Team
   }
 
   async sendPasswordResetEmail(email: string, token: string, name?: string): Promise<void> {
-    const resetUrl = `${process.env.BASE_URL || 'http://localhost:5000'}/reset-password?token=${token}`;
+    const resetUrl = `${getBaseUrl()}/reset-password?token=${token}`;
     
     console.log(`
 ========== PASSWORD RESET ==========
@@ -193,7 +209,7 @@ You can now:
 - Practice bidding sequences
 - Connect with other bridge players
 
-Get started by uploading your first game at: ${process.env.BASE_URL || 'http://localhost:5000'}
+Get started by uploading your first game at: ${getBaseUrl()}
 
 Best regards,
 The TableTalk Team
