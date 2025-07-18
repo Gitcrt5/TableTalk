@@ -215,5 +215,5 @@ export function isValidEmail(email: string): boolean {
 
 // Create email service instance
 export const emailService: EmailService = process.env.SENDGRID_API_KEY 
-  ? new SendGridEmailService(process.env.SENDGRID_API_KEY, 'craig@craigandlee.com')
+  ? new SendGridEmailService(process.env.SENDGRID_API_KEY, 'admin@tabletalk.cards')
   : new MockEmailService();
