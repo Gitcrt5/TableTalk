@@ -173,7 +173,7 @@ export function setupLocalAuth(app: Express) {
   // Local authentication routes
   app.post("/api/register", async (req, res, next) => {
     try {
-      const { email, password, firstName, lastName } = req.body;
+      const { email, password, firstName, lastName, displayName } = req.body;
 
       if (!email || !password) {
         return res.status(400).json({ message: "Email and password are required" });
@@ -203,6 +203,7 @@ export function setupLocalAuth(app: Express) {
         password: hashedPassword,
         firstName: firstName || null,
         lastName: lastName || null,
+        displayName: displayName || null,
         authType: "local",
         profileImageUrl: null,
         role: userRole,
