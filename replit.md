@@ -243,6 +243,7 @@ TableTalk supports two authentication methods for maximum hosting flexibility:
 - July 18, 2025. **UPLOAD DIALOG IMPROVEMENTS** - Consolidated duplicate file selection buttons in PBN upload dialog. Removed redundant "Select File" button and kept single "Browse Files" button that works reliably across all devices including mobile. Simplified user interface for cleaner upload experience.
 - July 18, 2025. **UPLOADER DISPLAY NAME FIX** - Fixed issue where game detail page showed uploader UUID instead of display name. Backend was correctly joining user data and returning display names, frontend now properly displays user's display name (e.g., "Uploaded by MM") instead of raw user ID. Enhanced user experience with proper name attribution.
 - July 18, 2025. **VERSION 0.1 BETA RELEASE** - Checkpoint reached for initial beta version. All core features implemented and tested: authentication, PBN upload/parsing, game/hand viewing, bidding sequences, comments, user management, and mobile responsiveness. System ready for beta testing with comprehensive bridge analysis functionality.
+- July 18, 2025. **DEPLOYMENT DATABASE FIX** - Fixed database configuration to properly use production database when deployed. Updated database selection logic to detect Replit deployment environment using REPLIT_DOMAINS and REPLIT_ENVIRONMENT variables. Deployed app now correctly uses production database instead of development database with test data.
 
 ## TODO List & Future Enhancements
 
