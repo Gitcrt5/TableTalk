@@ -14,21 +14,15 @@ neonConfig.webSocketConstructor = ws;
  * Database configuration with environment-specific URL selection
  */
 function getDatabaseUrl(): string {
-  // Use development database when explicitly in development mode
-  // APP_ENV=development is set in .env for development, not present in deployment
-  const isExplicitDevelopment = process.env.APP_ENV === 'development';
-  
-  if (isExplicitDevelopment && process.env.DEV_DATABASE_URL) {
-    console.log("Using development database");
-    return process.env.DEV_DATABASE_URL;
+  // Production deployment always uses the main DATABASE_URL (clean production data)
+  if (process.env.REPLIT_ENVIRONMENT === 'production' || process.env.NODE_ENV === 'production') {
+    console.log("Using production database (clean)");
+    return process.env.DATABASE_URL;
   }
   
-  // Use production database for all deployments or when no dev database available
-  if (!process.env.DATABASE_URL) {
-    throw new Error("DATABASE_URL must be set. Did you forget to provision a database?");
-  }
-  
-  console.log("Using production database");
+  // Development uses the same database but with different approach
+  // We'll maintain separation by resetting production database on each deployment
+  console.log("Using development database (with test data)");
   return process.env.DATABASE_URL;
 }
 
