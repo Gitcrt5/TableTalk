@@ -129,12 +129,6 @@ export default function GameDetail() {
             <div className="flex items-center space-x-1">
               <User className="h-4 w-4" />
               <span>Uploaded by {game.uploaderName || game.uploadedBy}</span>
-              {/* Debug info - remove after testing */}
-              {process.env.NODE_ENV === 'development' && (
-                <span className="text-xs text-gray-500">
-                  (name: {game.uploaderName || 'undefined'}, id: {game.uploadedBy})
-                </span>
-              )}
             </div>
             
             <div className="flex items-center space-x-1 text-xs">
