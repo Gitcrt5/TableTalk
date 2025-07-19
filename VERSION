@@ -1,0 +1,30 @@
+0.1.0-beta
+
+TableTalk Bridge Analysis Platform
+Version 0.1 Beta Release
+Released: July 18, 2025
+
+CHANGELOG:
+- Initial beta release with core functionality
+- Full authentication system (email/password)
+- PBN file upload with duplicate detection
+- Bridge game and hand viewing
+- Bidding sequence management
+- Comment system for discussions
+- User profile and account management
+- Admin interface for user management
+- Mobile-responsive design
+- Production-ready architecture
+
+TECHNICAL STACK:
+- Frontend: React 18 + TypeScript + Tailwind CSS
+- Backend: Node.js + Express + PostgreSQL
+- ORM: Drizzle with type-safe operations
+- Authentication: Local email/password system
+- UI: Radix UI components with custom styling
+- Build: Vite for frontend, ESBuild for backend
+
+READY FOR BETA TESTING:
+All core features implemented and tested.
+Stable authentication and data management.
+Professional user interface optimized for all devices.

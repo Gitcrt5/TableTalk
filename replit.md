@@ -2,7 +2,9 @@
 
 ## Overview
 
-TableTalk is a simplified bridge review platform built with a modern full-stack TypeScript architecture. The MVP focuses on core functionality: uploading PBN files, viewing games and hands, and adding comments. Users can upload bridge games, browse available games, view individual hands with card layouts, add missing bidding sequences, and comment on hands for discussion.
+TableTalk is a comprehensive bridge review platform built with a modern full-stack TypeScript architecture. **Version 0.1 Beta** provides core functionality for bridge analysis and community discussion: uploading PBN files, viewing games and hands with detailed card layouts, managing bidding sequences, and engaging in hand discussions through comments. The platform supports user authentication, profile management, and admin controls, making it ready for beta testing by bridge enthusiasts.
+
+**Current Status:** Beta Release 0.1 - All core features implemented and tested.
 
 ## System Architecture
 
@@ -119,7 +121,31 @@ TableTalk supports two authentication methods for maximum hosting flexibility:
 
 ## Changelog
 
-## Project Checkpoints
+## Project Checkpoints & Version History
+
+### VERSION 0.1 BETA: "Initial Beta Release" (July 18, 2025)
+**Core Features Complete:**
+- Full email/password authentication system with registration, login, and account management
+- PBN file upload with duplicate detection and auto-edit functionality
+- Bridge game and hand viewing with card layouts and bidding sequences
+- Comment system for hand discussions
+- User profile management with display names and statistics
+- Admin user management interface
+- Mobile-responsive design optimized for all devices
+
+**Technical Foundation:**
+- React frontend with TypeScript and Tailwind CSS
+- Node.js/Express backend with PostgreSQL database
+- Drizzle ORM for type-safe database operations
+- SendGrid email integration (currently disabled)
+- Dual-database architecture (development/production)
+- Comprehensive error handling and validation
+
+**Ready for Beta Testing:**
+- All core workflows functional and tested
+- Clean, professional user interface
+- Proper user attribution and data management
+- Stable authentication and session management
 
 ### CHECKPOINT 1: "Email/Password Authentication Complete" (July 8, 2025)
 - Complete local authentication system implemented
@@ -216,6 +242,7 @@ TableTalk supports two authentication methods for maximum hosting flexibility:
 - July 18, 2025. **EMAIL VERIFICATION REMOVED** - Temporarily removed email verification requirement due to SendGrid delivery issues. Users can now register and immediately use the application without email verification. Updated all existing users to verified status and removed verification banner from dashboard. Added email verification back to TODO list for future implementation with proper email infrastructure.
 - July 18, 2025. **UPLOAD DIALOG IMPROVEMENTS** - Consolidated duplicate file selection buttons in PBN upload dialog. Removed redundant "Select File" button and kept single "Browse Files" button that works reliably across all devices including mobile. Simplified user interface for cleaner upload experience.
 - July 18, 2025. **UPLOADER DISPLAY NAME FIX** - Fixed issue where game detail page showed uploader UUID instead of display name. Backend was correctly joining user data and returning display names, frontend now properly displays user's display name (e.g., "Uploaded by MM") instead of raw user ID. Enhanced user experience with proper name attribution.
+- July 18, 2025. **VERSION 0.1 BETA RELEASE** - Checkpoint reached for initial beta version. All core features implemented and tested: authentication, PBN upload/parsing, game/hand viewing, bidding sequences, comments, user management, and mobile responsiveness. System ready for beta testing with comprehensive bridge analysis functionality.
 
 ## TODO List & Future Enhancements
 
