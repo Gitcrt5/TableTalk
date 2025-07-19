@@ -3,6 +3,10 @@ import { drizzle } from 'drizzle-orm/neon-serverless';
 import ws from "ws";
 import * as schema from "@shared/schema";
 
+// Load environment variables first
+import { config } from 'dotenv';
+config();
+
 // Configure WebSocket for Neon
 neonConfig.webSocketConstructor = ws;
 
@@ -10,19 +14,16 @@ neonConfig.webSocketConstructor = ws;
  * Database configuration with environment-specific URL selection
  */
 function getDatabaseUrl(): string {
-  // Check if we're in Replit deployment (production)
-  // Replit sets REPLIT_DOMAINS or REPLIT_ENVIRONMENT when deployed
-  const isDeployment = process.env.REPLIT_DOMAINS || 
-                      process.env.REPLIT_ENVIRONMENT === 'production' ||
-                      process.env.NODE_ENV === 'production';
+  // Use development database when explicitly in development mode
+  // APP_ENV=development is set in .env for development, not present in deployment
+  const isExplicitDevelopment = process.env.APP_ENV === 'development';
   
-  // Use development database URL only in local development and not in deployment
-  if (!isDeployment && process.env.NODE_ENV === 'development' && process.env.DEV_DATABASE_URL) {
+  if (isExplicitDevelopment && process.env.DEV_DATABASE_URL) {
     console.log("Using development database");
     return process.env.DEV_DATABASE_URL;
   }
   
-  // Use production database URL for all deployments
+  // Use production database for all deployments or when no dev database available
   if (!process.env.DATABASE_URL) {
     throw new Error("DATABASE_URL must be set. Did you forget to provision a database?");
   }
