@@ -43,10 +43,15 @@ export default function GameDetail() {
   });
 
   // Fetch user's partners
-  const { data: partners = [] } = useQuery<UserType[]>({
-    queryKey: ["/api/partners"],
+  const { data: partners = [], error: partnersError, isLoading: partnersLoading } = useQuery<UserType[]>({
+    queryKey: ["/api/user/partners"],
     enabled: !!user,
   });
+
+  // Debug logging
+  console.log("Partners data:", partners);
+  console.log("Partners error:", partnersError);
+  console.log("Partners loading:", partnersLoading);
 
   // Check if current user is already marked as playing this game
   const isCurrentUserPlaying = gamePlayers.some(player => player.id === user?.id);
