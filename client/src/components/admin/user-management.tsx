@@ -343,20 +343,12 @@ export default function UserManagement() {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <Select
-                          value={user.userType}
-                          onValueChange={(value) => handleUserTypeChange(user, value)}
-                          disabled={updateUserTypeMutation.isPending}
+                        <Badge
+                          variant="outline"
+                          className={getUserTypeBadgeColor(user.userType)}
                         >
-                          <SelectTrigger className="w-24">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="player">Player</SelectItem>
-                            <SelectItem value="admin">Admin</SelectItem>
-                            <SelectItem value="test">Test</SelectItem>
-                          </SelectContent>
-                        </Select>
+                          {user.userType}
+                        </Badge>
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
@@ -383,6 +375,20 @@ export default function UserManagement() {
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-2">
+                          <Select
+                            value={user.userType}
+                            onValueChange={(value) => handleUserTypeChange(user, value)}
+                            disabled={updateUserTypeMutation.isPending}
+                          >
+                            <SelectTrigger className="w-20 h-8 text-xs">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="player">Player</SelectItem>
+                              <SelectItem value="admin">Admin</SelectItem>
+                              <SelectItem value="test">Test</SelectItem>
+                            </SelectContent>
+                          </Select>
                           {user.isActive ? (
                             <Button
                               variant="outline"
