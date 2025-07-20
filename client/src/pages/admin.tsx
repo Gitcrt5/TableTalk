@@ -11,6 +11,10 @@ import UserManagement from "@/components/admin/user-management";
 export default function AdminPage() {
   const { user } = useAuth();
   
+  // Debug logging
+  console.log("Admin page - current user:", user);
+  console.log("User userType:", user?.userType);
+  
   // Check if user has admin userType
   if (!user || user.userType !== "admin") {
     return (

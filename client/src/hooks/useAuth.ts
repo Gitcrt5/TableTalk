@@ -46,19 +46,21 @@ export function useAuth() {
         if (!res.ok) {
           throw new Error(`HTTP ${res.status}: ${res.statusText}`);
         }
-        return await res.json();
+        const userData = await res.json();
+        console.log("Auth hook - fetched user data:", userData);
+        return userData;
       } catch (error) {
         // For network errors or other issues, return null to show auth page
         return null;
       }
     },
     retry: false,
-    refetchOnWindowFocus: false,
-    refetchOnMount: false, // Don't refetch on every mount
-    refetchOnReconnect: false,
-    refetchInterval: false, // Never automatically refetch
-    staleTime: 30 * 60 * 1000, // Cache for 30 minutes to prevent frequent requests
-    gcTime: 60 * 60 * 1000, // Keep in cache for 1 hour
+    refetchOnWindowFocus: true, // Force refetch on focus
+    refetchOnMount: true, // Force refetch on mount
+    refetchOnReconnect: true,
+    refetchInterval: false,
+    staleTime: 0, // No caching during admin debugging
+    gcTime: 0, // Clear cache immediately
   });
 
   const loginMutation = useMutation({
