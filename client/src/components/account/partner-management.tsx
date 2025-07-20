@@ -61,9 +61,11 @@ export function PartnerManagement() {
     setIsSearching(true);
     try {
       const results = await apiRequest(`/api/users/search?query=${encodeURIComponent(searchQuery)}`);
+      console.log("Search results:", results);
       setSearchResults(results);
     } catch (error) {
       console.error("Error searching users:", error);
+      setSearchResults([]);
     } finally {
       setIsSearching(false);
     }
@@ -139,6 +141,7 @@ export function PartnerManagement() {
           </div>
 
           {/* Search Results */}
+          {isSearching && <div className="text-sm text-muted-foreground">Searching...</div>}
           {searchResults.length > 0 && (
             <div className="space-y-2">
               <h4 className="text-sm font-medium">Search Results</h4>
@@ -167,6 +170,9 @@ export function PartnerManagement() {
                 );
               })}
             </div>
+          )}
+          {!isSearching && searchQuery.trim() && searchResults.length === 0 && (
+            <div className="text-sm text-muted-foreground">No users found matching "{searchQuery}"</div>
           )}
         </div>
       </CardContent>
