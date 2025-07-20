@@ -76,6 +76,8 @@ export function useAuth() {
         title: "Success",
         description: "You have been logged in successfully",
       });
+      // Ensure we navigate to dashboard after login
+      window.location.href = "/";
     },
     onError: (error: Error) => {
       toast({
@@ -100,6 +102,8 @@ export function useAuth() {
         title: "Welcome to TableTalk!",
         description: "Your account has been created successfully. You can now upload and analyze bridge games.",
       });
+      // Ensure we navigate to dashboard after registration
+      window.location.href = "/";
     },
     onError: (error: Error) => {
       toast({
