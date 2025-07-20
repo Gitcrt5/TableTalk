@@ -676,6 +676,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Partner management routes
+  app.get("/api/user/partners", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = getUserId(req);
+      const partners = await storage.getUserPartners(userId);
+      res.json(partners);
+    } catch (error) {
+      console.error('Error getting user partners:', error);
+      res.status(500).json({ error: 'Failed to get partners' });
+    }
+  });
+
+  app.post("/api/user/partners", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = getUserId(req);
+      const { partnerId } = req.body;
+      
+      if (!partnerId) {
+        return res.status(400).json({ error: 'Partner ID is required' });
+      }
+      
+      if (userId === partnerId) {
+        return res.status(400).json({ error: 'Cannot add yourself as partner' });
+      }
+      
+      await storage.addPartner(userId, partnerId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error adding partner:', error);
+      res.status(500).json({ error: 'Failed to add partner' });
+    }
+  });
+
+  app.delete("/api/user/partners/:partnerId", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = getUserId(req);
+      const { partnerId } = req.params;
+      
+      await storage.removePartner(userId, partnerId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error removing partner:', error);
+      res.status(500).json({ error: 'Failed to remove partner' });
+    }
+  });
+
+  // User search route
+  app.get("/api/users/search", isAuthenticated, async (req: any, res) => {
+    try {
+      const { query } = req.query;
+      
+      if (!query || typeof query !== 'string') {
+        return res.status(400).json({ error: 'Search query is required' });
+      }
+      
+      const users = await storage.searchUsers(query);
+      res.json(users);
+    } catch (error) {
+      console.error('Error searching users:', error);
+      res.status(500).json({ error: 'Failed to search users' });
+    }
+  });
+
   app.patch("/api/user/profile", isAuthenticated, async (req: any, res) => {
     try {
       const userId = getUserId(req);
@@ -746,6 +809,124 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating password:", error);
       res.status(500).json({ error: "Failed to update password" });
+    }
+  });
+
+  // Partner routes
+  app.get("/api/users/search", isAuthenticated, async (req: any, res) => {
+    try {
+      const { query } = req.query;
+      const currentUserId = getUserId(req);
+      
+      if (!query) {
+        return res.status(400).json({ error: "Search query required" });
+      }
+      
+      const users = await storage.searchUsers(query as string, currentUserId);
+      res.json(users);
+    } catch (error) {
+      console.error("Error searching users:", error);
+      res.status(500).json({ error: "Failed to search users" });
+    }
+  });
+
+  app.get("/api/user/partners", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = getUserId(req);
+      const partners = await storage.getUserPartners(userId);
+      res.json(partners);
+    } catch (error) {
+      console.error("Error fetching partners:", error);
+      res.status(500).json({ error: "Failed to fetch partners" });
+    }
+  });
+
+  app.post("/api/user/partners", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = getUserId(req);
+      const { partnerId } = req.body;
+      
+      if (!partnerId) {
+        return res.status(400).json({ error: "Partner ID required" });
+      }
+      
+      const partner = await storage.createPartner({
+        userId,
+        partnerId,
+      });
+      
+      res.json(partner);
+    } catch (error) {
+      console.error("Error adding partner:", error);
+      res.status(500).json({ error: "Failed to add partner" });
+    }
+  });
+
+  app.delete("/api/user/partners/:partnerId", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = getUserId(req);
+      const { partnerId } = req.params;
+      
+      const success = await storage.removePartner(userId, partnerId);
+      if (success) {
+        res.json({ message: "Partner removed successfully" });
+      } else {
+        res.status(404).json({ error: "Partner not found" });
+      }
+    } catch (error) {
+      console.error("Error removing partner:", error);
+      res.status(500).json({ error: "Failed to remove partner" });
+    }
+  });
+
+  // Game participation routes
+  app.post("/api/games/:gameId/participation", isAuthenticated, async (req: any, res) => {
+    try {
+      const gameId = parseInt(req.params.gameId);
+      const userId = getUserId(req);
+      const { partnerId, position } = req.body;
+      
+      const participant = await storage.createGameParticipant({
+        gameId,
+        userId,
+        partnerId: partnerId || null,
+        position: position || null,
+      });
+      
+      res.json(participant);
+    } catch (error) {
+      console.error("Error adding game participation:", error);
+      res.status(500).json({ error: "Failed to add game participation" });
+    }
+  });
+
+  app.get("/api/games/:gameId/participation", async (req, res) => {
+    try {
+      const gameId = parseInt(req.params.gameId);
+      const participants = await storage.getGameParticipants(gameId);
+      res.json(participants);
+    } catch (error) {
+      console.error("Error fetching game participants:", error);
+      res.status(500).json({ error: "Failed to fetch game participants" });
+    }
+  });
+
+  // Partner comments for hand
+  app.get("/api/hands/:handId/partner-comments", isAuthenticated, async (req: any, res) => {
+    try {
+      const handId = parseInt(req.params.handId);
+      const userId = getUserId(req);
+      const { partnerId } = req.query;
+      
+      if (!partnerId) {
+        return res.status(400).json({ error: "Partner ID required" });
+      }
+      
+      const comments = await storage.getPartnerCommentsForHand(handId, userId, partnerId as string);
+      res.json(comments);
+    } catch (error) {
+      console.error("Error fetching partner comments:", error);
+      res.status(500).json({ error: "Failed to fetch partner comments" });
     }
   });
 

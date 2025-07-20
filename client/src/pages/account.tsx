@@ -1,414 +1,72 @@
-import { useState, useEffect } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Separator } from "@/components/ui/separator";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { useToast } from "@/hooks/use-toast";
-import { apiRequest, queryClient } from "@/lib/queryClient";
-import { User, CheckCircle, AlertCircle, Settings } from "lucide-react";
+import { useState } from "react";
+import { ProfileManagement } from "@/components/account/profile-management";
+import { PasswordManagement } from "@/components/account/password-management";
+import { UserStats } from "@/components/account/user-stats";
+import { PartnerManagement } from "@/components/account/partner-management";
 import { useAuth } from "@/hooks/useAuth";
-
-const updateProfileSchema = z.object({
-  firstName: z.string().min(1, "First name is required").max(50, "First name must be less than 50 characters"),
-  lastName: z.string().min(1, "Last name is required").max(50, "Last name must be less than 50 characters"),
-  displayName: z.string().min(1, "Display name is required").max(20, "Display name must be less than 20 characters"),
-  email: z.string().email("Please enter a valid email address"),
-});
-
-const changePasswordSchema = z.object({
-  currentPassword: z.string().min(1, "Current password is required"),
-  newPassword: z.string().min(6, "New password must be at least 6 characters"),
-  confirmPassword: z.string().min(6, "Please confirm your new password"),
-}).refine((data) => data.newPassword === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ["confirmPassword"],
-});
-
-type UpdateProfileFormData = z.infer<typeof updateProfileSchema>;
-type ChangePasswordFormData = z.infer<typeof changePasswordSchema>;
 
 export default function AccountPage() {
   const { user } = useAuth();
-  const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState<"profile" | "password">("profile");
-
-  const { data: userStats } = useQuery({
-    queryKey: ["/api/user/stats"],
-    enabled: !!user,
-  });
-
-  const profileForm = useForm<UpdateProfileFormData>({
-    resolver: zodResolver(updateProfileSchema),
-    defaultValues: {
-      firstName: "",
-      lastName: "",
-      displayName: "",
-      email: "",
-    },
-  });
-
-  // Update form values when user data is loaded
-  useEffect(() => {
-    if (user) {
-      profileForm.reset({
-        firstName: user.firstName || "",
-        lastName: user.lastName || "",
-        displayName: user.displayName || "",
-        email: user.email || "",
-      });
-    }
-  }, [user, profileForm]);
-
-  const passwordForm = useForm<ChangePasswordFormData>({
-    resolver: zodResolver(changePasswordSchema),
-    defaultValues: {
-      currentPassword: "",
-      newPassword: "",
-      confirmPassword: "",
-    },
-  });
-
-  const updateProfileMutation = useMutation({
-    mutationFn: async (data: UpdateProfileFormData) => {
-      const response = await apiRequest("/api/user/profile", {
-        method: "PATCH",
-        body: JSON.stringify(data),
-      });
-      return response.json();
-    },
-    onSuccess: (updatedUser) => {
-      toast({
-        title: "Profile Updated",
-        description: "Your profile has been updated successfully.",
-      });
-      // Update the cached user data immediately with the response
-      queryClient.setQueryData(["/api/user"], updatedUser);
-      // Also invalidate to ensure freshness
-      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Update Failed",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
-  const changePasswordMutation = useMutation({
-    mutationFn: async (data: ChangePasswordFormData) => {
-      const response = await apiRequest("/api/user/password", {
-        method: "PATCH",
-        body: JSON.stringify(data),
-      });
-      return response.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: "Password Changed",
-        description: "Your password has been changed successfully.",
-      });
-      passwordForm.reset();
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Password Change Failed",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
-  const onUpdateProfile = (data: UpdateProfileFormData) => {
-    updateProfileMutation.mutate(data);
-  };
-
-  const onChangePassword = (data: ChangePasswordFormData) => {
-    changePasswordMutation.mutate(data);
-  };
+  const [activeTab, setActiveTab] = useState<"profile" | "password" | "partners">("profile");
 
   if (!user) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <Alert>
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            Please log in to access your account settings.
-          </AlertDescription>
-        </Alert>
-      </div>
-    );
+    return <div>Loading...</div>;
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Account Settings</h1>
-        <p className="text-text-secondary">
-          Manage your account information and preferences
-        </p>
-      </div>
+    <div className="container mx-auto py-8 px-4">
+      <div className="max-w-4xl mx-auto">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold tracking-tight">Account Settings</h1>
+          <p className="text-muted-foreground">
+            Manage your account settings, partners, and preferences.
+          </p>
+        </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Profile Summary */}
-        <Card className="lg:col-span-1">
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <User className="h-5 w-5" />
-              <span>Profile</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center space-x-4">
-              <Avatar className="h-16 w-16">
-                <AvatarImage src={user.profileImageUrl || undefined} />
-                <AvatarFallback className="text-lg">
-                  {user.firstName?.[0]}{user.lastName?.[0]}
-                </AvatarFallback>
-              </Avatar>
-              <div>
-                <h3 className="font-semibold">{user.firstName} {user.lastName}</h3>
-                <p className="text-text-secondary">@{user.displayName}</p>
-                <p className="text-sm text-text-secondary">{user.email}</p>
-              </div>
-            </div>
-            
-            <Separator />
-            
-            {userStats && (
-              <div className="space-y-2">
-                <h4 className="font-medium">Statistics</h4>
-                <div className="grid grid-cols-2 gap-2 text-sm">
-                  <div>
-                    <p className="text-text-secondary">Games Uploaded</p>
-                    <p className="font-semibold">{userStats.gamesUploaded}</p>
-                  </div>
-                  <div>
-                    <p className="text-text-secondary">Comments Made</p>
-                    <p className="font-semibold">{userStats.commentsMade}</p>
-                  </div>
-                  <div>
-                    <p className="text-text-secondary">Hands Reviewed</p>
-                    <p className="font-semibold">{userStats.handsReviewed}</p>
-                  </div>
-                  <div>
-                    <p className="text-text-secondary">Avg Accuracy</p>
-                    <p className="font-semibold">{userStats.averageBiddingAccuracy}%</p>
-                  </div>
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        <div className="flex space-x-8 border-b">
+          <button
+            onClick={() => setActiveTab("profile")}
+            className={`py-2 px-1 border-b-2 font-medium text-sm ${
+              activeTab === "profile"
+                ? "border-blue-500 text-blue-600"
+                : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+            }`}
+          >
+            Profile
+          </button>
+          <button
+            onClick={() => setActiveTab("password")}
+            className={`py-2 px-1 border-b-2 font-medium text-sm ${
+              activeTab === "password"
+                ? "border-blue-500 text-blue-600"
+                : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+            }`}
+          >
+            Password
+          </button>
+          <button
+            onClick={() => setActiveTab("partners")}
+            className={`py-2 px-1 border-b-2 font-medium text-sm ${
+              activeTab === "partners"
+                ? "border-blue-500 text-blue-600"
+                : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+            }`}
+          >
+            Partners
+          </button>
+        </div>
 
-        {/* Settings Forms */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Tab Navigation */}
-          <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg">
-            <button
-              onClick={() => setActiveTab("profile")}
-              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-                activeTab === "profile"
-                  ? "bg-white text-gray-900 shadow-sm"
-                  : "text-gray-600 hover:text-gray-900"
-              }`}
-            >
-              Profile Information
-            </button>
-            {user.authType === "local" && (
-              <button
-                onClick={() => setActiveTab("password")}
-                className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-                  activeTab === "password"
-                    ? "bg-white text-gray-900 shadow-sm"
-                    : "text-gray-600 hover:text-gray-900"
-                }`}
-              >
-                Change Password
-              </button>
-            )}
+        <div className="mt-8 space-y-8">
+          {/* User Statistics */}
+          <div>
+            <h2 className="text-xl font-semibold mb-4">Your Statistics</h2>
+            <UserStats />
           </div>
 
-          {/* Profile Information Form */}
-          {activeTab === "profile" && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Settings className="h-5 w-5" />
-                  <span>Profile Information</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Form {...profileForm}>
-                  <form onSubmit={profileForm.handleSubmit(onUpdateProfile)} className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <FormField
-                        control={profileForm.control}
-                        name="firstName"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>First Name</FormLabel>
-                            <FormControl>
-                              <Input {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={profileForm.control}
-                        name="lastName"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Last Name</FormLabel>
-                            <FormControl>
-                              <Input {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                    
-                    <FormField
-                      control={profileForm.control}
-                      name="displayName"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Display Name</FormLabel>
-                          <FormControl>
-                            <Input {...field} placeholder="Max 20 characters" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={profileForm.control}
-                      name="email"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Email Address</FormLabel>
-                          <FormControl>
-                            <Input {...field} type="email" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <div className="flex justify-end">
-                      <Button 
-                        type="submit" 
-                        disabled={updateProfileMutation.isPending}
-                        className="flex items-center space-x-2"
-                      >
-                        {updateProfileMutation.isPending ? (
-                          <>
-                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                            <span>Updating...</span>
-                          </>
-                        ) : (
-                          <>
-                            <CheckCircle className="h-4 w-4" />
-                            <span>Update Profile</span>
-                          </>
-                        )}
-                      </Button>
-                    </div>
-                  </form>
-                </Form>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Change Password Form */}
-          {activeTab === "password" && user.authType === "local" && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Settings className="h-5 w-5" />
-                  <span>Change Password</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Form {...passwordForm}>
-                  <form onSubmit={passwordForm.handleSubmit(onChangePassword)} className="space-y-4">
-                    <FormField
-                      control={passwordForm.control}
-                      name="currentPassword"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Current Password</FormLabel>
-                          <FormControl>
-                            <Input {...field} type="password" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={passwordForm.control}
-                      name="newPassword"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>New Password</FormLabel>
-                          <FormControl>
-                            <Input {...field} type="password" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={passwordForm.control}
-                      name="confirmPassword"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Confirm New Password</FormLabel>
-                          <FormControl>
-                            <Input {...field} type="password" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <div className="flex justify-end">
-                      <Button 
-                        type="submit" 
-                        disabled={changePasswordMutation.isPending}
-                        className="flex items-center space-x-2"
-                      >
-                        {changePasswordMutation.isPending ? (
-                          <>
-                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                            <span>Changing...</span>
-                          </>
-                        ) : (
-                          <>
-                            <CheckCircle className="h-4 w-4" />
-                            <span>Change Password</span>
-                          </>
-                        )}
-                      </Button>
-                    </div>
-                  </form>
-                </Form>
-              </CardContent>
-            </Card>
-          )}
+          {/* Tab Content */}
+          {activeTab === "profile" && <ProfileManagement />}
+          {activeTab === "password" && <PasswordManagement />}
+          {activeTab === "partners" && <PartnerManagement />}
         </div>
       </div>
     </div>

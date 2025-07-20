@@ -59,6 +59,12 @@ export interface IStorage {
     commentsMade: number;
   }>;
   
+  // Partner management
+  searchUsers(query: string): Promise<User[]>;
+  getUserPartners(userId: string): Promise<User[]>;
+  addPartner(userId: string, partnerId: string): Promise<void>;
+  removePartner(userId: string, partnerId: string): Promise<void>;
+  
   // Admin operations
   deactivateUser(userId: string, reason?: string): Promise<boolean>;
   reactivateUser(userId: string): Promise<boolean>;
@@ -72,6 +78,18 @@ export interface IStorage {
     newUsersThisWeek: number;
     newGamesThisWeek: number;
   }>;
+
+  // Partners
+  createPartner(partner: InsertPartner): Promise<Partner>;
+  getUserPartners(userId: string): Promise<User[]>;
+  removePartner(userId: string, partnerId: string): Promise<boolean>;
+  searchUsers(query: string, excludeUserId?: string): Promise<User[]>;
+
+  // Game Participants
+  createGameParticipant(participant: InsertGameParticipant): Promise<GameParticipant>;
+  getGameParticipants(gameId: number): Promise<GameParticipant[]>;
+  getUserGameParticipation(userId: string, gameId: number): Promise<GameParticipant | undefined>;
+  getPartnerCommentsForHand(handId: number, userId: string, partnerId: string): Promise<Comment[]>;
 
   // Clubs
   createClub(club: InsertClub): Promise<Club>;
@@ -91,6 +109,7 @@ export class MemStorage implements IStorage {
   private hands: Map<number, Hand>;
   private userBidding: Map<string, UserBidding>; // key: handId-userId
   private comments: Map<number, Comment>;
+  private partners: Map<string, string[]>; // userId -> list of partner IDs
   private currentGameId: number;
   private currentHandId: number;
   private currentUserBiddingId: number;
@@ -102,6 +121,7 @@ export class MemStorage implements IStorage {
     this.hands = new Map();
     this.userBidding = new Map();
     this.comments = new Map();
+    this.partners = new Map();
     this.currentGameId = 1;
     this.currentHandId = 1;
     this.currentUserBiddingId = 1;
@@ -262,13 +282,15 @@ export class MemStorage implements IStorage {
 
   async createGame(insertGame: InsertGame): Promise<Game> {
     const id = this.currentGameId++;
+    const uploadDate = new Date();
     const game: Game = {
       ...insertGame,
       id,
-      uploadedAt: new Date(),
+      uploadedAt: uploadDate,
       tournament: insertGame.tournament || null,
       round: insertGame.round || null,
-      date: insertGame.date || null,
+      // Default date to upload date if not provided
+      date: insertGame.date || uploadDate.toISOString().split('T')[0],
       location: insertGame.location || null,
       event: insertGame.event || null,
     };
@@ -459,10 +481,136 @@ export class MemStorage implements IStorage {
       commentsMade,
     };
   }
+
+  async searchUsers(query: string): Promise<User[]> {
+    const lowercaseQuery = query.toLowerCase();
+    return Array.from(this.users.values()).filter(user =>
+      user.firstName?.toLowerCase().includes(lowercaseQuery) ||
+      user.lastName?.toLowerCase().includes(lowercaseQuery) ||
+      user.displayName?.toLowerCase().includes(lowercaseQuery) ||
+      user.email?.toLowerCase().includes(lowercaseQuery)
+    );
+  }
+
+  async getUserPartners(userId: string): Promise<User[]> {
+    const userPartners = this.partners.get(userId) || [];
+    return userPartners.map(partnerId => this.users.get(partnerId)).filter(Boolean) as User[];
+  }
+
+  async addPartner(userId: string, partnerId: string): Promise<void> {
+    const userPartners = this.partners.get(userId) || [];
+    if (!userPartners.includes(partnerId)) {
+      userPartners.push(partnerId);
+      this.partners.set(userId, userPartners);
+    }
+  }
+
+  async removePartner(userId: string, partnerId: string): Promise<void> {
+    const userPartners = this.partners.get(userId) || [];
+    const updatedPartners = userPartners.filter(id => id !== partnerId);
+    this.partners.set(userId, updatedPartners);
+  }
+
+  async updateUserType(id: string, userType: string): Promise<boolean> {
+    const user = this.users.get(id);
+    if (!user) return false;
+    
+    user.userType = userType;
+    this.users.set(id, user);
+    return true;
+  }
+
+  // Game participation (placeholder implementations for in-memory storage)
+  async createGameParticipant(participant: InsertGameParticipant): Promise<GameParticipant> {
+    throw new Error("Game participation functionality requires database implementation");
+  }
+
+  async getGameParticipants(gameId: number): Promise<GameParticipant[]> {
+    return [];
+  }
+
+  async getUserGameParticipation(userId: string, gameId: number): Promise<GameParticipant | undefined> {
+    return undefined;
+  }
+
+  async getPartnerCommentsForHand(handId: number, userId: string, partnerId: string): Promise<Comment[]> {
+    return Array.from(this.comments.values())
+      .filter(comment => 
+        comment.handId === handId && 
+        (comment.userId === userId || comment.userId === partnerId)
+      )
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  }
+
+  // Club management (placeholder implementations for in-memory storage)
+  async createClub(club: InsertClub): Promise<Club> {
+    throw new Error("Club functionality requires database implementation");
+  }
+
+  async getAllClubs(): Promise<Club[]> {
+    return [];
+  }
+
+  async getVerifiedClubs(): Promise<Club[]> {
+    return [];
+  }
+
+  async searchClubs(query: string): Promise<Club[]> {
+    return [];
+  }
+
+  async getClub(id: number): Promise<Club | undefined> {
+    return undefined;
+  }
+
+  async updateClub(id: number, updates: Partial<Club>): Promise<Club | undefined> {
+    return undefined;
+  }
+
+  async verifyClub(id: number, adminUserId: string): Promise<boolean> {
+    return false;
+  }
+
+  async deleteClub(id: number): Promise<boolean> {
+    return false;
+  }
+
+  async setUserHomeClub(userId: string, clubId: number | null): Promise<boolean> {
+    return false;
+  }
+
+  // Admin operations
+  async deactivateUser(userId: string, reason?: string): Promise<boolean> {
+    return false;
+  }
+
+  async reactivateUser(userId: string): Promise<boolean> {
+    return false;
+  }
+
+  async getAdminStats(): Promise<{
+    totalUsers: number;
+    totalGames: number;
+    totalHands: number;
+    totalComments: number;
+    newUsersThisWeek: number;
+    newGamesThisWeek: number;
+  }> {
+    const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    
+    return {
+      totalUsers: this.users.size,
+      totalGames: this.games.size,
+      totalHands: this.hands.size,
+      totalComments: this.comments.size,
+      newUsersThisWeek: 0, // Would need created timestamps
+      newGamesThisWeek: 0, // Would need created timestamps
+    };
+  }
 }
 
 import { db } from "./db";
-import { eq, desc, like, and, sql } from "drizzle-orm";
+import { eq, desc, like, and, sql, or } from "drizzle-orm";
 
 export class DatabaseStorage implements IStorage {
   // User operations (required for Replit Auth)
@@ -519,6 +667,50 @@ export class DatabaseStorage implements IStorage {
 
   async getAllUsers(): Promise<User[]> {
     return await db.select().from(users).orderBy(users.createdAt);
+  }
+
+  async searchUsers(query: string): Promise<User[]> {
+    const lowercaseQuery = `%${query.toLowerCase()}%`;
+    return await db
+      .select()
+      .from(users)
+      .where(
+        sql`LOWER(${users.firstName}) LIKE ${lowercaseQuery} 
+        OR LOWER(${users.lastName}) LIKE ${lowercaseQuery} 
+        OR LOWER(${users.displayName}) LIKE ${lowercaseQuery} 
+        OR LOWER(${users.email}) LIKE ${lowercaseQuery}`
+      )
+      .orderBy(users.firstName);
+  }
+
+  async getUserPartners(userId: string): Promise<User[]> {
+    const partnerRows = await db
+      .select({
+        partner: users,
+      })
+      .from(partners)
+      .innerJoin(users, eq(partners.partnerId, users.id))
+      .where(eq(partners.userId, userId));
+    
+    return partnerRows.map(row => row.partner);
+  }
+
+  async addPartner(userId: string, partnerId: string): Promise<void> {
+    await db
+      .insert(partners)
+      .values({ userId, partnerId })
+      .onConflictDoNothing();
+  }
+
+  async removePartner(userId: string, partnerId: string): Promise<void> {
+    await db
+      .delete(partners)
+      .where(
+        and(
+          eq(partners.userId, userId),
+          eq(partners.partnerId, partnerId)
+        )
+      );
   }
 
   async getAllHands(): Promise<Hand[]> {

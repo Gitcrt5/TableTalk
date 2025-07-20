@@ -167,6 +167,38 @@ export const insertClubSchema = createInsertSchema(clubs).omit({
 export type InsertClub = z.infer<typeof insertClubSchema>;
 export type Club = typeof clubs.$inferSelect;
 
+// Partners table for user relationships
+export const partners = pgTable("partners", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull(), // User who added the partner
+  partnerId: varchar("partner_id").notNull(), // User being added as partner
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Game participants table to track who played in each game
+export const gameParticipants = pgTable("game_participants", {
+  id: serial("id").primaryKey(),
+  gameId: integer("game_id").notNull(),
+  userId: varchar("user_id").notNull(), // User who played
+  partnerId: varchar("partner_id"), // Optional - their partner in this game
+  position: varchar("position"), // Optional - North, South, East, West
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertPartnerSchema = createInsertSchema(partners).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertPartner = z.infer<typeof insertPartnerSchema>;
+export type Partner = typeof partners.$inferSelect;
+
+export const insertGameParticipantSchema = createInsertSchema(gameParticipants).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertGameParticipant = z.infer<typeof insertGameParticipantSchema>;
+export type GameParticipant = typeof gameParticipants.$inferSelect;
+
 // User types for authentication
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
