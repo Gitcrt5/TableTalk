@@ -11,7 +11,7 @@ import Landing from "@/pages/landing";
 import AuthPage from "@/pages/auth-page";
 import AccountPage from "@/pages/account";
 import AdminPage from "@/pages/admin";
-import AuthTestPage from "@/pages/auth-test";
+
 import VerifyEmailPage from "@/pages/verify-email";
 import ForgotPasswordPage from "@/pages/forgot-password";
 import ResetPasswordPage from "@/pages/reset-password";
@@ -59,7 +59,6 @@ function Router() {
         <Route path="/hands/:id" component={HandDetail} />
         <Route path="/account" component={AccountPage} />
         <Route path="/admin" component={AdminPage} />
-        <Route path="/auth-test" component={AuthTestPage} />
         <Route path="/auth" component={AuthPage} />
         <Route component={NotFound} />
       </Switch>

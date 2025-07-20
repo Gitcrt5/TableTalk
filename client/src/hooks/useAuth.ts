@@ -46,11 +46,8 @@ export function useAuth() {
         if (!res.ok) {
           throw new Error(`HTTP ${res.status}: ${res.statusText}`);
         }
-        const userData = await res.json();
-        console.log("useAuth - fetched user data:", userData);
-        return userData;
+        return await res.json();
       } catch (error) {
-        console.log("useAuth - fetch error:", error);
         // For network errors or other issues, return null to show auth page
         return null;
       }

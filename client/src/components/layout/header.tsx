@@ -48,7 +48,7 @@ export default function Header() {
                         Account Settings
                       </Link>
                     </DropdownMenuItem>
-                    {user && (user as any).role === "admin" && (
+                    {user && (user as any).userType === "admin" && (
                       <DropdownMenuItem asChild>
                         <Link href="/admin" className="flex items-center cursor-pointer">
                           <Shield className="w-4 h-4 mr-2" />
