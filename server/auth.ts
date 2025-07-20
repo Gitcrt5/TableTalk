@@ -77,17 +77,21 @@ export async function bootstrapAdmin() {
 
 // Check if user should be made admin (first user or specific email)
 export async function checkForAutoAdmin(email: string) {
-  const adminEmail = process.env.ADMIN_EMAIL || "craig@craigandlee.com";
+  const adminEmail = process.env.ADMIN_EMAIL || "admin@tabletalk.cards";
   
   // Make specific email admin
   if (email === adminEmail) {
     return "admin";
   }
   
-  // Check if this is the first user (fallback)
-  const userCount = await db.select().from(users).limit(2);
-  if (userCount.length === 0) {
-    return "admin";
+  // Check if this is the first user (but not if we already have an admin)
+  const adminCount = await db.select().from(users).where(eq(users.role, "admin")).limit(1);
+  if (adminCount.length === 0) {
+    // Only make this user admin if there are no admin users yet
+    const userCount = await db.select().from(users).limit(1);
+    if (userCount.length === 0) {
+      return "admin";
+    }
   }
   
   return "player";
