@@ -69,9 +69,7 @@ export function PartnerManagement() {
       }
       
       const results = await response.json();
-      console.log("Search results:", results);
-      console.log("Search results type:", typeof results);
-      console.log("Search results length:", results?.length);
+
       setSearchResults(results);
     } catch (error) {
       console.error("Error searching users:", error);
@@ -152,7 +150,7 @@ export function PartnerManagement() {
 
           {/* Search Results */}
           {isSearching && <div className="text-sm text-muted-foreground">Searching...</div>}
-          {searchResults.length > 0 && (
+          {!isSearching && searchResults.length > 0 && (
             <div className="space-y-2">
               <h4 className="text-sm font-medium">Search Results</h4>
               {searchResults.map((user) => {
@@ -180,9 +178,6 @@ export function PartnerManagement() {
                 );
               })}
             </div>
-          )}
-          {!isSearching && searchQuery.trim() && searchResults.length === 0 && (
-            <div className="text-sm text-muted-foreground">No users found matching "{searchQuery}"</div>
           )}
         </div>
       </CardContent>
