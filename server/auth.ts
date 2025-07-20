@@ -317,7 +317,7 @@ export function setupLocalAuth(app: Express) {
       lastName: user.lastName,
       displayName: user.displayName,
       authType: user.authType,
-      role: user.role,
+      userType: user.userType,
       emailVerified: user.emailVerified,
     });
   });
