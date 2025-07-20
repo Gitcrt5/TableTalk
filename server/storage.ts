@@ -1,4 +1,4 @@
-import { games, hands, userBidding, comments, users, clubs, type Game, type Hand, type UserBidding, type Comment, type User, type Club, type InsertGame, type InsertHand, type InsertUserBidding, type InsertComment, type InsertClub, type UpsertUser } from "@shared/schema";
+import { games, hands, userBidding, comments, users, clubs, partners, type Game, type Hand, type UserBidding, type Comment, type User, type Club, type Partner, type InsertGame, type InsertHand, type InsertUserBidding, type InsertComment, type InsertClub, type UpsertUser } from "@shared/schema";
 
 export interface IStorage {
   // Users (required for Replit Auth)
@@ -691,20 +691,20 @@ export class DatabaseStorage implements IStorage {
         firstName: users.firstName,
         lastName: users.lastName,
         displayName: users.displayName,
-        role: users.role,
         userType: users.userType,
         authType: users.authType,
         profileImageUrl: users.profileImageUrl,
         emailVerified: users.emailVerified,
         isActive: users.isActive,
         createdAt: users.createdAt,
+        updatedAt: users.updatedAt,
         password: users.password,
         emailVerificationToken: users.emailVerificationToken,
         emailVerificationExpires: users.emailVerificationExpires,
         passwordResetToken: users.passwordResetToken,
         passwordResetExpires: users.passwordResetExpires,
         deactivatedAt: users.deactivatedAt,
-        deactivationReason: users.deactivationReason,
+        homeClubId: users.homeClubId,
       })
       .from(partners)
       .innerJoin(users, eq(partners.partnerId, users.id))
