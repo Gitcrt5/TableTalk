@@ -257,10 +257,13 @@ TableTalk supports two authentication methods for maximum hosting flexibility:
 - **Replit Preview Environment**: Login works in standalone tabs but not in Replit's embedded preview due to iframe cookie restrictions. This is expected behavior and will work correctly in production deployment.
 
 ### Core Features to Add
+- [ ] Partner/friend system: users can add partners, select who they played with during game upload
+- [ ] Partnership statistics: track performance and games played with specific partners
 - [ ] Add tags to hands and games for better organization and filtering
 - [ ] Add way for users to manually enter a game and/or hand (form-based input)
 - [ ] Bidding sequence input functionality (partially implemented, needs completion)
 - [ ] Comment system improvements: add like, reply, and report functionality (UI removed for MVP)
+- [ ] Comment privacy system: partner comments, private notes, discussion filtering
 - [ ] Add filtering as well as search of the games list
 - [ ] Search and filter hands by criteria (dealer, vulnerability, convention)
 - [ ] User profiles and statistics dashboard
