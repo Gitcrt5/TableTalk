@@ -154,18 +154,18 @@ export default function GameDetail() {
                   <div className="flex justify-between items-start mb-4">
                     <div>
                       <Link to={`/hands/${hand.id}`}>
-                        <h3 className="font-semibold text-lg hover:text-primary transition-colors cursor-pointer">
+                        <Button className="mb-2 h-auto">
                           Board {hand.boardNumber}
-                        </h3>
+                        </Button>
                       </Link>
                       <p className="text-text-secondary text-sm">
                         Dealer: {hand.dealer} • Vul: {hand.vulnerability}
                       </p>
                     </div>
                     {hand.actualBidding && hand.actualBidding.length > 0 ? (
-                      <Badge variant="default" className="text-xs">Has bidding</Badge>
+                      <Badge className="text-xs bg-green-100 text-green-800 hover:bg-green-100">Has bidding</Badge>
                     ) : (
-                      <Badge variant="secondary" className="text-xs">No bidding</Badge>
+                      <Badge variant="secondary" className="text-xs bg-gray-100 text-gray-600">No bidding</Badge>
                     )}
                   </div>
                   
