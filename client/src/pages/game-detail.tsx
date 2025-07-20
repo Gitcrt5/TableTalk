@@ -162,11 +162,20 @@ export default function GameDetail() {
                         Dealer: {hand.dealer} • Vul: {hand.vulnerability}
                       </p>
                     </div>
-                    {hand.actualBidding && hand.actualBidding.length > 0 ? (
-                      <Badge className="text-xs bg-green-100 text-green-800 hover:bg-green-100">Has bidding</Badge>
-                    ) : (
-                      <Badge variant="secondary" className="text-xs bg-gray-100 text-gray-600">No bidding</Badge>
-                    )}
+                    <div className="flex flex-col space-y-1">
+                      {hand.actualBidding && hand.actualBidding.length > 0 ? (
+                        <Badge className="text-xs bg-green-100 text-green-800 hover:bg-green-100">Has bidding</Badge>
+                      ) : (
+                        <Badge variant="secondary" className="text-xs bg-gray-100 text-gray-600">No bidding</Badge>
+                      )}
+                      {hand.commentCount && hand.commentCount > 0 ? (
+                        <Badge className="text-xs bg-blue-100 text-blue-800 hover:bg-blue-100">
+                          {hand.commentCount} comment{hand.commentCount !== 1 ? 's' : ''}
+                        </Badge>
+                      ) : (
+                        <Badge variant="secondary" className="text-xs bg-gray-100 text-gray-600">No comments</Badge>
+                      )}
+                    </div>
                   </div>
                   
                   <div className="space-y-2 text-sm">

@@ -1018,9 +1018,30 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getHandsByGame(gameId: number): Promise<Hand[]> {
-    return await db.select().from(hands)
+    const handsWithCommentCounts = await db
+      .select({
+        id: hands.id,
+        gameId: hands.gameId,
+        boardNumber: hands.boardNumber,
+        dealer: hands.dealer,
+        vulnerability: hands.vulnerability,
+        northHand: hands.northHand,
+        southHand: hands.southHand,
+        eastHand: hands.eastHand,
+        westHand: hands.westHand,
+        actualBidding: hands.actualBidding,
+        finalContract: hands.finalContract,
+        declarer: hands.declarer,
+        result: hands.result,
+        commentCount: sql<number>`COALESCE(COUNT(${comments.id}), 0)`,
+      })
+      .from(hands)
+      .leftJoin(comments, eq(hands.id, comments.handId))
       .where(eq(hands.gameId, gameId))
+      .groupBy(hands.id)
       .orderBy(hands.boardNumber);
+
+    return handsWithCommentCounts as (Hand & { commentCount: number })[];
   }
 
   async getHandsWithFilters(filters: {

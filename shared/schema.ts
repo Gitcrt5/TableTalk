@@ -164,7 +164,9 @@ export type Game = typeof games.$inferSelect & {
   players?: User[];
 };
 export type GamePlayer = typeof gamePlayers.$inferSelect;
-export type Hand = typeof hands.$inferSelect;
+export type Hand = typeof hands.$inferSelect & {
+  commentCount?: number;
+};
 export type UserBidding = typeof userBidding.$inferSelect;
 export type Comment = typeof comments.$inferSelect;
 
