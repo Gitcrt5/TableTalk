@@ -55,12 +55,12 @@ export function useAuth() {
       }
     },
     retry: false,
-    refetchOnWindowFocus: true, // Force refetch on focus
-    refetchOnMount: true, // Force refetch on mount
-    refetchOnReconnect: true,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
     refetchInterval: false,
-    staleTime: 0, // No caching during admin debugging
-    gcTime: 0, // Clear cache immediately
+    staleTime: 30 * 60 * 1000, // 30 minutes
+    gcTime: 5 * 60 * 1000, // 5 minutes
   });
 
   const loginMutation = useMutation({

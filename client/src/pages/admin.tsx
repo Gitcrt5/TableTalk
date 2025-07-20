@@ -14,8 +14,20 @@ export default function AdminPage() {
   // Debug logging
   console.log("Admin page - current user:", user);
   console.log("User userType:", user?.userType);
+  console.log("User object keys:", user ? Object.keys(user) : 'no user');
+  console.log("Comparison result:", user?.userType !== "admin");
   
-  // Check if user has admin userType
+  // Force display for debugging
+  if (!user) {
+    return <div>Loading user data...</div>;
+  }
+  
+  if (user.userType !== "admin") {
+    return <div>Access denied - userType is: {user.userType}</div>;
+  }
+  
+  // Original check (commented out for debugging)
+  /*
   if (!user || user.userType !== "admin") {
     return (
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -38,6 +50,7 @@ export default function AdminPage() {
       </div>
     );
   }
+  */
 
   const { data: stats } = useQuery({
     queryKey: ["/api/admin/stats"],
