@@ -56,12 +56,12 @@ export function useAuth() {
       }
     },
     retry: false,
-    refetchOnWindowFocus: true, // Force refetch to debug
-    refetchOnMount: true, // Force refetch to debug
-    refetchOnReconnect: true,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
     refetchInterval: false,
-    staleTime: 0, // Force fresh data for debugging
-    gcTime: 0, // No cache
+    staleTime: 30 * 60 * 1000, // 30 minutes
+    gcTime: 5 * 60 * 1000, // 5 minutes
   });
 
   const loginMutation = useMutation({
