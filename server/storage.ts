@@ -686,13 +686,31 @@ export class DatabaseStorage implements IStorage {
   async getUserPartners(userId: string): Promise<User[]> {
     const partnerRows = await db
       .select({
-        partner: users,
+        id: users.id,
+        email: users.email,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        displayName: users.displayName,
+        role: users.role,
+        userType: users.userType,
+        authType: users.authType,
+        profileImageUrl: users.profileImageUrl,
+        emailVerified: users.emailVerified,
+        isActive: users.isActive,
+        createdAt: users.createdAt,
+        password: users.password,
+        emailVerificationToken: users.emailVerificationToken,
+        emailVerificationExpires: users.emailVerificationExpires,
+        passwordResetToken: users.passwordResetToken,
+        passwordResetExpires: users.passwordResetExpires,
+        deactivatedAt: users.deactivatedAt,
+        deactivationReason: users.deactivationReason,
       })
       .from(partners)
       .innerJoin(users, eq(partners.partnerId, users.id))
       .where(eq(partners.userId, userId));
     
-    return partnerRows.map(row => row.partner);
+    return partnerRows;
   }
 
   async addPartner(userId: string, partnerId: string): Promise<void> {
