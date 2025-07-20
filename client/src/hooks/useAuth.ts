@@ -46,16 +46,19 @@ export function useAuth() {
         if (!res.ok) {
           throw new Error(`HTTP ${res.status}: ${res.statusText}`);
         }
-        return await res.json();
+        const userData = await res.json();
+        console.log("useAuth - fetched user data:", userData);
+        return userData;
       } catch (error) {
+        console.log("useAuth - fetch error:", error);
         // For network errors or other issues, return null to show auth page
         return null;
       }
     },
     retry: false,
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-    refetchOnReconnect: false,
+    refetchOnWindowFocus: true, // Force refetch to debug
+    refetchOnMount: true, // Force refetch to debug
+    refetchOnReconnect: true,
     refetchInterval: false,
     staleTime: 0, // Force fresh data for debugging
     gcTime: 0, // No cache
