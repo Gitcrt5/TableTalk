@@ -9,7 +9,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { UserX, UserCheck, Search, Calendar, Mail, Shield } from "lucide-react";
+import { UserX, UserCheck, Search, Calendar, Mail, Shield, Trash2 } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 
@@ -20,6 +21,7 @@ interface User {
   lastName: string;
   displayName: string;
   role: string;
+  userType: string;
   authType: string;
   emailVerified: boolean;
   isActive: boolean;
@@ -32,6 +34,7 @@ export default function UserManagement() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [showDeactivateDialog, setShowDeactivateDialog] = useState(false);
   const [showReactivateDialog, setShowReactivateDialog] = useState(false);
+  const [showCleanupDialog, setShowCleanupDialog] = useState(false);
   const [deactivationReason, setDeactivationReason] = useState("");
   const { toast } = useToast();
 
@@ -96,6 +99,58 @@ export default function UserManagement() {
     },
   });
 
+  const updateUserTypeMutation = useMutation({
+    mutationFn: async ({ userId, userType }: { userId: string; userType: string }) => {
+      const response = await apiRequest(`/api/admin/users/${userId}/user-type`, {
+        method: "POST",
+        body: JSON.stringify({ userType }),
+      });
+      if (!response.ok) throw new Error("Failed to update user type");
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "User type updated",
+        description: "The user type has been successfully updated.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/stats"] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update user type",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const cleanupTestDataMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest(`/api/admin/cleanup-test-data`, {
+        method: "POST",
+      });
+      if (!response.ok) throw new Error("Failed to cleanup test data");
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Test data cleanup completed",
+        description: `Deleted ${data.results.deletedUsers} test users, ${data.results.deletedGames} games, ${data.results.deletedHands} hands, and ${data.results.deletedComments} comments.`,
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/stats"] });
+      setShowCleanupDialog(false);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to cleanup test data",
+        variant: "destructive",
+      });
+    },
+  });
+
   const filteredUsers = users.filter(user => {
     const query = searchQuery.toLowerCase();
     return (
@@ -131,6 +186,34 @@ export default function UserManagement() {
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString();
+  };
+
+  const getUserTypeBadgeColor = (userType: string) => {
+    switch (userType) {
+      case "admin":
+        return "bg-purple-100 text-purple-800";
+      case "test":
+        return "bg-orange-100 text-orange-800";
+      case "player":
+        return "bg-gray-100 text-gray-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
+  };
+
+  const handleUserTypeChange = (user: User, newUserType: string) => {
+    updateUserTypeMutation.mutate({
+      userId: user.id,
+      userType: newUserType,
+    });
+  };
+
+  const handleCleanupTestData = () => {
+    setShowCleanupDialog(true);
+  };
+
+  const confirmCleanupTestData = () => {
+    cleanupTestDataMutation.mutate();
   };
 
   const getRoleBadgeColor = (role: string) => {
@@ -184,10 +267,21 @@ export default function UserManagement() {
     <>
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Shield className="h-5 w-5" />
-            User Management
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <Shield className="h-5 w-5" />
+              User Management
+            </CardTitle>
+            <Button
+              variant="outline"
+              onClick={handleCleanupTestData}
+              disabled={cleanupTestDataMutation.isPending}
+              className="text-orange-600 border-orange-600 hover:bg-orange-50"
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              {cleanupTestDataMutation.isPending ? "Cleaning..." : "Clean Test Data"}
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -210,6 +304,7 @@ export default function UserManagement() {
                     <TableHead>User</TableHead>
                     <TableHead>Email</TableHead>
                     <TableHead>Role</TableHead>
+                    <TableHead>User Type</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Joined</TableHead>
                     <TableHead>Actions</TableHead>
@@ -246,6 +341,22 @@ export default function UserManagement() {
                         >
                           {user.role}
                         </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Select
+                          value={user.userType}
+                          onValueChange={(value) => handleUserTypeChange(user, value)}
+                          disabled={updateUserTypeMutation.isPending}
+                        >
+                          <SelectTrigger className="w-24">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="player">Player</SelectItem>
+                            <SelectItem value="admin">Admin</SelectItem>
+                            <SelectItem value="test">Test</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
@@ -380,6 +491,41 @@ export default function UserManagement() {
               disabled={reactivateMutation.isPending}
             >
               {reactivateMutation.isPending ? "Reactivating..." : "Reactivate User"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Cleanup Test Data Dialog */}
+      <Dialog open={showCleanupDialog} onOpenChange={setShowCleanupDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Clean Test Data</DialogTitle>
+            <DialogDescription>
+              This will permanently delete all test users and their associated data, including:
+              <ul className="list-disc list-inside mt-2 space-y-1">
+                <li>All users with user type "test"</li>
+                <li>All games uploaded by test users</li>
+                <li>All hands from those games</li>
+                <li>All comments made by test users or on test games</li>
+              </ul>
+              This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowCleanupDialog(false)}
+              disabled={cleanupTestDataMutation.isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={confirmCleanupTestData}
+              disabled={cleanupTestDataMutation.isPending}
+            >
+              {cleanupTestDataMutation.isPending ? "Cleaning..." : "Clean Test Data"}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -568,6 +568,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update user type endpoint
+  app.post("/api/admin/users/:id/user-type", isAuthenticated, async (req: any, res) => {
+    try {
+      const user = req.user;
+      if (user.role !== "admin") {
+        return res.status(403).json({ error: "Admin access required" });
+      }
+
+      const userId = req.params.id;
+      const { userType } = req.body;
+      
+      // Validate user type
+      const validUserTypes = ['admin', 'player', 'test'];
+      if (!validUserTypes.includes(userType)) {
+        return res.status(400).json({ error: "Invalid user type" });
+      }
+
+      const success = await storage.updateUserType(userId, userType);
+      if (success) {
+        res.json({ message: "User type updated successfully" });
+      } else {
+        res.status(404).json({ error: "User not found" });
+      }
+    } catch (error) {
+      console.error("Error updating user type:", error);
+      res.status(500).json({ error: "Failed to update user type" });
+    }
+  });
+
+  // Clean test data endpoint
+  app.post("/api/admin/cleanup-test-data", isAuthenticated, async (req: any, res) => {
+    try {
+      const user = req.user;
+      if (user.role !== "admin") {
+        return res.status(403).json({ error: "Admin access required" });
+      }
+
+      // Import and run cleanup function
+      const { deleteTestUsersAndData } = await import("../scripts/cleanup-test-data.js");
+      const results = await deleteTestUsersAndData();
+      
+      res.json({
+        message: "Test data cleanup completed successfully",
+        results
+      });
+    } catch (error) {
+      console.error("Error cleaning test data:", error);
+      res.status(500).json({ error: "Failed to clean test data" });
+    }
+  });
+
   app.post("/api/hands/:handId/comments", isAuthenticated, async (req: any, res) => {
     try {
       const handId = parseInt(req.params.handId);

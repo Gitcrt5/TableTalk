@@ -6,6 +6,7 @@ export interface IStorage {
   getUserByEmail(email: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
   updateUser(id: string, updates: Partial<User>): Promise<User | undefined>;
+  updateUserType(id: string, userType: string): Promise<boolean>;
   getAllUsers(): Promise<User[]>;
   getAllHands(): Promise<Hand[]>;
 
@@ -137,6 +138,21 @@ export class MemStorage implements IStorage {
     };
     this.users.set(id, updatedUser);
     return updatedUser;
+  }
+
+  async updateUserType(id: string, userType: string): Promise<boolean> {
+    const existingUser = this.users.get(id);
+    if (!existingUser) {
+      return false;
+    }
+    
+    const updatedUser: User = {
+      ...existingUser,
+      userType,
+      updatedAt: new Date(),
+    };
+    this.users.set(id, updatedUser);
+    return true;
   }
 
   async getAllUsers(): Promise<User[]> {
@@ -457,6 +473,23 @@ export class DatabaseStorage implements IStorage {
       .where(eq(users.id, id))
       .returning();
     return updatedUser || undefined;
+  }
+
+  async updateUserType(id: string, userType: string): Promise<boolean> {
+    try {
+      const [updatedUser] = await db
+        .update(users)
+        .set({ 
+          userType, 
+          updatedAt: new Date(),
+        })
+        .where(eq(users.id, id))
+        .returning();
+      return !!updatedUser;
+    } catch (error) {
+      console.error("Error updating user type:", error);
+      return false;
+    }
   }
 
   async getAllUsers(): Promise<User[]> {
