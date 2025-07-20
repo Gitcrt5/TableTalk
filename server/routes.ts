@@ -249,6 +249,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Game players routes
+  app.get("/api/games/:gameId/players", async (req, res) => {
+    try {
+      const gameId = parseInt(req.params.gameId);
+      const players = await storage.getGamePlayers(gameId);
+      res.json(players);
+    } catch (error) {
+      console.error("Error fetching game players:", error);
+      res.status(500).json({ error: "Failed to fetch game players" });
+    }
+  });
+
+  app.post("/api/games/:gameId/players", isAuthenticated, async (req: any, res) => {
+    try {
+      const gameId = parseInt(req.params.gameId);
+      const userId = getUserId(req);
+      const { partnerId } = req.body;
+
+      // Add the current user to the game
+      await storage.addGamePlayer({
+        gameId,
+        userId,
+        addedBy: userId,
+      });
+
+      // If a partner was selected, add them too
+      if (partnerId) {
+        await storage.addGamePlayer({
+          gameId,
+          userId: partnerId,
+          addedBy: userId,
+        });
+      }
+
+      res.json({ message: "Participation marked successfully" });
+    } catch (error) {
+      console.error("Error adding game participation:", error);
+      res.status(500).json({ error: "Failed to mark participation" });
+    }
+  });
+
+  app.delete("/api/games/:gameId/players/:userId", isAuthenticated, async (req: any, res) => {
+    try {
+      const gameId = parseInt(req.params.gameId);
+      const userIdToRemove = req.params.userId;
+      const currentUserId = getUserId(req);
+
+      // Only allow users to remove themselves (or admins could remove anyone)
+      if (userIdToRemove !== currentUserId) {
+        return res.status(403).json({ error: "You can only remove your own participation" });
+      }
+
+      await storage.removeGamePlayer(gameId, userIdToRemove);
+      res.json({ message: "Participation removed successfully" });
+    } catch (error) {
+      console.error("Error removing game participation:", error);
+      res.status(500).json({ error: "Failed to remove participation" });
+    }
+  });
+
   app.post("/api/games/import-url", isAuthenticated, async (req: any, res) => {
     try {
       const { url } = req.body;
