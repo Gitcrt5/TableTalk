@@ -225,6 +225,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         hands.push(hand);
       }
 
+      // Add game players if specified
+      const partners = req.body.partners ? JSON.parse(req.body.partners) : [];
+      if (partners && partners.length > 0) {
+        for (const partnerId of partners) {
+          try {
+            await storage.addGamePlayer({
+              gameId: game.id,
+              userId: partnerId,
+              addedBy: userId,
+            });
+          } catch (error) {
+            console.error(`Error adding partner ${partnerId} to game:`, error);
+            // Continue with other partners
+          }
+        }
+      }
+
       res.json({ game, hands });
     } catch (error) {
       console.error("Error uploading PBN:", error);
@@ -467,11 +484,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Game players routes
+  app.get("/api/games/:gameId/players", async (req, res) => {
+    try {
+      const gameId = parseInt(req.params.gameId);
+      const players = await storage.getGamePlayers(gameId);
+      res.json(players);
+    } catch (error) {
+      console.error("Error fetching game players:", error);
+      res.status(500).json({ error: "Failed to fetch game players" });
+    }
+  });
+
+  app.post("/api/games/:gameId/players", isAuthenticated, async (req: any, res) => {
+    try {
+      const gameId = parseInt(req.params.gameId);
+      const userId = getUserId(req);
+      const { partnerId } = req.body;
+      
+      await storage.addGamePlayer({
+        gameId,
+        userId: partnerId,
+        addedBy: userId,
+      });
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error adding game player:", error);
+      res.status(500).json({ error: "Failed to add game player" });
+    }
+  });
+
+  app.delete("/api/games/:gameId/players/:userId", isAuthenticated, async (req: any, res) => {
+    try {
+      const gameId = parseInt(req.params.gameId);
+      const userIdToRemove = req.params.userId;
+      
+      await storage.removeGamePlayer(gameId, userIdToRemove);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error removing game player:", error);
+      res.status(500).json({ error: "Failed to remove game player" });
+    }
+  });
+
   // Comments routes
   app.get("/api/hands/:handId/comments", async (req, res) => {
     try {
       const handId = parseInt(req.params.handId);
-      const comments = await storage.getCommentsByHand(handId);
+      const partnershipOnly = req.query.partnershipOnly === 'true';
+      const userId = req.query.userId as string;
+      
+      let comments = await storage.getCommentsByHand(handId);
+      
+      // Filter for partnership comments if requested
+      if (partnershipOnly && userId) {
+        // Get user's partners
+        const partners = await storage.getUserPartners(userId);
+        const partnerIds = partners.map(p => p.id);
+        partnerIds.push(userId); // Include user's own comments
+        
+        comments = comments.filter(comment => partnerIds.includes(comment.userId));
+      }
+      
       res.json(comments);
     } catch (error) {
       console.error("Error fetching comments:", error);

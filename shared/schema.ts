@@ -84,6 +84,16 @@ export const games = pgTable("games", {
   pbnContent: text("pbn_content").notNull(),
 });
 
+// Game players table to track who played in each game
+export const gamePlayers = pgTable("game_players", {
+  id: serial("id").primaryKey(),
+  gameId: integer("game_id").notNull(),
+  userId: text("user_id").notNull(),
+  position: text("position"), // "North", "South", "East", "West" or null if unknown
+  addedBy: text("added_by").notNull(), // User who added this player (uploader)
+  addedAt: timestamp("added_at").notNull().defaultNow(),
+});
+
 export const hands = pgTable("hands", {
   id: serial("id").primaryKey(),
   gameId: integer("game_id").notNull(),
@@ -126,6 +136,11 @@ export const insertGameSchema = createInsertSchema(games).omit({
   uploadedAt: true,
 });
 
+export const insertGamePlayerSchema = createInsertSchema(gamePlayers).omit({
+  id: true,
+  addedAt: true,
+});
+
 export const insertHandSchema = createInsertSchema(hands).omit({
   id: true,
 }).extend({
@@ -146,12 +161,15 @@ export const insertCommentSchema = createInsertSchema(comments).omit({
 // Types
 export type Game = typeof games.$inferSelect & {
   uploaderName?: string;
+  players?: User[];
 };
+export type GamePlayer = typeof gamePlayers.$inferSelect;
 export type Hand = typeof hands.$inferSelect;
 export type UserBidding = typeof userBidding.$inferSelect;
 export type Comment = typeof comments.$inferSelect;
 
 export type InsertGame = z.infer<typeof insertGameSchema>;
+export type InsertGamePlayer = z.infer<typeof insertGamePlayerSchema>;
 export type InsertHand = z.infer<typeof insertHandSchema>;
 export type InsertUserBidding = z.infer<typeof insertUserBiddingSchema>;
 export type InsertComment = z.infer<typeof insertCommentSchema>;

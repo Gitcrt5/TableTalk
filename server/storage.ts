@@ -1,4 +1,4 @@
-import { games, hands, userBidding, comments, users, clubs, partners, type Game, type Hand, type UserBidding, type Comment, type User, type Club, type Partner, type InsertGame, type InsertHand, type InsertUserBidding, type InsertComment, type InsertClub, type UpsertUser } from "@shared/schema";
+import { games, hands, userBidding, comments, users, clubs, partners, gamePlayers, type Game, type Hand, type UserBidding, type Comment, type User, type Club, type Partner, type GamePlayer, type InsertGame, type InsertHand, type InsertUserBidding, type InsertComment, type InsertClub, type InsertGamePlayer, type UpsertUser } from "@shared/schema";
 
 export interface IStorage {
   // Users (required for Replit Auth)
@@ -25,6 +25,12 @@ export interface IStorage {
     eastHand: string;
     westHand: string;
   }): Promise<Game | undefined>;
+
+  // Game Players
+  addGamePlayer(gamePlayer: InsertGamePlayer): Promise<GamePlayer>;
+  getGamePlayers(gameId: number): Promise<User[]>;
+  removeGamePlayer(gameId: number, userId: string): Promise<void>;
+  getUserGames(userId: string): Promise<Game[]>;
 
   // Hands
   createHand(hand: InsertHand): Promise<Hand>;
@@ -607,6 +613,37 @@ export class MemStorage implements IStorage {
       newGamesThisWeek: 0, // Would need created timestamps
     };
   }
+
+  // Game Players (stub implementations for MemStorage)
+  async addGamePlayer(gamePlayer: InsertGamePlayer): Promise<GamePlayer> {
+    // For memory storage, just return a mock game player
+    // In production, this would use DatabaseStorage which has proper implementation
+    return {
+      id: Date.now(),
+      gameId: gamePlayer.gameId,
+      userId: gamePlayer.userId,
+      position: gamePlayer.position || null,
+      addedBy: gamePlayer.addedBy,
+      addedAt: new Date(),
+    };
+  }
+
+  async getGamePlayers(gameId: number): Promise<User[]> {
+    // For memory storage, return empty array
+    // In production, this would use DatabaseStorage which has proper implementation
+    return [];
+  }
+
+  async removeGamePlayer(gameId: number, userId: string): Promise<void> {
+    // For memory storage, no-op
+    // In production, this would use DatabaseStorage which has proper implementation
+  }
+
+  async getUserGames(userId: string): Promise<Game[]> {
+    // For memory storage, return games uploaded by user
+    // In production, this would use DatabaseStorage which has proper implementation
+    return Array.from(this.games.values()).filter(game => game.uploadedBy === userId);
+  }
 }
 
 import { db } from "./db";
@@ -874,6 +911,88 @@ export class DatabaseStorage implements IStorage {
     return this.getGame(matchingHand.gameId);
   }
 
+  // Game Players
+  async addGamePlayer(gamePlayer: InsertGamePlayer): Promise<GamePlayer> {
+    const [newGamePlayer] = await db
+      .insert(gamePlayers)
+      .values(gamePlayer)
+      .onConflictDoNothing()
+      .returning();
+    return newGamePlayer;
+  }
+
+  async getGamePlayers(gameId: number): Promise<User[]> {
+    const playerRows = await db
+      .select({
+        id: users.id,
+        email: users.email,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        displayName: users.displayName,
+        userType: users.userType,
+        authType: users.authType,
+        profileImageUrl: users.profileImageUrl,
+        emailVerified: users.emailVerified,
+        isActive: users.isActive,
+        createdAt: users.createdAt,
+        updatedAt: users.updatedAt,
+        password: users.password,
+        emailVerificationToken: users.emailVerificationToken,
+        emailVerificationExpires: users.emailVerificationExpires,
+        passwordResetToken: users.passwordResetToken,
+        passwordResetExpires: users.passwordResetExpires,
+        deactivatedAt: users.deactivatedAt,
+        homeClubId: users.homeClubId,
+      })
+      .from(gamePlayers)
+      .innerJoin(users, eq(gamePlayers.userId, users.id))
+      .where(eq(gamePlayers.gameId, gameId));
+    
+    return playerRows;
+  }
+
+  async removeGamePlayer(gameId: number, userId: string): Promise<void> {
+    await db
+      .delete(gamePlayers)
+      .where(
+        and(
+          eq(gamePlayers.gameId, gameId),
+          eq(gamePlayers.userId, userId)
+        )
+      );
+  }
+
+  async getUserGames(userId: string): Promise<Game[]> {
+    const gamesWithUsers = await db
+      .select({
+        id: games.id,
+        title: games.title,
+        tournament: games.tournament,
+        round: games.round,
+        date: games.date,
+        location: games.location,
+        event: games.event,
+        pbnEvent: games.pbnEvent,
+        pbnSite: games.pbnSite,
+        pbnDate: games.pbnDate,
+        filename: games.filename,
+        uploadedBy: games.uploadedBy,
+        uploadedAt: games.uploadedAt,
+        pbnContent: games.pbnContent,
+        uploaderName: sql<string>`COALESCE(${users.displayName}, ${users.firstName} || ' ' || ${users.lastName}, ${users.email})`,
+      })
+      .from(gamePlayers)
+      .innerJoin(games, eq(gamePlayers.gameId, games.id))
+      .leftJoin(users, eq(games.uploadedBy, users.id))
+      .where(eq(gamePlayers.userId, userId))
+      .orderBy(desc(games.uploadedAt));
+
+    return gamesWithUsers.map(game => ({
+      ...game,
+      uploaderName: game.uploaderName || game.uploadedBy,
+    }));
+  }
+
   async createHand(insertHand: InsertHand): Promise<Hand> {
     const [hand] = await db
       .insert(hands)
@@ -1044,6 +1163,82 @@ export class DatabaseStorage implements IStorage {
       console.error("Error reactivating user:", error);
       return false;
     }
+  }
+
+  // Game Players methods
+  async addGamePlayer(gamePlayer: InsertGamePlayer): Promise<GamePlayer> {
+    const [player] = await db.insert(gamePlayers).values(gamePlayer).returning();
+    return player;
+  }
+
+  async getGamePlayers(gameId: number): Promise<User[]> {
+    const players = await db
+      .select({
+        id: users.id,
+        email: users.email,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        displayName: users.displayName,
+        userType: users.userType,
+        isActive: users.isActive,
+        createdAt: users.createdAt,
+        updatedAt: users.updatedAt,
+        deactivatedAt: users.deactivatedAt,
+        emailVerified: users.emailVerified,
+        emailVerificationToken: users.emailVerificationToken,
+        passwordResetToken: users.passwordResetToken,
+        passwordResetTokenExpiry: users.passwordResetTokenExpiry,
+        homeClubId: users.homeClubId,
+      })
+      .from(gamePlayers)
+      .innerJoin(users, eq(gamePlayers.userId, users.id))
+      .where(eq(gamePlayers.gameId, gameId));
+    
+    return players;
+  }
+
+  async removeGamePlayer(gameId: number, userId: string): Promise<void> {
+    await db
+      .delete(gamePlayers)
+      .where(and(eq(gamePlayers.gameId, gameId), eq(gamePlayers.userId, userId)));
+  }
+
+  async getUserGames(userId: string): Promise<Game[]> {
+    // Get games where user is either uploader or participant
+    const uploadedGames = await db
+      .select()
+      .from(games)
+      .where(eq(games.uploadedBy, userId));
+
+    const participantGames = await db
+      .select({
+        id: games.id,
+        title: games.title,
+        tournament: games.tournament,
+        round: games.round,
+        pbnEvent: games.pbnEvent,
+        pbnSite: games.pbnSite,
+        pbnDate: games.pbnDate,
+        date: games.date,
+        location: games.location,
+        event: games.event,
+        filename: games.filename,
+        uploadedBy: games.uploadedBy,
+        pbnContent: games.pbnContent,
+        createdAt: games.createdAt,
+        updatedAt: games.updatedAt,
+      })
+      .from(games)
+      .innerJoin(gamePlayers, eq(games.id, gamePlayers.gameId))
+      .where(eq(gamePlayers.userId, userId));
+
+    // Combine and deduplicate
+    const allGames = [...uploadedGames, ...participantGames];
+    const uniqueGames = allGames.filter((game, index, self) => 
+      index === self.findIndex(g => g.id === game.id)
+    );
+
+    return uniqueGames;
   }
 }
 
