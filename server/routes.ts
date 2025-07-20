@@ -749,6 +749,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Club routes
+  app.get("/api/clubs", async (req, res) => {
+    try {
+      const { verified, search } = req.query;
+      
+      let clubs;
+      if (search) {
+        clubs = await storage.searchClubs(search as string);
+      } else if (verified === "true") {
+        clubs = await storage.getVerifiedClubs();
+      } else {
+        clubs = await storage.getAllClubs();
+      }
+      
+      res.json(clubs);
+    } catch (error) {
+      console.error("Error fetching clubs:", error);
+      res.status(500).json({ error: "Failed to fetch clubs" });
+    }
+  });
+
+  app.post("/api/clubs", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = getUserId(req);
+      
+      const clubData = insertClubSchema.parse({
+        ...req.body,
+        createdBy: userId,
+      });
+
+      const club = await storage.createClub(clubData);
+      res.json(club);
+    } catch (error) {
+      console.error("Error creating club:", error);
+      res.status(500).json({ error: "Failed to create club" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

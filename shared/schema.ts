@@ -29,7 +29,9 @@ export const users = pgTable("users", {
   // User role for permissions
   role: varchar("role").notNull().default("player"), // "admin", "teacher", "player", "viewer"
   // User type for data management
-  userType: varchar("user_type").notNull().default("player"), // "admin", "player", "test"
+  userType: varchar("user_type").notNull().default("player"), // "admin", "player", "test", "club"
+  // Home club for default location
+  homeClubId: integer("home_club_id"),
   // Email verification for future email alerts
   emailVerified: boolean("email_verified").default(false),
   emailVerificationToken: varchar("email_verification_token"),
@@ -44,6 +46,27 @@ export const users = pgTable("users", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Bridge clubs/locations table
+export const clubs = pgTable("clubs", {
+  id: serial("id").primaryKey(),
+  name: varchar("name").notNull(),
+  location: text("location"), // City, state/province, country
+  address: text("address"),
+  website: varchar("website"),
+  phone: varchar("phone"),
+  email: varchar("email"),
+  // Verification status
+  isVerified: boolean("is_verified").default(false),
+  verifiedBy: varchar("verified_by"), // Admin user ID who verified
+  verifiedAt: timestamp("verified_at"),
+  // Club management
+  managedBy: varchar("managed_by"), // User ID of club manager/account
+  // Metadata
+  createdBy: varchar("created_by").notNull(), // User who added this club
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 export const games = pgTable("games", {
   id: serial("id").primaryKey(),
   title: text("title").notNull(), // User-entered title (user.title)
@@ -51,6 +74,7 @@ export const games = pgTable("games", {
   round: text("round"),
   date: text("date"), // User-entered date (user.date)
   location: text("location"), // User-entered location (user.location)
+  clubId: integer("club_id"), // Reference to clubs table if location matches a club
   event: text("event"), // Type of event (e.g., "Club Championship", "Pairs Game")
   // PBN-extracted fields
   pbnEvent: text("pbn_event"), // Event from PBN file (pbn.event)
@@ -133,6 +157,15 @@ export type InsertGame = z.infer<typeof insertGameSchema>;
 export type InsertHand = z.infer<typeof insertHandSchema>;
 export type InsertUserBidding = z.infer<typeof insertUserBiddingSchema>;
 export type InsertComment = z.infer<typeof insertCommentSchema>;
+
+export const insertClubSchema = createInsertSchema(clubs).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  verifiedAt: true,
+});
+export type InsertClub = z.infer<typeof insertClubSchema>;
+export type Club = typeof clubs.$inferSelect;
 
 // User types for authentication
 export type UpsertUser = typeof users.$inferInsert;

@@ -194,6 +194,8 @@ export default function UserManagement() {
         return "bg-purple-100 text-purple-800";
       case "test":
         return "bg-orange-100 text-orange-800";
+      case "club":
+        return "bg-blue-100 text-blue-800";
       case "player":
         return "bg-gray-100 text-gray-800";
       default:
@@ -355,6 +357,7 @@ export default function UserManagement() {
                             <SelectItem value="player">Player</SelectItem>
                             <SelectItem value="admin">Admin</SelectItem>
                             <SelectItem value="test">Test</SelectItem>
+                            <SelectItem value="club">Club</SelectItem>
                           </SelectContent>
                         </Select>
                       </TableCell>

@@ -1,4 +1,4 @@
-import { games, hands, userBidding, comments, users, type Game, type Hand, type UserBidding, type Comment, type User, type InsertGame, type InsertHand, type InsertUserBidding, type InsertComment, type UpsertUser } from "@shared/schema";
+import { games, hands, userBidding, comments, users, clubs, type Game, type Hand, type UserBidding, type Comment, type User, type Club, type InsertGame, type InsertHand, type InsertUserBidding, type InsertComment, type InsertClub, type UpsertUser } from "@shared/schema";
 
 export interface IStorage {
   // Users (required for Replit Auth)
@@ -58,6 +58,31 @@ export interface IStorage {
     averageBiddingAccuracy: number;
     commentsMade: number;
   }>;
+  
+  // Admin operations
+  deactivateUser(userId: string, reason?: string): Promise<boolean>;
+  reactivateUser(userId: string): Promise<boolean>;
+  updateUserType(id: string, userType: string): Promise<boolean>;
+  getAllUsers(): Promise<User[]>;
+  getAdminStats(): Promise<{
+    totalUsers: number;
+    totalGames: number;
+    totalHands: number;
+    totalComments: number;
+    newUsersThisWeek: number;
+    newGamesThisWeek: number;
+  }>;
+
+  // Clubs
+  createClub(club: InsertClub): Promise<Club>;
+  getClub(id: number): Promise<Club | undefined>;
+  updateClub(id: number, updates: Partial<Club>): Promise<Club | undefined>;
+  getAllClubs(): Promise<Club[]>;
+  getVerifiedClubs(): Promise<Club[]>;
+  searchClubs(query: string): Promise<Club[]>;
+  verifyClub(id: number, adminUserId: string): Promise<boolean>;
+  deleteClub(id: number): Promise<boolean>;
+  setUserHomeClub(userId: string, clubId: number | null): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
