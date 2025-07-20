@@ -60,8 +60,18 @@ export function PartnerManagement() {
     
     setIsSearching(true);
     try {
-      const results = await apiRequest(`/api/users/search?query=${encodeURIComponent(searchQuery)}`);
+      const response = await fetch(`/api/users/search?query=${encodeURIComponent(searchQuery)}`, {
+        credentials: "include"
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
+      const results = await response.json();
       console.log("Search results:", results);
+      console.log("Search results type:", typeof results);
+      console.log("Search results length:", results?.length);
       setSearchResults(results);
     } catch (error) {
       console.error("Error searching users:", error);
