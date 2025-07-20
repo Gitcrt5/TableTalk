@@ -267,18 +267,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = getUserId(req);
       const { partnerId } = req.body;
 
-      // Add the current user to the game
+      // Add the current user to the game with partner info
       await storage.addGamePlayer({
         gameId,
         userId,
+        partnerId: partnerId || null,
         addedBy: userId,
       });
 
-      // If a partner was selected, add them too
+      // If a partner was selected, add them too (but as a separate entry)
       if (partnerId) {
         await storage.addGamePlayer({
           gameId,
           userId: partnerId,
+          partnerId: userId, // Reciprocal partnership
           addedBy: userId,
         });
       }
@@ -306,6 +308,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error removing game participation:", error);
       res.status(500).json({ error: "Failed to remove participation" });
+    }
+  });
+
+  app.get("/api/games/:gameId/my-participation", isAuthenticated, async (req: any, res) => {
+    try {
+      const gameId = parseInt(req.params.gameId);
+      const userId = getUserId(req);
+      const participation = await storage.getCurrentUserGameData(gameId, userId);
+      res.json(participation);
+    } catch (error) {
+      console.error("Error fetching user participation:", error);
+      res.status(500).json({ error: "Failed to fetch participation data" });
     }
   });
 

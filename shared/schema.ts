@@ -89,6 +89,7 @@ export const gamePlayers = pgTable("game_players", {
   id: serial("id").primaryKey(),
   gameId: integer("game_id").notNull(),
   userId: text("user_id").notNull(),
+  partnerId: text("partner_id"), // Partner who played with this user
   position: text("position"), // "North", "South", "East", "West" or null if unknown
   addedBy: text("added_by").notNull(), // User who added this player (uploader)
   addedAt: timestamp("added_at").notNull().defaultNow(),

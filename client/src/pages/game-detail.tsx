@@ -42,19 +42,23 @@ export default function GameDetail() {
     enabled: !!gameId,
   });
 
+  // Fetch current user's participation data
+  const { data: participationData } = useQuery<{
+    isPlaying: boolean;
+    partner?: UserType;
+  }>({
+    queryKey: [`/api/games/${gameId}/my-participation`],
+    enabled: !!gameId && !!user,
+  });
+
   // Fetch user's partners
-  const { data: partners = [], error: partnersError, isLoading: partnersLoading } = useQuery<UserType[]>({
+  const { data: partners = [] } = useQuery<UserType[]>({
     queryKey: ["/api/user/partners"],
     enabled: !!user,
   });
 
-  // Debug logging
-  console.log("Partners data:", partners);
-  console.log("Partners error:", partnersError);
-  console.log("Partners loading:", partnersLoading);
-
-  // Check if current user is already marked as playing this game
-  const isCurrentUserPlaying = gamePlayers.some(player => player.id === user?.id);
+  const isCurrentUserPlaying = participationData?.isPlaying || false;
+  const currentUserPartner = participationData?.partner;
 
   // Add participation mutation
   const addParticipationMutation = useMutation({
@@ -66,6 +70,7 @@ export default function GameDetail() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/games/${gameId}/players`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/games/${gameId}/my-participation`] });
       setIsParticipationDialogOpen(false);
       setSelectedPartner(undefined);
     },
@@ -80,6 +85,7 @@ export default function GameDetail() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/games/${gameId}/players`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/games/${gameId}/my-participation`] });
     },
   });
 
@@ -191,113 +197,93 @@ export default function GameDetail() {
         </div>
       </div>
 
-      {/* Game Participation */}
+      {/* Game Participation Banner */}
       {user && (
         <div className="mb-6">
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-4">
-                  <div className="flex items-center space-x-2">
-                    <Users className="h-4 w-4" />
-                    <span className="font-medium">Game Participation</span>
-                  </div>
-                  
-                  {isCurrentUserPlaying ? (
-                    <Badge className="bg-green-100 text-green-800">You played this game</Badge>
-                  ) : (
-                    <Badge variant="secondary">Not marked as playing</Badge>
-                  )}
-                  
-                  {gamePlayers.length > 0 && (
-                    <div className="text-sm text-text-secondary">
-                      {gamePlayers.length} player{gamePlayers.length !== 1 ? 's' : ''} marked
-                    </div>
-                  )}
-                </div>
-                
-                <div className="flex space-x-2">
-                  {!isCurrentUserPlaying ? (
-                    <Dialog open={isParticipationDialogOpen} onOpenChange={setIsParticipationDialogOpen}>
-                      <DialogTrigger asChild>
-                        <Button size="sm">
-                          <Plus className="h-4 w-4 mr-2" />
-                          I Played This
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent>
-                        <DialogHeader>
-                          <DialogTitle>Mark Game Participation</DialogTitle>
-                        </DialogHeader>
-                        <div className="space-y-4">
-                          <p className="text-sm text-text-secondary">
-                            Mark yourself as having played in this game. Optionally select your partner.
-                          </p>
-                          
-                          <div>
-                            <label className="text-sm font-medium mb-2 block">
-                              Partner (optional)
-                            </label>
-                            <Select value={selectedPartner} onValueChange={setSelectedPartner}>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select partner (optional)" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="none">No partner / Unknown</SelectItem>
-                                {partners.map(partner => (
-                                  <SelectItem key={partner.id} value={partner.id}>
-                                    {partner.displayName || `${partner.firstName} ${partner.lastName}`}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          
-                          <div className="flex justify-end space-x-2">
-                            <Button 
-                              variant="outline" 
-                              onClick={() => setIsParticipationDialogOpen(false)}
-                            >
-                              Cancel
-                            </Button>
-                            <Button 
-                              onClick={() => addParticipationMutation.mutate(selectedPartner === "none" ? undefined : selectedPartner)}
-                              disabled={addParticipationMutation.isPending}
-                            >
-                              {addParticipationMutation.isPending ? "Adding..." : "Mark as Played"}
-                            </Button>
-                          </div>
-                        </div>
-                      </DialogContent>
-                    </Dialog>
-                  ) : (
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => removeParticipationMutation.mutate()}
-                      disabled={removeParticipationMutation.isPending}
-                    >
-                      {removeParticipationMutation.isPending ? "Removing..." : "Remove Participation"}
-                    </Button>
-                  )}
-                </div>
+          <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <Users className="h-4 w-4 text-gray-600" />
+                <span className="text-sm font-medium">
+                  {isCurrentUserPlaying ? "You played this game" : "Mark if you played"}
+                </span>
+                {isCurrentUserPlaying && currentUserPartner && (
+                  <span className="text-sm text-gray-600">
+                    with {currentUserPartner.displayName || `${currentUserPartner.firstName} ${currentUserPartner.lastName}`}
+                  </span>
+                )}
+                {isCurrentUserPlaying && !currentUserPartner && (
+                  <span className="text-sm text-gray-500">• Partner not specified</span>
+                )}
               </div>
               
-              {/* Display list of players */}
-              {gamePlayers.length > 0 && (
-                <div className="mt-4 pt-4 border-t">
-                  <div className="text-sm font-medium mb-2">Players:</div>
-                  <div className="flex flex-wrap gap-2">
-                    {gamePlayers.map(player => (
-                      <Badge key={player.id} variant="outline" className="text-xs">
-                        {player.displayName || `${player.firstName} ${player.lastName}`}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+              <div className="flex items-center space-x-2">
+                {isCurrentUserPlaying ? (
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => removeParticipationMutation.mutate()}
+                    disabled={removeParticipationMutation.isPending}
+                  >
+                    {removeParticipationMutation.isPending ? "Removing..." : "Remove"}
+                  </Button>
+                ) : (
+                  <Dialog open={isParticipationDialogOpen} onOpenChange={setIsParticipationDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button size="sm">
+                        <Plus className="h-4 w-4 mr-2" />
+                        I Played This
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Mark Game Participation</DialogTitle>
+                      </DialogHeader>
+                      <div className="space-y-4">
+                        <p className="text-sm text-text-secondary">
+                          Mark yourself as having played in this game. Optionally select your partner.
+                        </p>
+                        
+                        <div>
+                          <label className="text-sm font-medium mb-2 block">
+                            Partner (optional)
+                          </label>
+                          <Select value={selectedPartner} onValueChange={setSelectedPartner}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select partner (optional)" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="none">No partner / Unknown</SelectItem>
+                              {partners.map(partner => (
+                                <SelectItem key={partner.id} value={partner.id}>
+                                  {partner.displayName || `${partner.firstName} ${partner.lastName}`}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        
+                        <div className="flex justify-end space-x-2">
+                          <Button 
+                            variant="outline" 
+                            onClick={() => setIsParticipationDialogOpen(false)}
+                          >
+                            Cancel
+                          </Button>
+                          <Button 
+                            onClick={() => addParticipationMutation.mutate(selectedPartner === "none" ? undefined : selectedPartner)}
+                            disabled={addParticipationMutation.isPending}
+                          >
+                            {addParticipationMutation.isPending ? "Adding..." : "Mark as Played"}
+                          </Button>
+                        </div>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
       )}
 

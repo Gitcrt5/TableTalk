@@ -31,6 +31,10 @@ export interface IStorage {
   getGamePlayers(gameId: number): Promise<User[]>;
   removeGamePlayer(gameId: number, userId: string): Promise<void>;
   getUserGames(userId: string): Promise<Game[]>;
+  getCurrentUserGameData(gameId: number, userId: string): Promise<{
+    isPlaying: boolean;
+    partner?: User;
+  }>;
 
   // Hands
   createHand(hand: InsertHand): Promise<Hand>;
@@ -639,6 +643,15 @@ export class MemStorage implements IStorage {
     // In production, this would use DatabaseStorage which has proper implementation
   }
 
+  async getCurrentUserGameData(gameId: number, userId: string): Promise<{
+    isPlaying: boolean;
+    partner?: User;
+  }> {
+    // For memory storage, return not playing
+    // In production, this would use DatabaseStorage which has proper implementation
+    return { isPlaying: false };
+  }
+
   async getUserGames(userId: string): Promise<Game[]> {
     // For memory storage, return games uploaded by user
     // In production, this would use DatabaseStorage which has proper implementation
@@ -921,34 +934,40 @@ export class DatabaseStorage implements IStorage {
     return newGamePlayer;
   }
 
+  async getCurrentUserGameData(gameId: number, userId: string): Promise<{
+    isPlaying: boolean;
+    partner?: User;
+  }> {
+    const [gamePlayer] = await db
+      .select()
+      .from(gamePlayers)
+      .leftJoin(users, eq(gamePlayers.partnerId, users.id))
+      .where(
+        and(
+          eq(gamePlayers.gameId, gameId),
+          eq(gamePlayers.userId, userId)
+        )
+      )
+      .limit(1);
+
+    if (!gamePlayer) {
+      return { isPlaying: false };
+    }
+
+    return {
+      isPlaying: true,
+      partner: gamePlayer.users || undefined,
+    };
+  }
+
   async getGamePlayers(gameId: number): Promise<User[]> {
     const playerRows = await db
-      .select({
-        id: users.id,
-        email: users.email,
-        firstName: users.firstName,
-        lastName: users.lastName,
-        displayName: users.displayName,
-        userType: users.userType,
-        authType: users.authType,
-        profileImageUrl: users.profileImageUrl,
-        emailVerified: users.emailVerified,
-        isActive: users.isActive,
-        createdAt: users.createdAt,
-        updatedAt: users.updatedAt,
-        password: users.password,
-        emailVerificationToken: users.emailVerificationToken,
-        emailVerificationExpires: users.emailVerificationExpires,
-        passwordResetToken: users.passwordResetToken,
-        passwordResetExpires: users.passwordResetExpires,
-        deactivatedAt: users.deactivatedAt,
-        homeClubId: users.homeClubId,
-      })
+      .select()
       .from(gamePlayers)
       .innerJoin(users, eq(gamePlayers.userId, users.id))
       .where(eq(gamePlayers.gameId, gameId));
     
-    return playerRows;
+    return playerRows.map(row => row.users);
   }
 
   async removeGamePlayer(gameId: number, userId: string): Promise<void> {
