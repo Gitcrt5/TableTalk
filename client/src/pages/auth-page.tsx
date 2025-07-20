@@ -282,11 +282,7 @@ export default function AuthPage() {
                       </Button>
 
                       <div className="text-center mt-4">
-                        <Link href="/forgot-password">
-                          <Button variant="ghost" className="text-sm">
-                            Forgot password?
-                          </Button>
-                        </Link>
+
                       </div>
                     </form>
                   </Form>
