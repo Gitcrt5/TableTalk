@@ -267,6 +267,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = getUserId(req);
       const { partnerId } = req.body;
 
+      // Remove existing entry first (in case updating partner)
+      await storage.removeGamePlayer(gameId, userId);
+
       // Add the current user to the game with partner info
       await storage.addGamePlayer({
         gameId,
@@ -277,6 +280,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // If a partner was selected, add them too (but as a separate entry)
       if (partnerId) {
+        // Remove existing partner entry first
+        await storage.removeGamePlayer(gameId, partnerId);
         await storage.addGamePlayer({
           gameId,
           userId: partnerId,
