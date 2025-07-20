@@ -9,7 +9,17 @@ import { Link } from "wouter";
 import UserManagement from "@/components/admin/user-management";
 
 export default function AdminPage() {
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
+  
+  console.log("Admin page render - user:", user, "isLoading:", isLoading);
+  
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-lg">Loading admin panel...</div>
+      </div>
+    );
+  }
   
   if (!user || user.userType !== "admin") {
     return (
@@ -25,6 +35,9 @@ export default function AdminPage() {
             <p className="text-muted-foreground mb-4">
               You don't have permission to access this page. Admin privileges are required.
             </p>
+            <div className="text-xs text-gray-500 mb-4">
+              Debug: User = {user ? JSON.stringify({userType: user.userType, id: user.id}) : 'null'}
+            </div>
             <Link to="/">
               <Button variant="outline">Return to Dashboard</Button>
             </Link>
