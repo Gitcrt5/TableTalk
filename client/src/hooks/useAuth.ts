@@ -22,7 +22,7 @@ type User = {
   lastName: string;
   displayName: string;
   authType: string;
-  role: string;
+  userType: string;
   emailVerified: boolean;
 };
 

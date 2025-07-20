@@ -11,8 +11,8 @@ import UserManagement from "@/components/admin/user-management";
 export default function AdminPage() {
   const { user } = useAuth();
   
-  // Check if user has admin role
-  if (!user || user.role !== "admin") {
+  // Check if user has admin userType
+  if (!user || user.userType !== "admin") {
     return (
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Card className="border-destructive">
@@ -132,8 +132,8 @@ export default function AdminPage() {
         <CardContent>
           <div className="space-y-2">
             <div className="flex items-center gap-2">
-              <span className="font-medium">Role:</span>
-              <Badge variant="secondary">{user.role}</Badge>
+              <span className="font-medium">User Type:</span>
+              <Badge variant="secondary">{user.userType}</Badge>
             </div>
             <div className="flex items-center gap-2">
               <span className="font-medium">Email:</span>

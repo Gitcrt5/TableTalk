@@ -43,10 +43,10 @@ export async function bootstrapAdmin() {
   const existingAdmin = await db.select().from(users).where(eq(users.email, adminEmail)).limit(1);
   
   if (existingAdmin.length > 0) {
-    // If admin exists but doesn't have admin role, update it
-    if (existingAdmin[0].role !== "admin") {
-      await db.update(users).set({ role: "admin" }).where(eq(users.email, adminEmail));
-      console.log(`Updated ${adminEmail} to admin role`);
+    // If admin exists but doesn't have admin userType, update it
+    if (existingAdmin[0].userType !== "admin") {
+      await db.update(users).set({ userType: "admin" }).where(eq(users.email, adminEmail));
+      console.log(`Updated ${adminEmail} to admin userType`);
     }
     return;
   }
@@ -67,7 +67,7 @@ export async function bootstrapAdmin() {
     displayName: "Admin",
     password: hashedPassword,
     authType: "local" as const,
-    role: "admin" as const,
+    userType: "admin" as const,
     emailVerified: true,
   };
   
@@ -85,7 +85,7 @@ export async function checkForAutoAdmin(email: string) {
   }
   
   // Check if this is the first user (but not if we already have an admin)
-  const adminCount = await db.select().from(users).where(eq(users.role, "admin")).limit(1);
+  const adminCount = await db.select().from(users).where(eq(users.userType, "admin")).limit(1);
   if (adminCount.length === 0) {
     // Only make this user admin if there are no admin users yet
     const userCount = await db.select().from(users).limit(1);
@@ -200,7 +200,7 @@ export function setupLocalAuth(app: Express) {
 
       // Create new user with local auth (no email verification required)
       const hashedPassword = await hashPassword(password);
-      const userRole = await checkForAutoAdmin(email);
+      const userType = await checkForAutoAdmin(email);
       const newUser = await storage.upsertUser({
         id: uuidv4(),
         email,
@@ -210,7 +210,7 @@ export function setupLocalAuth(app: Express) {
         displayName: displayName || null,
         authType: "local",
         profileImageUrl: null,
-        role: userRole,
+        userType: userType,
         emailVerified: true, // Skip verification for now
         emailVerificationToken: null,
         emailVerificationExpires: null,
@@ -237,7 +237,7 @@ export function setupLocalAuth(app: Express) {
             lastName: newUser.lastName,
             displayName: newUser.displayName,
             authType: newUser.authType,
-            role: newUser.role,
+            userType: newUser.userType,
             emailVerified: newUser.emailVerified,
             message: "Account created successfully. Welcome to TableTalk!",
           });
@@ -280,7 +280,7 @@ export function setupLocalAuth(app: Express) {
             lastName: user.lastName,
             displayName: user.displayName,
             authType: user.authType,
-            role: user.role,
+            userType: user.userType,
             emailVerified: user.emailVerified,
           });
         });

@@ -483,7 +483,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/admin/stats", isAuthenticated, async (req: any, res) => {
     try {
       const user = req.user;
-      if (user.role !== "admin") {
+      if (user.userType !== "admin") {
         return res.status(403).json({ error: "Admin access required" });
       }
 
@@ -508,7 +508,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/admin/users", isAuthenticated, async (req: any, res) => {
     try {
       const user = req.user;
-      if (user.role !== "admin") {
+      if (user.userType !== "admin") {
         return res.status(403).json({ error: "Admin access required" });
       }
 
@@ -523,7 +523,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/admin/users/:id/deactivate", isAuthenticated, async (req: any, res) => {
     try {
       const user = req.user;
-      if (user.role !== "admin") {
+      if (user.userType !== "admin") {
         return res.status(403).json({ error: "Admin access required" });
       }
 
@@ -550,7 +550,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/admin/users/:id/reactivate", isAuthenticated, async (req: any, res) => {
     try {
       const user = req.user;
-      if (user.role !== "admin") {
+      if (user.userType !== "admin") {
         return res.status(403).json({ error: "Admin access required" });
       }
 
@@ -572,7 +572,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/admin/users/:id/user-type", isAuthenticated, async (req: any, res) => {
     try {
       const user = req.user;
-      if (user.role !== "admin") {
+      if (user.userType !== "admin") {
         return res.status(403).json({ error: "Admin access required" });
       }
 
@@ -601,7 +601,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/admin/cleanup-test-data", isAuthenticated, async (req: any, res) => {
     try {
       const user = req.user;
-      if (user.role !== "admin") {
+      if (user.userType !== "admin") {
         return res.status(403).json({ error: "Admin access required" });
       }
 

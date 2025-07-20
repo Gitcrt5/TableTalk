@@ -20,7 +20,6 @@ interface User {
   firstName: string;
   lastName: string;
   displayName: string;
-  role: string;
   userType: string;
   authType: string;
   emailVerified: boolean;
@@ -216,20 +215,7 @@ export default function UserManagement() {
     cleanupTestDataMutation.mutate();
   };
 
-  const getRoleBadgeColor = (role: string) => {
-    switch (role) {
-      case "admin":
-        return "bg-red-100 text-red-800";
-      case "teacher":
-        return "bg-blue-100 text-blue-800";
-      case "player":
-        return "bg-green-100 text-green-800";
-      case "viewer":
-        return "bg-gray-100 text-gray-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
+
 
   if (isLoading) {
     return (
@@ -303,7 +289,6 @@ export default function UserManagement() {
                   <TableRow>
                     <TableHead>User</TableHead>
                     <TableHead>Email</TableHead>
-                    <TableHead>Role</TableHead>
                     <TableHead>User Type</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Joined</TableHead>
@@ -333,14 +318,6 @@ export default function UserManagement() {
                             </Badge>
                           )}
                         </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          variant="outline"
-                          className={getRoleBadgeColor(user.role)}
-                        >
-                          {user.role}
-                        </Badge>
                       </TableCell>
                       <TableCell>
                         <Badge
