@@ -31,7 +31,7 @@ interface IntegrityIssue {
  * Comprehensive database integrity checker
  * Identifies orphaned records, invalid foreign keys, and data inconsistencies
  */
-export class DataIntegrityChecker {
+class DataIntegrityChecker {
   private issues: IntegrityIssue[] = [];
   
   async runFullCheck(): Promise<IntegrityReport> {
@@ -681,3 +681,6 @@ async function main() {
 if (import.meta.url === `file://${process.argv[1]}`) {
   main().then(() => process.exit(0));
 }
+
+// Export for use in API routes
+export { DataIntegrityChecker };

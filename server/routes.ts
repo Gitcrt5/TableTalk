@@ -881,6 +881,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Data integrity check endpoint
+  app.get("/api/admin/integrity-check", isAuthenticated, async (req: any, res) => {
+    try {
+      const user = req.user;
+      if (user.userType !== "admin") {
+        return res.status(403).json({ error: "Admin access required" });
+      }
+
+      const { DataIntegrityChecker } = await import("../scripts/data-integrity-checker.js");
+      const checker = new DataIntegrityChecker();
+      const report = await checker.runFullCheck();
+      
+      res.json(report);
+    } catch (error) {
+      console.error("Error running integrity check:", error);
+      res.status(500).json({ error: "Failed to run integrity check" });
+    }
+  });
+
+  // Auto-fix integrity issues endpoint
+  app.post("/api/admin/integrity-fix", isAuthenticated, async (req: any, res) => {
+    try {
+      const user = req.user;
+      if (user.userType !== "admin") {
+        return res.status(403).json({ error: "Admin access required" });
+      }
+
+      const { DataIntegrityChecker } = await import("../scripts/data-integrity-checker.js");
+      const checker = new DataIntegrityChecker();
+      
+      // First run check to identify issues
+      await checker.runFullCheck();
+      
+      // Then auto-fix orphaned records
+      const fixedCount = await checker.autoFixOrphanedRecords();
+      
+      // Run check again to get updated report
+      const finalReport = await checker.runFullCheck();
+      
+      res.json({
+        message: `Auto-fix completed. Fixed ${fixedCount} issues.`,
+        fixedCount,
+        finalReport
+      });
+    } catch (error) {
+      console.error("Error running integrity fix:", error);
+      res.status(500).json({ error: "Failed to run integrity fix" });
+    }
+  });
+
   app.post("/api/hands/:handId/comments", isAuthenticated, async (req: any, res) => {
     try {
       const handId = parseInt(req.params.handId);

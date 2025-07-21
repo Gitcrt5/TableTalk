@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Settings, Users, Database, Shield, BarChart3 } from "lucide-react";
 import { Link } from "wouter";
 import UserManagement from "@/components/admin/user-management";
+import DatabaseIntegrity from "@/components/admin/database-integrity";
 
 export default function AdminPage() {
   const { user } = useAuth();
@@ -59,7 +60,7 @@ export default function AdminPage() {
       </div>
 
       <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="overview" className="flex items-center gap-2">
             <BarChart3 className="h-4 w-4" />
             Overview
@@ -67,6 +68,10 @@ export default function AdminPage() {
           <TabsTrigger value="users" className="flex items-center gap-2">
             <Users className="h-4 w-4" />
             User Management
+          </TabsTrigger>
+          <TabsTrigger value="database" className="flex items-center gap-2">
+            <Database className="h-4 w-4" />
+            Database Integrity
           </TabsTrigger>
         </TabsList>
 
@@ -121,6 +126,10 @@ export default function AdminPage() {
 
         <TabsContent value="users" className="space-y-6">
           <UserManagement />
+        </TabsContent>
+
+        <TabsContent value="database" className="space-y-6">
+          <DatabaseIntegrity />
         </TabsContent>
       </Tabs>
 
