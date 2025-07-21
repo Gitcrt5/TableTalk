@@ -51,6 +51,7 @@ export default function DatabaseIntegrity() {
     refetch: refetchIntegrity
   } = useQuery<IntegrityReport>({
     queryKey: ["/api/admin/integrity-check"],
+    enabled: false, // Don't run automatically
     refetchOnMount: false,
     refetchOnWindowFocus: false,
   });
