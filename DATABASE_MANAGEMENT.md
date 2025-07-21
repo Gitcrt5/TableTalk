@@ -1,191 +1,104 @@
-# Database Management Guide
+# Database Management System
 
 ## Overview
 
-TableTalk uses a dual-database architecture to separate development and production environments:
+The TableTalk database management system has been consolidated into a single, comprehensive script that handles all database operations safely and efficiently.
 
-- **Development Database**: Contains test data for local development and testing
-- **Production Database**: Clean database for deployed application with real user data
+## New Unified Script: `database-manager.ts`
 
-## Database Architecture
-
-### Environment-Based Database Selection
-
-The application automatically selects the appropriate database based on:
-- `NODE_ENV=development` → Uses `DEV_DATABASE_URL` (if set) or falls back to `DATABASE_URL`
-- `NODE_ENV=production` → Uses `DATABASE_URL`
-
-### Database URLs
+### Commands Available
 
 ```bash
-# Production Database (clean for deployment)
-DATABASE_URL=postgresql://...
+# Reset to clean production state (admin user only)
+tsx scripts/database-manager.ts clean
 
-# Development Database (with test data)
-DEV_DATABASE_URL=postgresql://...
+# Reset with test data (admin + test users for development)
+tsx scripts/database-manager.ts test
+
+# Remove only test users and their data (keeps real users)
+tsx scripts/database-manager.ts cleanup
+
+# Clear all tables (emergency use only)
+tsx scripts/database-manager.ts clear
 ```
 
-## Database Management Commands
+### What's Fixed
 
-### Development Environment
+1. **Updated Schema Support**: Now handles all new tables including:
+   - `partnershipBidding` - Partnership-specific bidding sequences
+   - `partners` - User partnership relationships
+   - `gameParticipants` - Game participation tracking
+   - `gamePlayers` - Game player management
 
+2. **Field Corrections**: Fixed outdated field references:
+   - `role` → `userType` (consolidated user type system)
+   - Proper foreign key handling for all relationships
+
+3. **Proper Deletion Order**: Respects all foreign key constraints:
+   - Comments → Partnership Bidding → User Bidding → Hands → Games → Participants → Players → Partners → Users
+
+## Usage Examples
+
+### Development Workflow
 ```bash
-# Push schema changes to development database
-npm run db:push
+# Start with test data for development
+tsx scripts/database-manager.ts test
 
-# Reset development database (clean slate + admin user)
-NODE_ENV=development tsx scripts/reset-dev-database.ts
-
-# Seed development database with test data (after reset)
-NODE_ENV=development tsx scripts/seed-dev-data.ts
-
-# Quick reset with test data
-NODE_ENV=development tsx scripts/reset-dev-database.ts && NODE_ENV=development tsx scripts/seed-dev-data.ts
+# Remove test data when ready for real users
+tsx scripts/database-manager.ts cleanup
 ```
 
-### Production Environment
-
+### Production Deployment
 ```bash
-# Reset production database (clean slate + admin user)
-tsx scripts/reset-production-db.ts
-
-# Setup production database with admin user (alternative)
-ADMIN_PASSWORD=your_password tsx scripts/setup-production-db.ts
-
-# Generate migration files (run after schema changes)
-npx drizzle-kit generate
-
-# Apply migrations to production database
-NODE_ENV=production tsx scripts/migrate-production.ts
+# Reset to clean state for production
+tsx scripts/database-manager.ts clean
 ```
 
-## Schema Migration Workflow
-
-### 1. Development Phase
-1. Make changes to `shared/schema.ts`
-2. Run `npm run db:push` to apply to development database
-3. Test thoroughly with existing test data
-4. Generate migration files: `npx drizzle-kit generate`
-
-### 2. Production Deployment
-1. Set `NODE_ENV=production`
-2. Run migration script: `tsx scripts/migrate-production.ts`
-3. The script will apply all pending migrations safely
-
-## Test Data Management
-
-### Development Test Data
-
-The development database includes:
-- **4 test users** with different roles (admin, teacher, player)
-- **2 sample games** with realistic bridge data
-- **2 sample hands** with bidding sequences and contracts
-- **3 sample comments** demonstrating the discussion system
-
-### Test User Credentials
-
-```
-alice@example.com / password123 (Player)
-bob@example.com / password123 (Player)
-carol@example.com / password123 (Teacher)
-david@example.com / password123 (Player)
-```
-
-### Admin User
-
-```
-admin@tabletalk.cards / [Set via ADMIN_PASSWORD]
-```
-
-## Production Database Setup
-
-### Initial Setup
-
-1. **Create Clean Database**: Production database starts completely empty
-2. **Run Setup Script**: `tsx scripts/setup-production-db.ts`
-3. **Verify Admin Access**: Login with admin credentials
-4. **Test Basic Functionality**: Upload a test game, then delete it
-
-### Environment Variables
-
+### Emergency Recovery
 ```bash
-# Required for production
-ADMIN_EMAIL=craig@craigandlee.com
-ADMIN_PASSWORD=your_secure_password
-DATABASE_URL=postgresql://...
-NODE_ENV=production
+# Complete reset if database is corrupted
+tsx scripts/database-manager.ts clear
+tsx scripts/database-manager.ts clean
 ```
 
-## Data Safety Features
+## Admin Credentials
 
-### Soft Delete System
-- Users are deactivated rather than deleted
-- Preserves data integrity for comments and games
-- Allows reactivation if needed
+**Default Admin Account:**
+- Email: `admin@tabletalk.cards`
+- Password: `admin123`
 
-### Migration Safety
-- All migrations are tested in development first
-- Production migrations include rollback instructions
-- Database backups recommended before major changes
+*Can be overridden with environment variables:*
+- `ADMIN_EMAIL` - Custom admin email
+- `ADMIN_PASSWORD` - Custom admin password
 
-## Troubleshooting
+## Test Users (Created with `test` command)
 
-### Database Connection Issues
+- **Alice Johnson**: `alice@test.com` / `test123`
+- **Bob Smith**: `bob@test.com` / `test123`
 
-```bash
-# Check database configuration
-echo $DATABASE_URL
-echo $DEV_DATABASE_URL
-echo $NODE_ENV
+Both test users have `userType: "test"` for easy identification and cleanup.
 
-# Test database connection
-tsx -e "import { db } from './server/db'; console.log('Database connected successfully')"
-```
+## Deprecated Scripts
 
-### Schema Synchronization
+The following scripts now redirect to the new system:
+- `reset-dev-database.ts` → `database-manager.ts test`
+- `reset-production-db.ts` → `database-manager.ts clean`
+- `cleanup-test-data.ts` → `database-manager.ts cleanup`
 
-```bash
-# Check schema differences
-npx drizzle-kit check
+## Safety Features
 
-# Reset development database
-npm run db:push
-tsx scripts/seed-dev-data.ts
-```
+1. **Proper Foreign Key Handling**: All deletions respect database relationships
+2. **Transaction Safety**: Operations are performed in correct order
+3. **User Type Filtering**: Test data cleanup only affects `userType: "test"` users
+4. **Confirmation Messages**: Clear feedback on what was deleted/created
+5. **Error Handling**: Comprehensive error reporting with rollback
 
-### Production Issues
+## Environment Integration
 
-```bash
-# Check migration status
-npx drizzle-kit status
+The script automatically:
+- Detects database environment (development/production)
+- Uses appropriate connection strings
+- Respects environment variables for admin credentials
+- Provides appropriate default passwords for each environment
 
-# Manually run specific migration
-npx drizzle-kit migrate --file=specific_migration.sql
-```
-
-## Best Practices
-
-1. **Always Test First**: Test schema changes in development before production
-2. **Backup Before Changes**: Backup production database before major updates
-3. **Monitor Migrations**: Check migration logs for errors
-4. **Keep Environments Separate**: Never mix development and production data
-5. **Document Changes**: Update this guide when adding new database features
-
-## File Structure
-
-```
-scripts/
-├── seed-dev-data.ts          # Populates development database
-├── setup-production-db.ts    # Initializes production database
-└── migrate-production.ts     # Applies migrations safely
-
-migrations/                   # Generated migration files
-├── 0000_initial.sql
-├── 0001_add_email_verification.sql
-└── ...
-
-shared/
-└── schema.ts                # Database schema definition
-```
-
-This architecture ensures clean separation between development and production while maintaining data integrity and migration safety.
+This unified system ensures database operations are consistent, safe, and maintainable across all environments.

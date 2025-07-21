@@ -1,55 +1,17 @@
-import { db } from "../server/db";
-import { users, games, hands, comments, userBidding } from "../shared/schema";
-import { hashPassword } from "../server/auth";
-import { v4 as uuidv4 } from "uuid";
+// DEPRECATED: Use scripts/database-manager.ts instead
+// Run: tsx scripts/database-manager.ts test
 
-async function resetDevDatabase() {
-  console.log("🔄 Resetting development database...");
-  
-  try {
-    // Delete all data in correct order (respecting foreign key constraints)
-    console.log("🗑️  Deleting all existing data...");
-    await db.delete(comments);
-    await db.delete(userBidding);
-    await db.delete(hands);
-    await db.delete(games);
-    await db.delete(users);
-    
-    console.log("✅ All data cleared successfully");
-    
-    // Create admin user
-    const adminEmail = "admin@tabletalk.cards";
-    const adminPassword = "TabletalkAdmin2025!";
-    
-    console.log("👤 Creating admin user...");
-    const hashedPassword = await hashPassword(adminPassword);
-    
-    await db.insert(users).values({
-      id: uuidv4(),
-      email: adminEmail,
-      firstName: "TableTalk",
-      lastName: "Admin",
-      displayName: "Admin",
-      password: hashedPassword,
-      authType: "local",
-      role: "admin",
-      emailVerified: true,
-      isActive: true
-    });
-    
-    console.log("✅ Development database reset completed");
-    console.log("🔑 Admin credentials:");
-    console.log(`   Email: ${adminEmail}`);
-    console.log(`   Password: ${adminPassword}`);
-    
-    // Option to seed with test data
-    console.log("\n💡 To add test data, run:");
-    console.log("   NODE_ENV=development tsx scripts/seed-dev-data.ts");
-    
-  } catch (error) {
-    console.error("❌ Failed to reset development database:", error);
-    process.exit(1);
-  }
-}
+import { resetWithTestData } from "./database-manager";
 
-resetDevDatabase().then(() => process.exit(0));
+console.log("⚠️  This script is deprecated. Use database-manager.ts instead:");
+console.log("   tsx scripts/database-manager.ts test");
+console.log("");
+console.log("🔄 Running migration to new script...");
+
+resetWithTestData().then(() => {
+  console.log("✅ Migration completed. Please use database-manager.ts in the future.");
+  process.exit(0);
+}).catch(error => {
+  console.error("❌ Migration failed:", error);
+  process.exit(1);
+});
