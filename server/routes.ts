@@ -867,8 +867,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ error: "Admin access required" });
       }
 
-      // Import and run cleanup function
-      const { deleteTestUsersAndData } = await import("../scripts/cleanup-test-data.js");
+      // Import and run cleanup function from database-manager
+      const { deleteTestUsersAndData } = await import("../scripts/database-manager.js");
       const results = await deleteTestUsersAndData();
       
       res.json({
