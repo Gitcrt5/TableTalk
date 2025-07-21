@@ -1,4 +1,4 @@
-import { games, hands, userBidding, comments, users, clubs, partners, gamePlayers, type Game, type Hand, type UserBidding, type Comment, type User, type Club, type Partner, type GamePlayer, type InsertGame, type InsertHand, type InsertUserBidding, type InsertComment, type InsertClub, type InsertGamePlayer, type UpsertUser } from "@shared/schema";
+import { games, hands, userBidding, comments, users, clubs, partners, gamePlayers, partnershipBidding, gameParticipants, type Game, type Hand, type UserBidding, type Comment, type User, type Club, type Partner, type GamePlayer, type PartnershipBidding, type GameParticipant, type InsertGame, type InsertHand, type InsertUserBidding, type InsertComment, type InsertClub, type InsertGamePlayer, type InsertPartnershipBidding, type InsertGameParticipant, type InsertPartner, type UpsertUser } from "@shared/schema";
 
 export interface IStorage {
   // Users (required for Replit Auth)
@@ -55,6 +55,17 @@ export interface IStorage {
     averageAccuracy: number;
   }>;
 
+  // Partnership Bidding
+  createPartnershipBidding(bidding: InsertPartnershipBidding): Promise<PartnershipBidding>;
+  getPartnershipBidding(handId: number, userId: string, partnerId?: string): Promise<PartnershipBidding | undefined>;
+  getAllPartnershipBiddingForHand(handId: number): Promise<PartnershipBidding[]>;
+  updatePartnershipBidding(id: number, biddingSequence: string[]): Promise<PartnershipBidding | undefined>;
+  deletePartnershipBidding(handId: number, userId: string): Promise<void>;
+  checkPartnershipBiddingConflicts(gameId: number, userId: string, partnerId: string): Promise<{
+    hasConflicts: boolean;
+    conflictingHands: number[];
+  }>;
+
   // Comments
   createComment(comment: InsertComment): Promise<Comment>;
   getCommentsByHand(handId: number): Promise<Comment[]>;
@@ -89,17 +100,17 @@ export interface IStorage {
     newGamesThisWeek: number;
   }>;
 
-  // Partners
-  createPartner(partner: InsertPartner): Promise<Partner>;
+  // Partners (legacy compatibility interface)
   getUserPartners(userId: string): Promise<User[]>;
-  removePartner(userId: string, partnerId: string): Promise<boolean>;
+  removePartner(userId: string, partnerId: string): Promise<void>;
   searchUsers(query: string, excludeUserId?: string): Promise<User[]>;
 
-  // Game Participants
+  // Game Participants (unified interface for database methods)
   createGameParticipant(participant: InsertGameParticipant): Promise<GameParticipant>;
   getGameParticipants(gameId: number): Promise<GameParticipant[]>;
   getUserGameParticipation(userId: string, gameId: number): Promise<GameParticipant | undefined>;
   getPartnerCommentsForHand(handId: number, userId: string, partnerId: string): Promise<Comment[]>;
+  createPartner(partner: InsertPartner): Promise<Partner>;
 
   // Clubs
   createClub(club: InsertClub): Promise<Club>;
@@ -120,10 +131,12 @@ export class MemStorage implements IStorage {
   private userBidding: Map<string, UserBidding>; // key: handId-userId
   private comments: Map<number, Comment>;
   private partners: Map<string, string[]>; // userId -> list of partner IDs
+  private partnershipBidding: Map<string, PartnershipBidding>; // key: handId-userId-partnerId
   private currentGameId: number;
   private currentHandId: number;
   private currentUserBiddingId: number;
   private currentCommentId: number;
+  private currentPartnershipBiddingId: number;
 
   constructor() {
     this.users = new Map();
@@ -132,10 +145,12 @@ export class MemStorage implements IStorage {
     this.userBidding = new Map();
     this.comments = new Map();
     this.partners = new Map();
+    this.partnershipBidding = new Map();
     this.currentGameId = 1;
     this.currentHandId = 1;
     this.currentUserBiddingId = 1;
     this.currentCommentId = 1;
+    this.currentPartnershipBiddingId = 1;
 
     // Add sample data
     this.initializeSampleData();
@@ -164,10 +179,11 @@ export class MemStorage implements IStorage {
       displayName: userData.displayName || null,
       profileImageUrl: userData.profileImageUrl || null,
       password: userData.password || null,
-      authType: userData.authType || "replit",
+      authType: userData.authType || "local",
+      userType: userData.userType || "player",
+      homeClubId: userData.homeClubId || null,
       createdAt: userData.createdAt || new Date(),
       updatedAt: new Date(),
-      role: userData.role || "player",
       emailVerified: userData.emailVerified || false,
       emailVerificationToken: userData.emailVerificationToken || null,
       emailVerificationExpires: userData.emailVerificationExpires || null,
@@ -266,7 +282,7 @@ export class MemStorage implements IStorage {
       southHand: "♠J5 ♥3 ♦A5 ♣KJ9632",
       eastHand: "♠643 ♥A752 ♦J10872 ♣Q4",
       westHand: "♠972 ♥KQ1086 ♦Q94 ♣A108",
-      actualBidding: ["Pass", "1♠", "Pass", "2♣", "Pass", "2♠", "Pass", "3♣", "Pass", "4♠", "Pass", "Pass", "Pass"],
+
       finalContract: "4♠",
       declarer: "N",
       result: "Made",
@@ -302,6 +318,7 @@ export class MemStorage implements IStorage {
       // Default date to upload date if not provided
       date: insertGame.date || uploadDate.toISOString().split('T')[0],
       location: insertGame.location || null,
+      clubId: insertGame.clubId || null,
       event: insertGame.event || null,
     };
     this.games.set(id, game);
@@ -366,7 +383,6 @@ export class MemStorage implements IStorage {
     const hand: Hand = { 
       ...insertHand, 
       id,
-      actualBidding: insertHand.actualBidding as string[],
       finalContract: insertHand.finalContract || null,
       declarer: insertHand.declarer || null,
       result: insertHand.result || null,
@@ -440,6 +456,88 @@ export class MemStorage implements IStorage {
       : 0;
     
     return { totalHands, averageAccuracy };
+  }
+
+  // Partnership Bidding methods
+  async createPartnershipBidding(bidding: InsertPartnershipBidding): Promise<PartnershipBidding> {
+    const id = this.currentPartnershipBiddingId++;
+    const partnershipBidding: PartnershipBidding = {
+      id,
+      handId: bidding.handId,
+      userId: bidding.userId,
+      partnerId: bidding.partnerId,
+      biddingSequence: bidding.biddingSequence,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    const key = `${bidding.handId}-${bidding.userId}-${bidding.partnerId}`;
+    this.partnershipBidding.set(key, partnershipBidding);
+    return partnershipBidding;
+  }
+
+  async getPartnershipBidding(handId: number, userId: string, partnerId?: string): Promise<PartnershipBidding | undefined> {
+    if (!partnerId) {
+      // Find any partnership bidding for this user on this hand
+      for (const [key, bidding] of this.partnershipBidding.entries()) {
+        if (bidding.handId === handId && bidding.userId === userId) {
+          return bidding;
+        }
+      }
+      return undefined;
+    }
+    
+    const key = `${handId}-${userId}-${partnerId}`;
+    return this.partnershipBidding.get(key);
+  }
+
+  async getAllPartnershipBiddingForHand(handId: number): Promise<PartnershipBidding[]> {
+    return Array.from(this.partnershipBidding.values()).filter(
+      bidding => bidding.handId === handId
+    );
+  }
+
+  async updatePartnershipBidding(id: number, biddingSequence: string[]): Promise<PartnershipBidding | undefined> {
+    for (const [key, bidding] of this.partnershipBidding.entries()) {
+      if (bidding.id === id) {
+        const updated: PartnershipBidding = {
+          ...bidding,
+          biddingSequence,
+          updatedAt: new Date(),
+        };
+        this.partnershipBidding.set(key, updated);
+        return updated;
+      }
+    }
+    return undefined;
+  }
+
+  async deletePartnershipBidding(handId: number, userId: string): Promise<void> {
+    for (const [key, bidding] of this.partnershipBidding.entries()) {
+      if (bidding.handId === handId && bidding.userId === userId) {
+        this.partnershipBidding.delete(key);
+        return;
+      }
+    }
+  }
+
+  async checkPartnershipBiddingConflicts(gameId: number, userId: string, partnerId: string): Promise<{
+    hasConflicts: boolean;
+    conflictingHands: number[];
+  }> {
+    const gameHands = Array.from(this.hands.values()).filter(hand => hand.gameId === gameId);
+    const conflictingHands: number[] = [];
+    
+    for (const hand of gameHands) {
+      const existingBidding = await this.getPartnershipBidding(hand.id, userId);
+      if (existingBidding && existingBidding.partnerId !== partnerId) {
+        conflictingHands.push(hand.id);
+      }
+    }
+    
+    return {
+      hasConflicts: conflictingHands.length > 0,
+      conflictingHands,
+    };
   }
 
   async createComment(insertComment: InsertComment): Promise<Comment> {
@@ -533,6 +631,10 @@ export class MemStorage implements IStorage {
   // Game participation (placeholder implementations for in-memory storage)
   async createGameParticipant(participant: InsertGameParticipant): Promise<GameParticipant> {
     throw new Error("Game participation functionality requires database implementation");
+  }
+
+  async createPartner(partner: InsertPartner): Promise<Partner> {
+    throw new Error("Partner creation functionality requires database implementation");
   }
 
   async getGameParticipants(gameId: number): Promise<GameParticipant[]> {
@@ -768,6 +870,14 @@ export class DatabaseStorage implements IStorage {
       .insert(partners)
       .values({ userId, partnerId })
       .onConflictDoNothing();
+  }
+
+  async createPartner(partner: InsertPartner): Promise<Partner> {
+    const [created] = await db
+      .insert(partners)
+      .values(partner)
+      .returning();
+    return created;
   }
 
   async removePartner(userId: string, partnerId: string): Promise<void> {
@@ -1113,6 +1223,91 @@ export class DatabaseStorage implements IStorage {
       : 0;
     
     return { totalHands, averageAccuracy };
+  }
+
+  // Partnership Bidding methods
+  async createPartnershipBidding(bidding: InsertPartnershipBidding): Promise<PartnershipBidding> {
+    const [created] = await db
+      .insert(partnershipBidding)
+      .values(bidding)
+      .returning();
+    return created;
+  }
+
+  async getPartnershipBidding(handId: number, userId: string, partnerId?: string): Promise<PartnershipBidding | undefined> {
+    if (!partnerId) {
+      // Find any partnership bidding for this user on this hand
+      const [bidding] = await db
+        .select()
+        .from(partnershipBidding)
+        .where(and(
+          eq(partnershipBidding.handId, handId),
+          eq(partnershipBidding.userId, userId)
+        ));
+      return bidding || undefined;
+    }
+    
+    const [bidding] = await db
+      .select()
+      .from(partnershipBidding)
+      .where(and(
+        eq(partnershipBidding.handId, handId),
+        eq(partnershipBidding.userId, userId),
+        eq(partnershipBidding.partnerId, partnerId)
+      ));
+    return bidding || undefined;
+  }
+
+  async getAllPartnershipBiddingForHand(handId: number): Promise<PartnershipBidding[]> {
+    return await db
+      .select()
+      .from(partnershipBidding)
+      .where(eq(partnershipBidding.handId, handId));
+  }
+
+  async updatePartnershipBidding(id: number, biddingSequence: string[]): Promise<PartnershipBidding | undefined> {
+    const [updated] = await db
+      .update(partnershipBidding)
+      .set({ 
+        biddingSequence,
+        updatedAt: new Date(),
+      })
+      .where(eq(partnershipBidding.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async deletePartnershipBidding(handId: number, userId: string): Promise<void> {
+    await db
+      .delete(partnershipBidding)
+      .where(and(
+        eq(partnershipBidding.handId, handId),
+        eq(partnershipBidding.userId, userId)
+      ));
+  }
+
+  async checkPartnershipBiddingConflicts(gameId: number, userId: string, partnerId: string): Promise<{
+    hasConflicts: boolean;
+    conflictingHands: number[];
+  }> {
+    const gameHands = await db
+      .select({ id: hands.id })
+      .from(hands)
+      .where(eq(hands.gameId, gameId));
+    
+    const conflictingHands: number[] = [];
+    
+    for (const hand of gameHands) {
+      const existingBidding = await this.getPartnershipBidding(hand.id, userId);
+      if (existingBidding && existingBidding.partnerId !== partnerId) {
+        conflictingHands.push(hand.id);
+      }
+    }
+    
+    return {
+      hasConflicts: conflictingHands.length > 0,
+      conflictingHands,
+    };
   }
 
   async createComment(insertComment: InsertComment): Promise<Comment> {

@@ -105,10 +105,22 @@ export const hands = pgTable("hands", {
   southHand: text("south_hand").notNull(),
   eastHand: text("east_hand").notNull(),
   westHand: text("west_hand").notNull(),
-  actualBidding: jsonb("actual_bidding").$type<string[]>().notNull(),
+  // Removed actualBidding - now handled by partnershipBidding table
   finalContract: text("final_contract"),
   declarer: text("declarer"), // N, E, S, W
   result: text("result"), // Made, Down 1, etc.
+});
+
+// Partnership-specific bidding table
+export const partnershipBidding = pgTable("partnership_bidding", {
+  id: serial("id").primaryKey(),
+  gameId: integer("game_id").notNull(),
+  handId: integer("hand_id").notNull(),
+  userId: text("user_id").notNull(), // Primary player in partnership
+  partnerId: text("partner_id"), // Partner (nullable for solo bidding)
+  biddingSequence: jsonb("bidding_sequence").$type<string[]>().notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
 export const userBidding = pgTable("user_bidding", {
@@ -144,8 +156,14 @@ export const insertGamePlayerSchema = createInsertSchema(gamePlayers).omit({
 
 export const insertHandSchema = createInsertSchema(hands).omit({
   id: true,
+});
+
+export const insertPartnershipBiddingSchema = createInsertSchema(partnershipBidding).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
 }).extend({
-  actualBidding: z.array(z.string()).default([]),
+  biddingSequence: z.array(z.string()).default([]),
 });
 
 export const insertUserBiddingSchema = createInsertSchema(userBidding).omit({
@@ -167,14 +185,17 @@ export type Game = typeof games.$inferSelect & {
 export type GamePlayer = typeof gamePlayers.$inferSelect;
 export type Hand = typeof hands.$inferSelect & {
   commentCount?: number;
+  partnershipBidding?: PartnershipBidding[];
 };
 export type UserBidding = typeof userBidding.$inferSelect;
+export type PartnershipBidding = typeof partnershipBidding.$inferSelect;
 export type Comment = typeof comments.$inferSelect;
 
 export type InsertGame = z.infer<typeof insertGameSchema>;
 export type InsertGamePlayer = z.infer<typeof insertGamePlayerSchema>;
 export type InsertHand = z.infer<typeof insertHandSchema>;
 export type InsertUserBidding = z.infer<typeof insertUserBiddingSchema>;
+export type InsertPartnershipBidding = z.infer<typeof insertPartnershipBiddingSchema>;
 export type InsertComment = z.infer<typeof insertCommentSchema>;
 
 export const insertClubSchema = createInsertSchema(clubs).omit({

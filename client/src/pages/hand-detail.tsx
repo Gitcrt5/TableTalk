@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import HandDisplay from "@/components/bridge/hand-display";
 import BiddingTable from "@/components/bridge/bidding-table";
+import PartnershipBidding from "@/components/bridge/partnership-bidding";
 import CommentsSection from "@/components/comments/comments-section";
 import { ArrowLeft, Edit, ChevronLeft, ChevronRight, Calendar } from "lucide-react";
 import { Link, useParams } from "wouter";
@@ -392,12 +393,12 @@ export default function HandDetail() {
           </Card>
         </div>
 
-        {/* Bidding Section - takes 1/3 of width on large screens, full width on smaller screens */}
+        {/* Original Bidding Section - takes 1/3 of width on large screens, full width on smaller screens */}
         <div className="lg:col-span-1">
           <Card>
             <CardHeader>
               <div className="flex justify-between items-center">
-                <CardTitle>Bidding</CardTitle>
+                <CardTitle>Official Bidding</CardTitle>
                 {!hasBidding && !isEditingBidding && (
                   <Button onClick={() => setIsEditingBidding(true)}>
                     <Edit className="mr-2 h-4 w-4" />
@@ -656,6 +657,11 @@ export default function HandDetail() {
             </CardContent>
           </Card>
         </div>
+      </div>
+
+      {/* Partnership Bidding Section */}
+      <div className="mb-3 md:mb-4">
+        <PartnershipBidding hand={hand} />
       </div>
 
       {/* Comments Section */}

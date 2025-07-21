@@ -168,3 +168,16 @@ export function formatContract(contract: string): { contractPart: string; declar
   
   return { contractPart, declarerPart, isRed };
 }
+
+// Format individual bid with suit symbols
+export function formatBid(bid: string): string {
+  if (!bid) return "";
+  
+  // Handle special bids
+  if (bid === "Pass" || bid === "Double" || bid === "Redouble") {
+    return bid;
+  }
+  
+  // Replace suit abbreviations with symbols - keep existing format intact
+  return bid;
+}

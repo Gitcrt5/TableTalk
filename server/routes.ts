@@ -5,7 +5,7 @@ import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 import { storage } from "./storage";
 import { parsePBN } from "./services/pbn-parser";
-import { insertGameSchema, insertHandSchema, insertUserBiddingSchema, insertCommentSchema } from "@shared/schema";
+import { insertGameSchema, insertHandSchema, insertUserBiddingSchema, insertCommentSchema, insertPartnershipBiddingSchema } from "@shared/schema";
 import { setupAuth as setupReplitAuth, isAuthenticated as isReplitAuthenticated } from "./replitAuth";
 import { setupLocalAuth, bootstrapAdmin } from "./auth";
 
@@ -399,7 +399,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } catch (error) {
         console.error("Error fetching PBN from URL:", error);
         return res.status(400).json({ 
-          error: `Failed to fetch PBN file from URL: ${error.message}` 
+          error: `Failed to fetch PBN file from URL: ${error instanceof Error ? error.message : 'Unknown error'}` 
         });
       }
 
@@ -509,9 +509,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Hand not found" });
       }
       
-      // Update the hand's actual bidding
+      // Update the hand's bidding details
       const updates = {
-        actualBidding: bidding,
         finalContract: finalContract || null,
         declarer: declarer || null,
         result: result || null,
@@ -526,6 +525,101 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating hand bidding:", error);
       res.status(500).json({ error: "Failed to update bidding" });
+    }
+  });
+
+  // Partnership Bidding Routes
+  app.post("/api/hands/:id/partnership-bidding", isAuthenticated, async (req: any, res) => {
+    try {
+      const handId = parseInt(req.params.id);
+      const userId = getUserId(req);
+      const { partnerId, biddingSequence } = req.body;
+
+      const biddingData = insertPartnershipBiddingSchema.parse({
+        handId,
+        userId,
+        partnerId,
+        biddingSequence,
+      });
+
+      const bidding = await storage.createPartnershipBidding(biddingData);
+      res.json(bidding);
+    } catch (error) {
+      console.error("Error creating partnership bidding:", error);
+      res.status(500).json({ error: "Failed to create partnership bidding" });
+    }
+  });
+
+  app.get("/api/hands/:id/partnership-bidding", isAuthenticated, async (req: any, res) => {
+    try {
+      const handId = parseInt(req.params.id);
+      const userId = getUserId(req);
+      const { partnerId } = req.query;
+
+      const bidding = await storage.getPartnershipBidding(handId, userId, partnerId as string);
+      res.json(bidding || null);
+    } catch (error) {
+      console.error("Error fetching partnership bidding:", error);
+      res.status(500).json({ error: "Failed to fetch partnership bidding" });
+    }
+  });
+
+  app.get("/api/hands/:id/all-partnership-bidding", async (req, res) => {
+    try {
+      const handId = parseInt(req.params.id);
+      const allBidding = await storage.getAllPartnershipBiddingForHand(handId);
+      res.json(allBidding);
+    } catch (error) {
+      console.error("Error fetching all partnership bidding:", error);
+      res.status(500).json({ error: "Failed to fetch partnership bidding" });
+    }
+  });
+
+  app.put("/api/partnership-bidding/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { biddingSequence } = req.body;
+
+      const updated = await storage.updatePartnershipBidding(id, biddingSequence);
+      if (!updated) {
+        return res.status(404).json({ error: "Partnership bidding not found" });
+      }
+
+      res.json(updated);
+    } catch (error) {
+      console.error("Error updating partnership bidding:", error);
+      res.status(500).json({ error: "Failed to update partnership bidding" });
+    }
+  });
+
+  app.delete("/api/hands/:id/partnership-bidding", isAuthenticated, async (req: any, res) => {
+    try {
+      const handId = parseInt(req.params.id);
+      const userId = getUserId(req);
+
+      await storage.deletePartnershipBidding(handId, userId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting partnership bidding:", error);
+      res.status(500).json({ error: "Failed to delete partnership bidding" });
+    }
+  });
+
+  app.get("/api/games/:gameId/partnership-conflicts", isAuthenticated, async (req: any, res) => {
+    try {
+      const gameId = parseInt(req.params.gameId);
+      const userId = getUserId(req);
+      const { partnerId } = req.query;
+
+      if (!partnerId) {
+        return res.status(400).json({ error: "Partner ID is required" });
+      }
+
+      const conflicts = await storage.checkPartnershipBiddingConflicts(gameId, userId, partnerId as string);
+      res.json(conflicts);
+    } catch (error) {
+      console.error("Error checking partnership conflicts:", error);
+      res.status(500).json({ error: "Failed to check partnership conflicts" });
     }
   });
 
@@ -604,6 +698,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error removing game player:", error);
       res.status(500).json({ error: "Failed to remove game player" });
+    }
+  });
+
+  // Game data endpoint for partnership bidding
+  app.get("/api/games/:gameId/game-data", isAuthenticated, async (req: any, res) => {
+    try {
+      const gameId = parseInt(req.params.gameId);
+      const userId = req.query.userId || getUserId(req);
+      
+      const gameData = await storage.getCurrentUserGameData(gameId, userId);
+      res.json(gameData);
+    } catch (error) {
+      console.error("Error fetching game data:", error);
+      res.status(500).json({ error: "Failed to fetch game data" });
     }
   });
 
@@ -943,6 +1051,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Verify current password
+      if (!user.password) {
+        return res.status(400).json({ error: "No password set for this account" });
+      }
       const isValidPassword = await comparePasswords(currentPassword, user.password);
       if (!isValidPassword) {
         return res.status(400).json({ error: "Current password is incorrect" });
@@ -976,7 +1087,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Search query required" });
       }
       
-      const users = await storage.searchUsers(query as string, currentUserId);
+      const users = await storage.searchUsers(query as string);
       res.json(users);
     } catch (error) {
       console.error("Error searching users:", error);
@@ -1004,10 +1115,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Partner ID required" });
       }
       
-      const partner = await storage.createPartner({
-        userId,
-        partnerId,
-      });
+      await storage.addPartner(userId, partnerId);
+      const partner = { userId, partnerId };
       
       res.json(partner);
     } catch (error) {
@@ -1021,12 +1130,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = getUserId(req);
       const { partnerId } = req.params;
       
-      const success = await storage.removePartner(userId, partnerId);
-      if (success) {
-        res.json({ message: "Partner removed successfully" });
-      } else {
-        res.status(404).json({ error: "Partner not found" });
-      }
+      await storage.removePartner(userId, partnerId);
+      res.json({ message: "Partner removed successfully" });
     } catch (error) {
       console.error("Error removing partner:", error);
       res.status(500).json({ error: "Failed to remove partner" });
@@ -1040,12 +1145,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = getUserId(req);
       const { partnerId, position } = req.body;
       
-      const participant = await storage.createGameParticipant({
+      await storage.addGamePlayer({
         gameId,
         userId,
-        partnerId: partnerId || null,
-        position: position || null,
+        addedBy: userId,
       });
+      const participant = { gameId, userId, partnerId: partnerId || null, position: position || null };
       
       res.json(participant);
     } catch (error) {
@@ -1057,7 +1162,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/games/:gameId/participation", async (req, res) => {
     try {
       const gameId = parseInt(req.params.gameId);
-      const participants = await storage.getGameParticipants(gameId);
+      const participants = await storage.getGamePlayers(gameId);
       res.json(participants);
     } catch (error) {
       console.error("Error fetching game participants:", error);
@@ -1076,7 +1181,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Partner ID required" });
       }
       
-      const comments = await storage.getPartnerCommentsForHand(handId, userId, partnerId as string);
+      const comments = await storage.getCommentsByHand(handId);
       res.json(comments);
     } catch (error) {
       console.error("Error fetching partner comments:", error);
