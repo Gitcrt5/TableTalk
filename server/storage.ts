@@ -904,34 +904,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getGame(id: number): Promise<Game | undefined> {
-    const [gameWithUser] = await db
-      .select({
-        id: games.id,
-        title: games.title,
-        tournament: games.tournament,
-        round: games.round,
-        date: games.date,
-        location: games.location,
-        event: games.event,
-        pbnEvent: games.pbnEvent,
-        pbnSite: games.pbnSite,
-        pbnDate: games.pbnDate,
-        filename: games.filename,
-        uploadedBy: games.uploadedBy,
-        uploadedAt: games.uploadedAt,
-        pbnContent: games.pbnContent,
-        uploaderName: sql<string>`COALESCE(${users.displayName}, ${users.firstName} || ' ' || ${users.lastName}, ${users.email})`,
-      })
+    const [game] = await db
+      .select()
       .from(games)
-      .leftJoin(users, eq(games.uploadedBy, users.id))
       .where(eq(games.id, id));
 
-    if (!gameWithUser) return undefined;
-
-    return {
-      ...gameWithUser,
-      uploaderName: gameWithUser.uploaderName || gameWithUser.uploadedBy,
-    };
+    return game;
   }
 
   async updateGame(id: number, updates: Partial<Game>): Promise<Game | undefined> {
@@ -952,6 +930,7 @@ export class DatabaseStorage implements IStorage {
         round: games.round,
         date: games.date,
         location: games.location,
+        clubId: games.clubId,
         event: games.event,
         pbnEvent: games.pbnEvent,
         pbnSite: games.pbnSite,
@@ -960,16 +939,12 @@ export class DatabaseStorage implements IStorage {
         uploadedBy: games.uploadedBy,
         uploadedAt: games.uploadedAt,
         pbnContent: games.pbnContent,
-        uploaderName: sql<string>`COALESCE(${users.displayName}, ${users.firstName} || ' ' || ${users.lastName}, ${users.email})`,
       })
       .from(games)
       .leftJoin(users, eq(games.uploadedBy, users.id))
       .orderBy(desc(games.uploadedAt));
 
-    return gamesWithUsers.map(game => ({
-      ...game,
-      uploaderName: game.uploaderName || game.uploadedBy,
-    }));
+    return gamesWithUsers;
   }
 
   async searchGames(query: string): Promise<Game[]> {
@@ -1147,30 +1122,11 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getHandsByGame(gameId: number): Promise<Hand[]> {
-    const handsWithCommentCounts = await db
-      .select({
-        id: hands.id,
-        gameId: hands.gameId,
-        boardNumber: hands.boardNumber,
-        dealer: hands.dealer,
-        vulnerability: hands.vulnerability,
-        northHand: hands.northHand,
-        southHand: hands.southHand,
-        eastHand: hands.eastHand,
-        westHand: hands.westHand,
-        actualBidding: hands.actualBidding,
-        finalContract: hands.finalContract,
-        declarer: hands.declarer,
-        result: hands.result,
-        commentCount: sql<number>`COALESCE(COUNT(${comments.id}), 0)`,
-      })
+    return await db
+      .select()
       .from(hands)
-      .leftJoin(comments, eq(hands.id, comments.handId))
       .where(eq(hands.gameId, gameId))
-      .groupBy(hands.id)
       .orderBy(hands.boardNumber);
-
-    return handsWithCommentCounts as (Hand & { commentCount: number })[];
   }
 
   async getHandsWithFilters(filters: {
@@ -1422,7 +1378,7 @@ export class DatabaseStorage implements IStorage {
         emailVerified: users.emailVerified,
         emailVerificationToken: users.emailVerificationToken,
         passwordResetToken: users.passwordResetToken,
-        passwordResetTokenExpiry: users.passwordResetTokenExpiry,
+        passwordResetExpires: users.passwordResetExpires,
         homeClubId: users.homeClubId,
       })
       .from(gamePlayers)
@@ -1460,8 +1416,7 @@ export class DatabaseStorage implements IStorage {
         filename: games.filename,
         uploadedBy: games.uploadedBy,
         pbnContent: games.pbnContent,
-        createdAt: games.createdAt,
-        updatedAt: games.updatedAt,
+        uploadedAt: games.uploadedAt,
       })
       .from(games)
       .innerJoin(gamePlayers, eq(games.id, gamePlayers.gameId))
