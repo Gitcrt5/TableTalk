@@ -31,7 +31,7 @@ import { Edit } from "lucide-react";
 
 const gameEditSchema = z.object({
   title: z.string().min(1, "Title is required"),
-  date: z.string().optional(),
+  date: z.string().min(1, "Date is required"),
   location: z.string().optional(),
 });
 

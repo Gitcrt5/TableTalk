@@ -4,8 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Upload, FileText, CheckCircle, AlertCircle, AlertTriangle, Users } from "lucide-react";
+import { Upload, FileText, CheckCircle, AlertCircle, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
@@ -22,19 +21,14 @@ export default function PBNUpload({ open, onOpenChange }: PBNUploadProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [duplicateGame, setDuplicateGame] = useState<Game | null>(null);
   const [showDuplicateDialog, setShowDuplicateDialog] = useState(false);
-  const [showPartnerSelection, setShowPartnerSelection] = useState(false);
-  const [selectedPartners, setSelectedPartners] = useState<string[]>([]);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   const { user } = useAuth();
 
-  // Get user's partners
-  const { data: partners = [] } = useQuery<User[]>({
-    queryKey: ["/api/user/partners"],
-    enabled: open,
-  });
+
 
   const uploadMutation = useMutation({
     mutationFn: async ({ file, partners }: { file: File; partners: string[] }) => {
@@ -198,20 +192,11 @@ export default function PBNUpload({ open, onOpenChange }: PBNUploadProps) {
 
   const handleUpload = () => {
     if (selectedFile) {
-      if (partners.length > 0) {
-        setShowPartnerSelection(true);
-      } else {
-        uploadMutation.mutate({ file: selectedFile, partners: [] });
-      }
+      uploadMutation.mutate({ file: selectedFile, partners: [] });
     }
   };
 
-  const handleUploadWithPartners = () => {
-    if (selectedFile) {
-      uploadMutation.mutate({ file: selectedFile, partners: selectedPartners });
-      setShowPartnerSelection(false);
-    }
-  };
+
 
   const handleClose = () => {
     setSelectedFile(null);
@@ -225,16 +210,8 @@ export default function PBNUpload({ open, onOpenChange }: PBNUploadProps) {
   const handleDuplicateConfirm = () => {
     if (selectedFile) {
       setShowDuplicateDialog(false);
-      forceUploadMutation.mutate({ file: selectedFile, partners: selectedPartners });
+      forceUploadMutation.mutate({ file: selectedFile, partners: [] });
     }
-  };
-
-  const handlePartnerToggle = (partnerId: string) => {
-    setSelectedPartners(prev => 
-      prev.includes(partnerId) 
-        ? prev.filter(id => id !== partnerId)
-        : [...prev, partnerId]
-    );
   };
 
   const handleViewExisting = () => {
@@ -423,58 +400,7 @@ export default function PBNUpload({ open, onOpenChange }: PBNUploadProps) {
       </Dialog>
     )}
 
-    {/* Partner Selection Dialog */}
-    <Dialog open={showPartnerSelection} onOpenChange={setShowPartnerSelection}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle className="flex items-center space-x-2">
-            <Users className="h-5 w-5" />
-            <span>Select Partners</span>
-          </DialogTitle>
-        </DialogHeader>
-        
-        <div className="space-y-4">
-          <p className="text-sm text-text-secondary">
-            Who played in this game with you? Select your partners:
-          </p>
-          
-          {partners.length === 0 ? (
-            <div className="text-center py-4">
-              <p className="text-sm text-text-secondary">
-                No partners found. You can add partners in your account settings.
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-2 max-h-60 overflow-y-auto">
-              {partners.map((partner) => (
-                <div key={partner.id} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={partner.id}
-                    checked={selectedPartners.includes(partner.id)}
-                    onCheckedChange={() => handlePartnerToggle(partner.id)}
-                  />
-                  <label
-                    htmlFor={partner.id}
-                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                  >
-                    {partner.displayName || `${partner.firstName} ${partner.lastName}`.trim()}
-                  </label>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-        
-        <DialogFooter>
-          <Button variant="outline" onClick={() => setShowPartnerSelection(false)}>
-            Skip
-          </Button>
-          <Button onClick={handleUploadWithPartners} disabled={uploadMutation.isPending}>
-            {uploadMutation.isPending ? "Uploading..." : "Upload Game"}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+
     </>
   );
 }

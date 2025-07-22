@@ -896,9 +896,16 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createGame(insertGame: InsertGame): Promise<Game> {
+    // Default date to upload date if not provided
+    const gameData = {
+      ...insertGame,
+      date: insertGame.date || new Date().toISOString().split('T')[0],
+      uploadedAt: new Date(),
+    };
+    
     const [game] = await db
       .insert(games)
-      .values(insertGame)
+      .values(gameData)
       .returning();
     return game;
   }
