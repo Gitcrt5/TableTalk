@@ -32,7 +32,7 @@ export async function clearAllTables() {
 
 export async function createAdminUser(): Promise<void> {
   const adminEmail = process.env.ADMIN_EMAIL || "admin@tabletalk.cards";
-  const adminPassword = process.env.ADMIN_PASSWORD || "admin123";
+  const adminPassword = process.env.ADMIN_PASSWORD || "TabletalkAdmin2025!";
   
   console.log("👤 Creating admin user...");
   const hashedPassword = await hashPassword(adminPassword);
@@ -199,10 +199,10 @@ export async function resetWithTestData(): Promise<void> {
   const testUsers = [
     {
       id: uuidv4(),
-      email: "alice@test.com",
+      email: "a@test.com",
       firstName: "Alice",
-      lastName: "Johnson",
-      displayName: "Alice",
+      lastName: "Player",
+      displayName: "PlayerA",
       password: await hashPassword("test123"),
       authType: "local" as const,
       userType: "test" as const,
@@ -211,9 +211,45 @@ export async function resetWithTestData(): Promise<void> {
     },
     {
       id: uuidv4(),
-      email: "bob@test.com",
+      email: "b@test.com",
       firstName: "Bob",
-      lastName: "Smith",
+      lastName: "Grobble",
+      displayName: "PlayerB",
+      password: await hashPassword("test123"),
+      authType: "local" as const,
+      userType: "test" as const,
+      emailVerified: true,
+      isActive: true
+    },
+    {
+      id: uuidv4(),
+      email: "c@test.com",
+      firstName: "Cindy",
+      lastName: "Brady",
+      displayName: "PlayerC",
+      password: await hashPassword("test123"),
+      authType: "local" as const,
+      userType: "test" as const,
+      emailVerified: true,
+      isActive: true
+    },
+    {
+      id: uuidv4(),
+      email: "d@test.com",
+      firstName: "Don",
+      lastName: "Bradman",
+      displayName: "PlayerD",
+      password: await hashPassword("test123"),
+      authType: "local" as const,
+      userType: "test" as const,
+      emailVerified: true,
+      isActive: true
+    },
+{
+      id: uuidv4(),
+      email: "bob@test.com",
+      firstName: "Boba",
+      lastName: "Fett",
       displayName: "Bob",
       password: await hashPassword("test123"),
       authType: "local" as const,
