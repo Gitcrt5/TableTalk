@@ -1,0 +1,37 @@
+I would like to brainstorm the workflow for bidding as well as how the bidding on hands. Lets make sure we have this all worked out and agreed upon before making any more changes.
+
+Bidding is between partners who played in the game that the hand is a part of.
+Therefore if you did not play in the game you cannot bid on a hand.
+If there is bidding on a hand that you played it will be displayed to you by default.
+The final contract is the result of the bidding.
+If you played in a game and there is bidding on a hand there will therefore be a final contract for a hand.
+If there is a contract in a hand that you played it will be displayed in the game page as well as the hand page.
+If you did not play in a game the final bid will not be shown in the game page, but it will tagged as having bidding.
+If you did not play a game then you can still see the bidding made by partnerships (but as noted you will not see the final contract in the summary of the hand).
+To the right of the hand details a non player can see the bidding of players. The heading will be Bidding by: (PlayerA) & (PlayerB) with the bidding underneath. If more than one partnership bid then a drop list of the partnerships will allow the non playing user to.
+Only the players in the partnership can edit or delete the bidding on a hand. Non playing partners can view only and not edit.
+
+Please ask any clarifying questions before we agree to go ahead.
+
+
+
+
+
+1. The final contract is the last non-pass bid (accounting for doubles/redoubles). Each partnerships has their own bidding, so will have their own final contract. 
+
+2. The contract will only be displayed for  players who played the game. If a user did not play they will not see a final contract displayed in the game page or in the hand summary. They will be able to see the bidding of playing partnerships and so therefore be able to see the final contract.
+
+3. All users, players and non-players, should see the "Had Bidding" badge on the game page. No need to specify how many bids. 
+
+4. Use display names. Ordering not specified, in the order returned by the database is fine. 
+
+Contract Display Logic:
+
+Currently, hands can have a global finalContract field. Should we:
+Remove this global field entirely and only use partnership-specific contracts?
+Keep it but only populate it for players who played the game?
+Use it as a fallback for legacy data?
+
+5. Remove the field and use only partnership specific contracts 
+
+6. Yes. If a partner removed themselves then the bidding remains and will be attached to the individual who entered it if they subsequently add a new partner.
