@@ -37,6 +37,60 @@ async function comparePasswords(supplied: string, stored: string): Promise<boole
   return timingSafeEqual(hashedBuf, suppliedBuf);
 }
 
+// Calculate contract from bidding sequence
+function calculateContractFromBidding(bidding: string[]): {
+  finalContract?: string;
+  declarer?: string;
+} {
+  const positions = ["West", "North", "East", "South"];
+  
+  // Find the last non-pass bid
+  let lastBidIndex = -1;
+  let lastBid = "";
+  
+  for (let i = bidding.length - 1; i >= 0; i--) {
+    if (bidding[i] !== "Pass" && bidding[i] !== "Double" && bidding[i] !== "Redouble") {
+      lastBidIndex = i;
+      lastBid = bidding[i];
+      break;
+    }
+  }
+  
+  if (lastBidIndex === -1) {
+    // All passes, no contract
+    return {};
+  }
+  
+  // Check if the last bid was doubled or redoubled
+  let isDoubled = false;
+  let isRedoubled = false;
+  
+  for (let i = lastBidIndex + 1; i < bidding.length; i++) {
+    if (bidding[i] === "Double") {
+      isDoubled = true;
+      isRedoubled = false;
+    } else if (bidding[i] === "Redouble") {
+      isRedoubled = true;
+    }
+  }
+  
+  // Build final contract string
+  let finalContract = lastBid;
+  if (isRedoubled) {
+    finalContract += "XX";
+  } else if (isDoubled) {
+    finalContract += "X";
+  }
+  
+  // Determine declarer
+  const declarer = positions[lastBidIndex % 4];
+  
+  return {
+    finalContract,
+    declarer,
+  };
+}
+
 const upload = multer({ storage: multer.memoryStorage() });
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -453,7 +507,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Hands routes
-  app.get("/api/hands/:id", async (req, res) => {
+  app.get("/api/hands/:id", async (req: any, res) => {
     try {
       const id = parseInt(req.params.id);
       const hand = await storage.getHand(id);
@@ -462,18 +516,84 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Hand not found" });
       }
       
-      res.json(hand);
+      // Check if user played this game
+      let enhancedHand = { ...hand };
+      
+      if (req.user) {
+        const userId = getUserId(req);
+        const gameData = await storage.getCurrentUserGameData(hand.gameId, userId);
+        
+        if (gameData.isPlaying) {
+          // Get partnership bidding for this user
+          const partnershipBid = await storage.getPartnershipBidding(
+            hand.id, 
+            userId, 
+            gameData.partner?.id
+          );
+          
+          if (partnershipBid && partnershipBid.biddingSequence.length > 0) {
+            // Calculate contract from bidding sequence
+            const contract = calculateContractFromBidding(partnershipBid.biddingSequence);
+            enhancedHand = {
+              ...enhancedHand,
+              finalContract: contract.finalContract,
+              declarer: contract.declarer,
+            };
+          }
+        }
+      }
+      
+      res.json(enhancedHand);
     } catch (error) {
       console.error("Error fetching hand:", error);
       res.status(500).json({ error: "Failed to fetch hand" });
     }
   });
 
-  app.get("/api/games/:gameId/hands", async (req, res) => {
+  app.get("/api/games/:gameId/hands", async (req: any, res) => {
     try {
       const gameId = parseInt(req.params.gameId);
       const hands = await storage.getHandsByGame(gameId);
-      res.json(hands);
+      
+      // Check if user played this game
+      let userIsPlaying = false;
+      let userPartner: User | undefined;
+      
+      if (req.user) {
+        const userId = getUserId(req);
+        const gameData = await storage.getCurrentUserGameData(gameId, userId);
+        userIsPlaying = gameData.isPlaying;
+        userPartner = gameData.partner;
+      }
+      
+      // Enhance hands with partnership-specific contract info
+      const enhancedHands = await Promise.all(
+        hands.map(async (hand) => {
+          if (userIsPlaying && req.user) {
+            // Get partnership bidding for this user
+            const userId = getUserId(req);
+            const partnershipBid = await storage.getPartnershipBidding(
+              hand.id, 
+              userId, 
+              userPartner?.id
+            );
+            
+            if (partnershipBid && partnershipBid.biddingSequence.length > 0) {
+              // Calculate contract from bidding sequence
+              const contract = calculateContractFromBidding(partnershipBid.biddingSequence);
+              return {
+                ...hand,
+                finalContract: contract.finalContract,
+                declarer: contract.declarer,
+              };
+            }
+          }
+          
+          return hand;
+        })
+      );
+      
+      res.json(enhancedHands);
     } catch (error) {
       console.error("Error fetching hands:", error);
       res.status(500).json({ error: "Failed to fetch hands" });
@@ -497,11 +617,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Update hand bidding (admin/original functionality)
-  app.put("/api/hands/:id/bidding", isAuthenticated, async (req: any, res) => {
+  // Update hand result (admin functionality - removed bidding as it's now partnership-specific)
+  app.put("/api/hands/:id/result", isAuthenticated, async (req: any, res) => {
     try {
       const handId = parseInt(req.params.id);
-      const { bidding, finalContract, declarer, result } = req.body;
+      const { result } = req.body;
       
       // Get the current hand
       const hand = await storage.getHand(handId);
@@ -509,10 +629,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Hand not found" });
       }
       
-      // Update the hand's bidding details
+      // Update only the result
       const updates = {
-        finalContract: finalContract || null,
-        declarer: declarer || null,
         result: result || null,
       };
       
@@ -523,8 +641,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json(updatedHand);
     } catch (error) {
-      console.error("Error updating hand bidding:", error);
-      res.status(500).json({ error: "Failed to update bidding" });
+      console.error("Error updating hand result:", error);
+      res.status(500).json({ error: "Failed to update result" });
     }
   });
 

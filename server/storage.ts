@@ -283,8 +283,7 @@ export class MemStorage implements IStorage {
       eastHand: "♠643 ♥A752 ♦J10872 ♣Q4",
       westHand: "♠972 ♥KQ1086 ♦Q94 ♣A108",
 
-      finalContract: "4♠",
-      declarer: "N",
+
       result: "Made",
     });
 
@@ -1169,7 +1168,18 @@ export class DatabaseStorage implements IStorage {
 
   async getHand(id: number): Promise<Hand | undefined> {
     const [hand] = await db.select().from(hands).where(eq(hands.id, id));
-    return hand;
+    if (!hand) return undefined;
+    
+    // Check if there's any partnership bidding for this hand
+    const biddings = await db
+      .select()
+      .from(partnershipBidding)
+      .where(eq(partnershipBidding.handId, id));
+    
+    return {
+      ...hand,
+      hasBidding: biddings.length > 0
+    };
   }
 
   async updateHand(id: number, updates: Partial<Hand>): Promise<Hand | undefined> {
@@ -1182,11 +1192,28 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getHandsByGame(gameId: number): Promise<Hand[]> {
-    return await db
+    const handsData = await db
       .select()
       .from(hands)
       .where(eq(hands.gameId, gameId))
       .orderBy(hands.boardNumber);
+    
+    // Calculate hasBidding for each hand
+    const handsWithBidding = await Promise.all(
+      handsData.map(async (hand) => {
+        const biddings = await db
+          .select()
+          .from(partnershipBidding)
+          .where(eq(partnershipBidding.handId, hand.id));
+        
+        return {
+          ...hand,
+          hasBidding: biddings.length > 0
+        };
+      })
+    );
+    
+    return handsWithBidding;
   }
 
   async getHandsWithFilters(filters: {

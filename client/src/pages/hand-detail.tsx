@@ -280,6 +280,10 @@ export default function HandDetail() {
             <div className="flex flex-wrap items-center gap-2 md:gap-4 text-text-secondary">
               <Badge variant="outline" className="text-xs md:text-sm">Dealer: {hand.dealer}</Badge>
               <Badge variant="outline" className="text-xs md:text-sm">{hand.vulnerability}</Badge>
+              {hand.hasBidding && (
+                <Badge variant="secondary" className="text-xs md:text-sm">Has Bidding</Badge>
+              )}
+              {/* Contract only shows for players who played this game */}
               {hand.finalContract && (
                 <Badge className="text-xs md:text-sm">
                   Contract:{'\u00A0'}

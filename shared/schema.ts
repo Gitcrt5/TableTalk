@@ -106,8 +106,7 @@ export const hands = pgTable("hands", {
   eastHand: text("east_hand").notNull(),
   westHand: text("west_hand").notNull(),
   // Removed actualBidding - now handled by partnershipBidding table
-  finalContract: text("final_contract"),
-  declarer: text("declarer"), // N, E, S, W
+  // Removed finalContract and declarer - now calculated from partnershipBidding
   result: text("result"), // Made, Down 1, etc.
 });
 
@@ -185,6 +184,10 @@ export type Game = typeof games.$inferSelect & {
 export type GamePlayer = typeof gamePlayers.$inferSelect;
 export type Hand = typeof hands.$inferSelect & {
   commentCount?: number;
+  hasBidding?: boolean;
+  // Partnership-specific contract fields (only populated for players who played the game)
+  finalContract?: string;
+  declarer?: string;
   partnershipBidding?: PartnershipBidding[];
 };
 export type UserBidding = typeof userBidding.$inferSelect;

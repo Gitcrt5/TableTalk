@@ -361,7 +361,7 @@ export default function GameDetail() {
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-semibold">Hands ({hands.length})</h2>
             <Badge variant="outline" className="text-xs">
-              {hands.filter(h => h.actualBidding && h.actualBidding.length > 0).length} with bidding
+              {hands.filter(h => h.hasBidding).length} with bidding
             </Badge>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -380,7 +380,7 @@ export default function GameDetail() {
                       </p>
                     </div>
                     <div className="flex flex-col space-y-1">
-                      {hand.actualBidding && hand.actualBidding.length > 0 ? (
+                      {hand.hasBidding ? (
                         <Badge className="text-xs bg-green-100 text-green-800 hover:bg-green-100">Has bidding</Badge>
                       ) : (
                         <Badge variant="secondary" className="text-xs bg-gray-100 text-gray-600">No bidding</Badge>
@@ -396,7 +396,13 @@ export default function GameDetail() {
                   </div>
                   
                   <div className="space-y-2 text-sm">
-                    {hand.finalContract && (
+                    {/* Show "Has Bidding" badge for all users */}
+                    {hand.hasBidding && (
+                      <Badge variant="secondary" className="text-xs">Has Bidding</Badge>
+                    )}
+                    
+                    {/* Only show contract details to players who played this game */}
+                    {isCurrentUserPlaying && hand.finalContract && (
                       <div className="flex justify-between">
                         <span className="text-text-secondary">Contract: </span>
                         <span className="font-medium">
@@ -416,7 +422,7 @@ export default function GameDetail() {
                       </div>
                     )}
                     
-                    {!hand.finalContract && (
+                    {!hand.hasBidding && (
                       <p className="text-text-secondary text-xs italic">
                         Click to view hand layout and add bidding
                       </p>
