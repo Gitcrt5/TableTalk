@@ -151,6 +151,8 @@ export default function PartnershipBidding({ hand }: PartnershipBiddingProps) {
     },
     onSuccess: () => {
       refetchBidding();
+      queryClient.invalidateQueries({ queryKey: [`/api/hands/${hand.id}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/games/${hand.gameId}/hands`] });
       setIsEditing(false);
       setNewBidding([]);
       setCurrentBidder(0);
@@ -168,6 +170,8 @@ export default function PartnershipBidding({ hand }: PartnershipBiddingProps) {
     },
     onSuccess: () => {
       refetchBidding();
+      queryClient.invalidateQueries({ queryKey: [`/api/hands/${hand.id}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/games/${hand.gameId}/hands`] });
       setIsEditing(false);
       setNewBidding([]);
       setCurrentBidder(0);
@@ -183,6 +187,8 @@ export default function PartnershipBidding({ hand }: PartnershipBiddingProps) {
     },
     onSuccess: () => {
       refetchBidding();
+      queryClient.invalidateQueries({ queryKey: [`/api/hands/${hand.id}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/games/${hand.gameId}/hands`] });
       setIsEditing(false);
       setNewBidding([]);
       setCurrentBidder(0);
@@ -283,15 +289,9 @@ export default function PartnershipBidding({ hand }: PartnershipBiddingProps) {
           <CardTitle>Partnership Bidding</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-center py-4">
-            <AlertCircle className="mx-auto h-8 w-8 text-yellow-500 mb-2" />
-            <p className="text-text-secondary mb-3">
-              Only players who participated in this game can enter bidding sequences.
-            </p>
-            <p className="text-sm text-text-muted">
-              Mark yourself as a player in the game to access partnership bidding.
-            </p>
-          </div>
+          <p className="text-text-secondary text-sm">
+            Only players who participated in this game can enter bidding sequences.
+          </p>
         </CardContent>
       </Card>
     );

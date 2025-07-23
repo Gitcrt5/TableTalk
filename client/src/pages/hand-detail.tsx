@@ -398,7 +398,7 @@ export default function HandDetail() {
           <Card>
             <CardHeader>
               <div className="flex justify-between items-center">
-                <CardTitle>Official Bidding</CardTitle>
+                <CardTitle>Bidding</CardTitle>
                 {!hasBidding && !isEditingBidding && (
                   <Button onClick={() => setIsEditingBidding(true)}>
                     <Edit className="mr-2 h-4 w-4" />

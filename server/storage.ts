@@ -912,8 +912,26 @@ export class DatabaseStorage implements IStorage {
 
   async getGame(id: number): Promise<Game | undefined> {
     const [game] = await db
-      .select()
+      .select({
+        id: games.id,
+        title: games.title,
+        tournament: games.tournament,
+        round: games.round,
+        date: games.date,
+        location: games.location,
+        clubId: games.clubId,
+        event: games.event,
+        pbnEvent: games.pbnEvent,
+        pbnSite: games.pbnSite,
+        pbnDate: games.pbnDate,
+        filename: games.filename,
+        uploadedBy: games.uploadedBy,
+        uploadedAt: games.uploadedAt,
+        pbnContent: games.pbnContent,
+        uploaderName: sql<string>`COALESCE(${users.displayName}, ${users.firstName} || ' ' || ${users.lastName}, ${users.email})`,
+      })
       .from(games)
+      .leftJoin(users, eq(games.uploadedBy, users.id))
       .where(eq(games.id, id));
 
     return game;
@@ -946,6 +964,7 @@ export class DatabaseStorage implements IStorage {
         uploadedBy: games.uploadedBy,
         uploadedAt: games.uploadedAt,
         pbnContent: games.pbnContent,
+        uploaderName: sql<string>`COALESCE(${users.displayName}, ${users.firstName} || ' ' || ${users.lastName}, ${users.email})`,
       })
       .from(games)
       .leftJoin(users, eq(games.uploadedBy, users.id))
