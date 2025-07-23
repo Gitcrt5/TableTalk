@@ -160,6 +160,26 @@ TableTalk supports two authentication methods for maximum hosting flexibility:
 - Improved vulnerability labeling
 - Professional, focused user interface
 
+## Database Management
+
+The project uses a unified database management system:
+
+### Primary Scripts
+- **`database-manager.ts`** - Unified database operations with commands:
+  - `clean` - Reset to clean state (admin user only) 
+  - `test` - Reset with test data (admin + test users)
+  - `cleanup` - Delete only test users and their data
+  - `clear` - Clear all tables (dangerous!)
+- **`data-integrity-checker.ts`** - Comprehensive database integrity verification
+
+### Usage Examples
+```bash
+tsx scripts/database-manager.ts clean    # Production reset
+tsx scripts/database-manager.ts test     # Development with test data
+tsx scripts/database-manager.ts cleanup  # Remove test users only
+tsx scripts/data-integrity-checker.ts    # Check database integrity
+```
+
 ## Recent Changes
 
 - June 25, 2025. Initial setup with full-featured bridge platform
@@ -252,6 +272,7 @@ TableTalk supports two authentication methods for maximum hosting flexibility:
 - July 20, 2025. **FORGOT PASSWORD REMOVAL** - Removed "Forgot password?" link from login page since email functionality is not fully configured for production. This prevents user confusion when the password reset feature doesn't work properly due to missing email infrastructure.
 - July 21, 2025. **PARTNERSHIP BIDDING SYSTEM IMPLEMENTATION** - Completed comprehensive partnership-specific bidding system. Added new `partnershipBidding` table with proper constraints ensuring one partnership per user per game. Migrated database and cleared existing global bidding data. Implemented full storage layer methods for creating, reading, updating, and deleting partnership bidding sequences. Added API routes for all CRUD operations plus conflict detection. System allows only players who played a game to enter bidding sequences that are tied to their specific partnerships. Includes automatic partner linking and conflict resolution mechanisms.
 - July 21, 2025. **DATABASE MANAGEMENT SYSTEM CONSOLIDATION** - Created unified `database-manager.ts` script that consolidates and updates all previous database scripts. Fixed issues with outdated `role` field usage (now uses `userType`) and missing new tables (partnershipBidding, partners, gameParticipants). New script provides clean commands: `clean` (production-ready), `test` (with test data), `cleanup` (remove test users only), and `clear` (emergency reset). All old scripts now redirect to the new unified system for consistency.
+- July 23, 2025. **SCRIPT CLEANUP** - Removed obsolete database scripts. Only `database-manager.ts` and `data-integrity-checker.ts` remain in scripts folder. All database operations now use the unified manager: `tsx scripts/database-manager.ts [clean|test|cleanup|clear]`.
 - July 21, 2025. **DATA INTEGRITY VERIFICATION SYSTEM** - Implemented comprehensive database integrity checker that verifies all foreign key relationships, identifies orphaned records, and checks data consistency. System validates 16 different dependency relationships including hands→games, comments→hands/users, bidding records, partnerships, and game participation. Includes auto-fix capabilities for orphaned records and detailed reporting with severity levels (error/warning/info). Provides both check-only analysis and destructive fix operations with full logging and safety features.
 - July 21, 2025. **ADMIN PANEL INTEGRITY INTEGRATION** - Added data integrity verification system to admin panel with professional interface. Created new "Database Integrity" tab with summary cards, detailed issue listings, one-click integrity checking, and auto-fix functionality. System only runs checks when explicitly triggered by admin users, not automatically on page load. Provides comprehensive reporting with severity levels and clear recommendations for database maintenance.
 
