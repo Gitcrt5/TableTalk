@@ -312,13 +312,10 @@ export default function HandDetail() {
           </Card>
         </div>
 
-        {/* Placeholder for global bidding - now handled by PartnershipBidding */}
-        <div className="lg:col-span-1"></div>
-      </div>
-
-      {/* Partnership Bidding Section */}
-      <div className="mb-3 md:mb-4">
-        <PartnershipBidding hand={hand} />
+        {/* Partnership Bidding - takes 1/3 of width on large screens */}
+        <div className="lg:col-span-1">
+          <PartnershipBidding hand={hand} />
+        </div>
       </div>
 
       {/* Comments Section */}
