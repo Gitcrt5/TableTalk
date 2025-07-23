@@ -728,7 +728,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (partnershipOnly && userId) {
         // Get user's partners
         const partners = await storage.getUserPartners(userId);
-        const partnerIds = partners.map(p => p.partnerId === userId ? p.userId : p.partnerId);
+        const partnerIds = partners.map(p => p.id);
         partnerIds.push(userId); // Include user's own comments
         
         comments = comments.filter(comment => partnerIds.includes(comment.userId));

@@ -836,7 +836,8 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUserPartners(userId: string): Promise<User[]> {
-    const partnerRows = await db
+    // Get partners where current user is the one who added the partnership
+    const partnersAddedByUser = await db
       .select({
         id: users.id,
         email: users.email,
@@ -862,7 +863,40 @@ export class DatabaseStorage implements IStorage {
       .innerJoin(users, eq(partners.partnerId, users.id))
       .where(eq(partners.userId, userId));
     
-    return partnerRows;
+    // Get partners where current user was added as someone else's partner
+    const partnersWhoAddedUser = await db
+      .select({
+        id: users.id,
+        email: users.email,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        displayName: users.displayName,
+        userType: users.userType,
+        authType: users.authType,
+        profileImageUrl: users.profileImageUrl,
+        emailVerified: users.emailVerified,
+        isActive: users.isActive,
+        createdAt: users.createdAt,
+        updatedAt: users.updatedAt,
+        password: users.password,
+        emailVerificationToken: users.emailVerificationToken,
+        emailVerificationExpires: users.emailVerificationExpires,
+        passwordResetToken: users.passwordResetToken,
+        passwordResetExpires: users.passwordResetExpires,
+        deactivatedAt: users.deactivatedAt,
+        homeClubId: users.homeClubId,
+      })
+      .from(partners)
+      .innerJoin(users, eq(partners.userId, users.id))
+      .where(eq(partners.partnerId, userId));
+    
+    // Combine both sets and remove duplicates
+    const allPartners = [...partnersAddedByUser, ...partnersWhoAddedUser];
+    const uniquePartners = allPartners.filter((partner, index, self) => 
+      index === self.findIndex(p => p.id === partner.id)
+    );
+    
+    return uniquePartners;
   }
 
   async addPartner(userId: string, partnerId: string): Promise<void> {
