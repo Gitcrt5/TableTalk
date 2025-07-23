@@ -264,6 +264,146 @@ export async function resetWithTestData(): Promise<void> {
   }
   
   console.log("✅ Test users created");
+  
+  // Create sample game with hands uploaded by first test user
+  console.log("🎮 Creating sample game with hands...");
+  
+  const sampleGame = {
+    title: "Friday Evening Duplicate",
+    tournament: "Club Championship",
+    round: "Round 1",
+    date: "2025-01-17",
+    location: "Bridge Club",
+    event: "Club Game",
+    pbnEvent: "Club Championship",
+    pbnSite: "Local Bridge Club", 
+    pbnDate: "2025.01.17",
+    filename: "sample_game.pbn",
+    uploadedBy: testUsers[0].id,
+    uploadedAt: new Date("2025-01-17T19:30:00Z"),
+    pbnContent: `[Event "Club Championship"]
+[Site "Local Bridge Club"]
+[Date "2025.01.17"]
+[Board "1"]
+[West "PlayerA"]
+[North "PlayerB"] 
+[East "PlayerC"]
+[South "PlayerD"]
+[Dealer "N"]
+[Vulnerable "None"]
+[Deal "N:AK32.QJ9.K87.A65 T987.A643.A92.K4 QJ65.K852.QT3.Q7 4.T7.J654.JT9832"]
+[Scoring "MP"]
+[Declarer "N"]
+[Contract "3NT"]
+[Result "9"]
+
+[Board "2"]
+[West "PlayerB"]
+[North "PlayerC"]
+[East "PlayerD"] 
+[South "PlayerA"]
+[Dealer "E"]
+[Vulnerable "NS"]
+[Deal "E:K987.A5.KJ83.A42 AQJ6.KQ94.A7.QT5 T542.J862.T652.K6 3.T73.Q94.J98763"]
+[Scoring "MP"]
+[Declarer "S"]
+[Contract "4S"]
+[Result "10"]
+
+[Board "3"]
+[West "PlayerC"]
+[North "PlayerD"]
+[East "PlayerA"]
+[South "PlayerB"]
+[Dealer "S"] 
+[Vulnerable "EW"]
+[Deal "S:AJ85.KQ7.A94.K83 K432.A954.KJ7.A4 QT76.J82.Q865.Q9 9.T63.T32.JT7652"]
+[Scoring "MP"]
+[Declarer "N"]
+[Contract "3NT"]
+[Result "9"]
+
+[Board "4"]
+[West "PlayerD"]
+[North "PlayerA"]
+[East "PlayerB"]
+[South "PlayerC"]
+[Dealer "W"]
+[Vulnerable "All"]
+[Deal "W:KQJ9.A83.K74.AQ2 A652.KJ95.A83.K4 T874.Q642.QJ9.T6 3.T7.T652.J98753"]
+[Scoring "MP"]
+[Declarer "W"]
+[Contract "4S"]
+[Result "10"]`
+  };
+
+  const [createdGame] = await db.insert(games).values(sampleGame).returning();
+  
+  // Create sample hands for the game
+  const sampleHands = [
+    {
+      gameId: createdGame.id,
+      boardNumber: 1,
+      dealer: "North",
+      vulnerability: "None",
+      northCards: "AK32.QJ9.K87.A65",
+      southCards: "4.T7.J654.JT9832", 
+      eastCards: "QJ65.K852.QT3.Q7",
+      westCards: "T987.A643.A92.K4",
+      contract: "3NT",
+      declarer: "North",
+      result: 9,
+      actualBidding: []
+    },
+    {
+      gameId: createdGame.id,
+      boardNumber: 2,
+      dealer: "East", 
+      vulnerability: "NS",
+      northCards: "AQJ6.KQ94.A7.QT5",
+      southCards: "3.T73.Q94.J98763",
+      eastCards: "K987.A5.KJ83.A42",
+      westCards: "T542.J862.T652.K6",
+      contract: "4S",
+      declarer: "South", 
+      result: 10,
+      actualBidding: []
+    },
+    {
+      gameId: createdGame.id,
+      boardNumber: 3,
+      dealer: "South",
+      vulnerability: "EW", 
+      northCards: "K432.A954.KJ7.A4",
+      southCards: "AJ85.KQ7.A94.K83",
+      eastCards: "QT76.J82.Q865.Q9",
+      westCards: "9.T63.T32.JT7652",
+      contract: "3NT",
+      declarer: "North",
+      result: 9,
+      actualBidding: []
+    },
+    {
+      gameId: createdGame.id,
+      boardNumber: 4,
+      dealer: "West",
+      vulnerability: "All",
+      northCards: "A652.KJ95.A83.K4", 
+      southCards: "3.T7.T652.J98753",
+      eastCards: "T874.Q642.QJ9.T6",
+      westCards: "KQJ9.A83.K74.AQ2",
+      contract: "4S",
+      declarer: "West",
+      result: 10,
+      actualBidding: []
+    }
+  ];
+  
+  for (const hand of sampleHands) {
+    await db.insert(hands).values(hand);
+  }
+  
+  console.log("✅ Sample game and hands created");
   console.log("🎉 Database reset with test data completed!");
 }
 
