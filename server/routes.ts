@@ -1038,13 +1038,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/users/search", isAuthenticated, async (req: any, res) => {
     try {
       const { query } = req.query;
+      const userId = getUserId(req);
       
       if (!query || typeof query !== 'string') {
         return res.status(400).json({ error: 'Search query is required' });
       }
       
       const users = await storage.searchUsers(query);
-      res.json(users);
+      // Filter out the current user from the results
+      const filteredUsers = users.filter(user => user.id !== userId);
+      res.json(filteredUsers);
     } catch (error) {
       console.error('Error searching users:', error);
       res.status(500).json({ error: 'Failed to search users' });

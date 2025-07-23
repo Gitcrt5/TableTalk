@@ -12,7 +12,7 @@ import { ArrowLeft, Edit, ChevronLeft, ChevronRight, Calendar } from "lucide-rea
 import { Link, useParams } from "wouter";
 import { apiRequest } from "@/lib/queryClient";
 import { formatContract } from "@/lib/bridge-utils";
-import type { Hand } from "@shared/schema";
+import type { Hand, Game } from "@shared/schema";
 
 const BIDDING_LAYOUT = {
   clubs: ["1♣", "2♣", "3♣", "4♣", "5♣", "6♣", "7♣"],
@@ -125,9 +125,7 @@ const getBidColor = (bid: string) => {
 export default function HandDetail() {
   const { id } = useParams<{ id: string }>();
   const handId = parseInt(id!);
-  const [isEditingBidding, setIsEditingBidding] = useState(false);
-  const [newBidding, setNewBidding] = useState<string[]>([]);
-  const [currentBidder, setCurrentBidder] = useState(0);
+  // Removed old bidding state - now handled by PartnershipBidding component
 
   const queryClient = useQueryClient();
 
@@ -143,92 +141,12 @@ export default function HandDetail() {
     enabled: !!hand?.gameId,
   });
 
-  const { data: game } = useQuery({
+  const { data: game } = useQuery<Game>({
     queryKey: [`/api/games/${hand?.gameId}`],
     enabled: !!hand?.gameId,
   });
 
-  const updateBiddingMutation = useMutation({
-    mutationFn: async (biddingData: {
-      bidding: string[];
-      finalContract?: string;
-      declarer?: string;
-      result?: string;
-    }) => {
-      const response = await apiRequest(`/api/hands/${handId}/bidding`, {
-        method: "PUT",
-        body: JSON.stringify(biddingData),
-      });
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/hands/${handId}`] });
-      queryClient.invalidateQueries({ queryKey: [`/api/games/${hand?.gameId}/hands`] });
-      setIsEditingBidding(false);
-      setNewBidding([]);
-      setCurrentBidder(0);
-    },
-  });
-
-  const handleBid = (bid: string) => {
-    // Only allow valid bids
-    if (!isValidBid(bid, newBidding, currentBidder)) {
-      return;
-    }
-    
-    const updatedBidding = [...newBidding, bid];
-    setNewBidding(updatedBidding);
-    setCurrentBidder((currentBidder + 1) % 4);
-  };
-
-  const handleSaveBidding = () => {
-    // Determine final contract and declarer from bidding
-    const finalBid = newBidding.slice().reverse().find(bid => 
-      bid !== "Pass" && bid !== "Double" && bid !== "Redouble"
-    );
-    
-    let finalContract = "";
-    let declarer = "";
-    
-    if (finalBid) {
-      finalContract = finalBid;
-      
-      // Check if the final bid was doubled or redoubled
-      const finalBidIndex = newBidding.lastIndexOf(finalBid);
-      
-      // Look for Double or Redouble after the final bid
-      let isDoubled = false;
-      let isRedoubled = false;
-      
-      for (let i = finalBidIndex + 1; i < newBidding.length; i++) {
-        if (newBidding[i] === "Double") {
-          isDoubled = true;
-          isRedoubled = false; // Reset redouble if we find a new double
-        } else if (newBidding[i] === "Redouble") {
-          isRedoubled = true;
-        } else if (newBidding[i] !== "Pass") {
-          // If we hit another bid, stop looking
-          break;
-        }
-      }
-      
-      // Add X for doubled or XX for redoubled
-      if (isRedoubled) {
-        finalContract += "XX";
-      } else if (isDoubled) {
-        finalContract += "X";
-      }
-      
-      // Find who made the final contract bid
-      declarer = positions[finalBidIndex % 4];
-    }
-    
-    updateBiddingMutation.mutate({
-      bidding: newBidding,
-      finalContract,
-      declarer,
-    });
-  };
+  // Removed old bidding mutation - now handled by PartnershipBidding component
 
   const positions = ["West", "North", "East", "South"];
 
@@ -274,7 +192,8 @@ export default function HandDetail() {
     );
   }
 
-  const hasBidding = hand.actualBidding && hand.actualBidding.length > 0;
+  // Partnership bidding is now handled in the PartnershipBidding component
+  const hasBidding = false; // Deprecated - bidding is now per partnership
 
   return (
     <div className="max-w-6xl mx-auto px-2 sm:px-4 lg:px-8 py-2 md:py-4">
@@ -393,270 +312,8 @@ export default function HandDetail() {
           </Card>
         </div>
 
-        {/* Original Bidding Section - takes 1/3 of width on large screens, full width on smaller screens */}
-        <div className="lg:col-span-1">
-          <Card>
-            <CardHeader>
-              <div className="flex justify-between items-center">
-                <CardTitle>Bidding</CardTitle>
-                {!hasBidding && !isEditingBidding && (
-                  <Button onClick={() => setIsEditingBidding(true)}>
-                    <Edit className="mr-2 h-4 w-4" />
-                    Add Bidding
-                  </Button>
-                )}
-              </div>
-            </CardHeader>
-            <CardContent className="p-3 md:p-6">
-          {hasBidding && !isEditingBidding ? (
-            <div className="space-y-4">
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm bridge-hand">
-                  <thead>
-                    <tr className="border-b border-gray-300">
-                      <th className="text-left py-2">West</th>
-                      <th className="text-left py-2">North</th>
-                      <th className="text-left py-2">East</th>
-                      <th className="text-left py-2">South</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {(() => {
-                      const biddingRounds = [];
-                      if (hand.actualBidding && hand.actualBidding.length > 0) {
-                        for (let i = 0; i < hand.actualBidding.length; i += 4) {
-                          biddingRounds.push(hand.actualBidding.slice(i, i + 4));
-                        }
-                      }
-                      
-                      const formatBid = (bid: string) => {
-                        if (!bid || bid === "Pass" || bid === "-") return bid;
-                        
-                        // Handle special bids that shouldn't be converted
-                        if (bid === "Double" || bid === "Redouble") return bid;
-                        
-                        // Convert suit letters to symbols while preserving X/XX annotations
-                        let formattedBid = bid.replace(/(\d)([SHDC])(X*)/g, (match, level, suit, doubleMarker) => {
-                          const suitSymbol = suit === 'S' ? '♠' : suit === 'H' ? '♥' : suit === 'D' ? '♦' : suit === 'C' ? '♣' : suit;
-                          return level + suitSymbol + doubleMarker;
-                        });
-                        
-                        // Handle NT with X/XX
-                        formattedBid = formattedBid.replace(/(\d)NT(X*)/g, '$1NT$2');
-                        
-                        return formattedBid;
-                      };
-                      
-                      return biddingRounds.map((round, index) => (
-                        <tr key={index} className="border-b border-gray-200">
-                          <td className={`py-2 ${getBidColor(formatBid(round[0]) || '')}`}>
-                            {formatBid(round[0]) || '-'}
-                          </td>
-                          <td className={`py-2 ${getBidColor(formatBid(round[1]) || '')}`}>
-                            {formatBid(round[1]) || '-'}
-                          </td>
-                          <td className={`py-2 ${getBidColor(formatBid(round[2]) || '')}`}>
-                            {formatBid(round[2]) || '-'}
-                          </td>
-                          <td className={`py-2 ${getBidColor(formatBid(round[3]) || '')}`}>
-                            {formatBid(round[3]) || '-'}
-                          </td>
-                        </tr>
-                      ));
-                    })()}
-                  </tbody>
-                </table>
-              </div>
-              
-              {hand.finalContract && (
-                <Card className="bg-white">
-                  <CardContent className="p-3">
-                    <div className="text-sm text-text-secondary">Final Contract:</div>
-                    <div className="font-semibold text-lg">
-                      {(() => {
-                        const { contractPart, isRed } = formatContract(hand.finalContract);
-                        return (
-                          <>
-                            <span className={isRed ? "text-red-600" : ""}>
-                              {contractPart}
-                            </span>
-                            {hand.declarer && <>{'\u00A0'}by{'\u00A0'}{hand.declarer}</>}
-                          </>
-                        );
-                      })()}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-            </div>
-          ) : isEditingBidding ? (
-            <div className="space-y-4 md:space-y-6">
-              {/* Current Bidding Display */}
-              {newBidding.length > 0 && (
-                <div className="mb-3">
-                  <h4 className="font-medium mb-2 text-sm">Current Auction:</h4>
-                  <div className="bg-gray-50 p-2 rounded">
-                    <div className="flex flex-wrap gap-1">
-                      {newBidding.map((bid, index) => (
-                        <Badge key={index} variant="outline" className={`text-xs ${getBidColor(bid)}`}>
-                          {positions[index % 4]}: <span className={getBidColor(bid)}>{bid}</span>
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Bidding Controls */}
-              <div>
-                <div className="flex flex-col gap-2 mb-3">
-                  <h4 className="font-medium text-sm">
-                    Current bidder: <strong>{positions[currentBidder]}</strong>
-                  </h4>
-                  <div className="flex space-x-2">
-                    <Button variant="outline" size="sm" onClick={() => {
-                      setIsEditingBidding(false);
-                      setNewBidding([]);
-                      setCurrentBidder(0);
-                    }}>
-                      Cancel
-                    </Button>
-                    <Button 
-                      size="sm"
-                      onClick={handleSaveBidding}
-                      disabled={newBidding.length === 0}
-                    >
-                      Save Bidding
-                    </Button>
-                  </div>
-                </div>
-                
-                <div className="space-y-1">
-                  {/* Clubs Row */}
-                  <div className="grid grid-cols-7 gap-1">
-                    {BIDDING_LAYOUT.clubs.map((bid) => {
-                      const isDisabled = !isValidBid(bid, newBidding, currentBidder);
-                      return (
-                        <Button
-                          key={bid}
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleBid(bid)}
-                          disabled={isDisabled}
-                          className={`text-xs h-7 ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''} text-black`}
-                        >
-                          {bid}
-                        </Button>
-                      );
-                    })}
-                  </div>
-
-                  {/* Diamonds Row */}
-                  <div className="grid grid-cols-7 gap-1">
-                    {BIDDING_LAYOUT.diamonds.map((bid) => {
-                      const isDisabled = !isValidBid(bid, newBidding, currentBidder);
-                      return (
-                        <Button
-                          key={bid}
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleBid(bid)}
-                          disabled={isDisabled}
-                          className={`text-xs h-7 ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''} text-orange-600`}
-                        >
-                          {bid}
-                        </Button>
-                      );
-                    })}
-                  </div>
-
-                  {/* Hearts Row */}
-                  <div className="grid grid-cols-7 gap-1">
-                    {BIDDING_LAYOUT.hearts.map((bid) => {
-                      const isDisabled = !isValidBid(bid, newBidding, currentBidder);
-                      return (
-                        <Button
-                          key={bid}
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleBid(bid)}
-                          disabled={isDisabled}
-                          className={`text-xs h-7 ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''} text-red-600`}
-                        >
-                          {bid}
-                        </Button>
-                      );
-                    })}
-                  </div>
-
-                  {/* Spades Row */}
-                  <div className="grid grid-cols-7 gap-1">
-                    {BIDDING_LAYOUT.spades.map((bid) => {
-                      const isDisabled = !isValidBid(bid, newBidding, currentBidder);
-                      return (
-                        <Button
-                          key={bid}
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleBid(bid)}
-                          disabled={isDisabled}
-                          className={`text-xs h-7 ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''} text-black`}
-                        >
-                          {bid}
-                        </Button>
-                      );
-                    })}
-                  </div>
-
-                  {/* No Trump Row */}
-                  <div className="grid grid-cols-7 gap-1">
-                    {BIDDING_LAYOUT.notrump.map((bid) => {
-                      const isDisabled = !isValidBid(bid, newBidding, currentBidder);
-                      return (
-                        <Button
-                          key={bid}
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleBid(bid)}
-                          disabled={isDisabled}
-                          className={`text-xs h-7 ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''} text-blue-700`}
-                        >
-                          {bid}
-                        </Button>
-                      );
-                    })}
-                  </div>
-
-                  {/* Pass, Double, Redouble Row */}
-                  <div className="grid grid-cols-3 gap-2 max-w-xs md:max-w-md">
-                    {BIDDING_LAYOUT.actions.map((bid) => {
-                      const isDisabled = !isValidBid(bid, newBidding, currentBidder);
-                      const isDoubleAction = bid === "Double" || bid === "Redouble";
-                      return (
-                        <Button
-                          key={bid}
-                          variant={bid === "Pass" ? "default" : "outline"}
-                          size="sm"
-                          onClick={() => handleBid(bid)}
-                          disabled={isDisabled}
-                          className={`text-xs h-7 ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''} ${isDoubleAction ? 'text-red-600' : ''}`}
-                        >
-                          {bid}
-                        </Button>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div className="text-center py-8 text-text-secondary">
-              <p>No bidding recorded for this hand.</p>
-            </div>
-          )}
-            </CardContent>
-          </Card>
-        </div>
+        {/* Placeholder for global bidding - now handled by PartnershipBidding */}
+        <div className="lg:col-span-1"></div>
       </div>
 
       {/* Partnership Bidding Section */}
