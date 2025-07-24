@@ -181,23 +181,57 @@ export async function deleteTestUsersAndData(): Promise<{
   return { deletedUsers, deletedGames, deletedHands, deletedComments };
 }
 
-async function loadSamplePBNFiles(): Promise<void> {
-  const sampleDir = path.join(process.cwd(), 'sample-pbn-files');
+async function loadSampleData(): Promise<void> {
+  const sampleDir = path.join(process.cwd(), 'sample-data');
   const metadataFile = path.join(sampleDir, 'sample-data.json');
   
   // Check if directory and metadata file exist
   if (!fs.existsSync(sampleDir) || !fs.existsSync(metadataFile)) {
-    console.log("ℹ️  No sample PBN files directory found, skipping sample data");
+    console.log("ℹ️  No sample data directory found, skipping sample data");
     return;
   }
   
-  console.log("📂 Loading sample PBN files...");
+  console.log("📂 Loading sample data...");
   
   try {
     // Read metadata
     const metadata = JSON.parse(fs.readFileSync(metadataFile, 'utf-8'));
-    const sampleGames = metadata['sample-games'] || [];
     
+    // Load users first
+    const sampleUsers = metadata.users || [];
+    if (sampleUsers.length > 0) {
+      console.log("👥 Creating sample users...");
+      let usersCreated = 0;
+      
+      for (const userData of sampleUsers) {
+        try {
+          const hashedPassword = await hashPassword(userData.password);
+          await db.insert(users).values({
+            id: uuidv4(),
+            email: userData.email,
+            firstName: userData.firstName,
+            lastName: userData.lastName,
+            displayName: userData.displayName,
+            password: hashedPassword,
+            authType: "local",
+            userType: userData.userType || "player",
+            emailVerified: true,
+            isActive: true
+          });
+          console.log(`✅ Created user: ${userData.email} (${userData.userType})`);
+          usersCreated++;
+        } catch (error) {
+          console.log(`⚠️  Failed to create user ${userData.email}: ${error instanceof Error ? error.message : String(error)}`);
+        }
+      }
+      
+      if (usersCreated > 0) {
+        console.log(`✅ Successfully created ${usersCreated} sample users`);
+      }
+    }
+    
+    // Load games
+    const sampleGames = metadata.games || [];
     let gamesLoaded = 0;
     
     for (const sampleGame of sampleGames) {
@@ -278,7 +312,7 @@ async function loadSamplePBNFiles(): Promise<void> {
     }
     
   } catch (error) {
-    console.error("❌ Error loading sample PBN files:", error);
+    console.error("❌ Error loading sample data:", error);
   }
 }
 
@@ -288,8 +322,8 @@ export async function resetToCleanState(): Promise<void> {
   await clearAllTables();
   await createAdminUser();
   
-  // Load sample PBN files if available
-  await loadSamplePBNFiles();
+  // Load sample data (users and games) if available
+  await loadSampleData();
   
   console.log("✅ Database reset completed");
   console.log("🎉 Clean database ready for use!");
@@ -532,7 +566,7 @@ async function main() {
         console.log("📖 Database Manager Usage:");
         console.log("");
         console.log("Commands:");
-        console.log("  clean   - Reset to clean state (admin user only + sample PBN files)");
+        console.log("  clean   - Reset to clean state (admin user + sample data)");
         console.log("  test    - Reset with test data (admin + test users)");
         console.log("  cleanup - Delete only test users and their data");
         console.log("  clear   - Clear all tables (dangerous!)");
@@ -542,8 +576,8 @@ async function main() {
         console.log("  tsx scripts/database-manager.ts test");
         console.log("  tsx scripts/database-manager.ts cleanup");
         console.log("");
-        console.log("Note: 'clean' command will also load sample PBN files from");
-        console.log("      sample-pbn-files/ directory if present");
+        console.log("Note: 'clean' command will load sample users and games from");
+        console.log("      sample-data/ directory if present");
         break;
     }
   } catch (error) {

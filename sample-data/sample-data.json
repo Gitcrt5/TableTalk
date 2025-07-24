@@ -1,0 +1,67 @@
+{
+  "users": [
+    {
+      "email": "alice@example.com",
+      "password": "alice123",
+      "firstName": "Alice",
+      "lastName": "Johnson",
+      "displayName": "Alice J",
+      "userType": "player"
+    },
+    {
+      "email": "bob@example.com",
+      "password": "bob123",
+      "firstName": "Bob",
+      "lastName": "Smith",
+      "displayName": "Bob S",
+      "userType": "player"
+    },
+    {
+      "email": "carol@example.com",
+      "password": "carol123",
+      "firstName": "Carol",
+      "lastName": "Williams",
+      "displayName": "Carol W",
+      "userType": "player"
+    },
+    {
+      "email": "david@example.com",
+      "password": "david123",
+      "firstName": "David",
+      "lastName": "Brown",
+      "displayName": "David B",
+      "userType": "test"
+    },
+    {
+      "email": "eve@example.com",
+      "password": "eve123",
+      "firstName": "Eve",
+      "lastName": "Davis",
+      "displayName": "Eve D",
+      "userType": "test"
+    }
+  ],
+  "games": [
+    {
+      "file": "example-game-1.pbn",
+      "uploadedBy": "alice@example.com",
+      "title": "Saturday Afternoon Pairs",
+      "date": "2025-01-18",
+      "location": "Newcastle Bridge Club"
+    },
+    {
+      "file": "example-game-2.pbn",
+      "uploadedBy": "bob@example.com",
+      "title": "Weekly Duplicate",
+      "date": "2025-01-20",
+      "location": "City Bridge Center"
+    },
+    {
+      "file": "example-game-3.pbn",
+      "uploadedBy": "random",
+      "title": "Club Championship",
+      "date": "2025-01-22",
+      "location": "Newcastle Bridge Club"
+    }
+  ]
+}
