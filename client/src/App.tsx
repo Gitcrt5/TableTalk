@@ -36,17 +36,20 @@ function Router() {
   if (!isAuthenticated) {
     // Special routes that should work without authentication
     return (
-      <div className="min-h-screen bg-surface">
-        <Switch>
-          <Route path="/verify-email" component={VerifyEmailPage} />
-          <Route path="/forgot-password" component={ForgotPasswordPage} />
-          <Route path="/reset-password" component={ResetPasswordPage} />
-          <Route path="/auth" component={AuthPage} />
-          <Route>
-            {/* Default route for unauthenticated users */}
-            {isReplitAuth ? <Landing /> : <AuthPage />}
-          </Route>
-        </Switch>
+      <div className="min-h-screen bg-surface flex flex-col">
+        <main className="flex-1">
+          <Switch>
+            <Route path="/verify-email" component={VerifyEmailPage} />
+            <Route path="/forgot-password" component={ForgotPasswordPage} />
+            <Route path="/reset-password" component={ResetPasswordPage} />
+            <Route path="/auth" component={AuthPage} />
+            <Route>
+              {/* Default route for unauthenticated users */}
+              {isReplitAuth ? <Landing /> : <AuthPage />}
+            </Route>
+          </Switch>
+        </main>
+        <Footer />
       </div>
     );
   }
