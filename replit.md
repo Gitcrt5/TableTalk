@@ -331,6 +331,8 @@ The `clean` command automatically loads sample data from the `/sample-data/` dir
 - [ ] Better loading states and error handling
 - [ ] Improved PBN upload with validation feedback
 - [ ] Improve error handling and user feedback
+- [ ] In the games dashboard add a flag for games that the user played in
+- [ ] In te games dashboard remove the text "Click to view hand layout and add bidding"
 
 ### Advanced Features (Future)
 - [ ] Automated game import from club websites - monitor results pages and automatically download PBN files when new games are added

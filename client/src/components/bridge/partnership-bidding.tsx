@@ -145,7 +145,10 @@ export default function PartnershipBidding({ hand }: PartnershipBiddingProps) {
     mutationFn: async (data: { partnerId: string; biddingSequence: string[] }) => {
       const response = await apiRequest(`/api/hands/${hand.id}/partnership-bidding`, {
         method: "POST",
-        body: JSON.stringify(data),
+        body: JSON.stringify({
+          ...data,
+          gameId: hand.gameId,
+        }),
       });
       return response.json();
     },
@@ -214,7 +217,10 @@ export default function PartnershipBidding({ hand }: PartnershipBiddingProps) {
   };
 
   const handleSave = () => {
-    if (!selectedPartner && !partnershipBidding) {
+    // Use current game partner if available, otherwise use selected partner
+    const partnerToUse = currentPartner?.id || selectedPartner;
+    
+    if (!partnerToUse && !partnershipBidding) {
       setShowPartnerDialog(true);
       return;
     }
@@ -226,19 +232,20 @@ export default function PartnershipBidding({ hand }: PartnershipBiddingProps) {
       });
     } else {
       createBiddingMutation.mutate({
-        partnerId: selectedPartner,
+        partnerId: partnerToUse,
         biddingSequence: newBidding,
       });
     }
   };
 
   const handleStartEditing = () => {
-    if (!partnershipBidding && partners.length === 0) {
+    // If user has a partner for this game, auto-use them
+    if (currentPartner?.id) {
+      setSelectedPartner(currentPartner.id);
+    } else if (!partnershipBidding && partners.length === 0) {
       // No partners and no existing bidding - need to add partners first
       return;
-    }
-    
-    if (!partnershipBidding && partners.length === 1) {
+    } else if (!partnershipBidding && partners.length === 1) {
       // Only one partner, auto-select them
       setSelectedPartner(partners[0].id);
     }
@@ -438,13 +445,14 @@ export default function PartnershipBidding({ hand }: PartnershipBiddingProps) {
               Current bidder: <span className="font-medium">{positions[currentBidder % 4]}</span>
             </div>
 
-            {/* Bidding buttons */}
-            <div className="space-y-3">
+            {/* Bidding buttons - compact grid layout */}
+            <div className="space-y-2">
               {Object.entries(BIDDING_LAYOUT).map(([suit, bids]) => (
-                <div key={suit} className="flex flex-wrap gap-1">
+                <div key={suit} className="grid grid-cols-7 gap-1">
                   {bids.map((bid) => {
                     const isValid = isValidBid(bid, newBidding, currentBidder);
-                    const isRed = suit === "hearts" || suit === "diamonds" || suit === "actions";
+                    const isRed = suit === "hearts" || suit === "diamonds" || 
+                                  (suit === "actions" && (bid === "Double" || bid === "Redouble"));
                     
                     return (
                       <Button
@@ -453,8 +461,8 @@ export default function PartnershipBidding({ hand }: PartnershipBiddingProps) {
                         disabled={!isValid}
                         variant="outline"
                         size="sm"
-                        className={`text-xs ${
-                          isRed && bid !== "Pass" ? "text-red-600" : ""
+                        className={`text-xs px-1 py-1 h-8 min-w-0 ${
+                          isRed ? "text-red-600" : ""
                         } ${!isValid ? "opacity-50" : ""}`}
                       >
                         {formatBid(bid)}

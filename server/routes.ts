@@ -5,7 +5,7 @@ import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 import { storage } from "./storage";
 import { parsePBN } from "./services/pbn-parser";
-import { insertGameSchema, insertHandSchema, insertUserBiddingSchema, insertCommentSchema, insertPartnershipBiddingSchema } from "@shared/schema";
+import { insertGameSchema, insertHandSchema, insertUserBiddingSchema, insertCommentSchema, insertPartnershipBiddingSchema, insertGamePlayerSchema, insertPartnerSchema, insertGameParticipantSchema, User } from "@shared/schema";
 import { setupAuth as setupReplitAuth, isAuthenticated as isReplitAuthenticated } from "./replitAuth";
 import { setupLocalAuth, bootstrapAdmin } from "./auth";
 

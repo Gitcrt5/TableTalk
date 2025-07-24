@@ -196,7 +196,7 @@ export default function HandDetail() {
   const hasBidding = false; // Deprecated - bidding is now per partnership
 
   return (
-    <div className="max-w-6xl mx-auto px-2 sm:px-4 lg:px-8 py-2 md:py-4">
+    <div className="max-w-5xl mx-auto px-2 sm:px-4 lg:px-6 py-2 md:py-4">
       {/* Header */}
       <div className="mb-3 md:mb-4">
         <div className="flex items-center justify-between mb-4">
@@ -306,9 +306,9 @@ export default function HandDetail() {
       </div>
 
       {/* Hand Display and Bidding Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 md:gap-4 mb-3 md:mb-4">
-        {/* Hand Display - takes 2/3 of width on large screens */}
-        <div className="lg:col-span-2">
+      <div className="grid grid-cols-1 xl:grid-cols-5 gap-3 md:gap-4 mb-3 md:mb-4">
+        {/* Hand Display - takes 3/5 of width on xl screens */}
+        <div className="xl:col-span-3">
           <Card>
             <CardContent className="p-2 md:p-4">
               <HandDisplay hand={hand} />
@@ -316,8 +316,8 @@ export default function HandDetail() {
           </Card>
         </div>
 
-        {/* Partnership Bidding - takes 1/3 of width on large screens */}
-        <div className="lg:col-span-1">
+        {/* Partnership Bidding - takes 2/5 of width on xl screens */}
+        <div className="xl:col-span-2">
           <PartnershipBidding hand={hand} />
         </div>
       </div>
