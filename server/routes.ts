@@ -566,9 +566,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         userPartner = gameData.partner;
       }
       
-      // Enhance hands with partnership-specific contract info
+      // Enhance hands with partnership-specific contract info and comment counts
       const enhancedHands = await Promise.all(
         hands.map(async (hand) => {
+          let enhancedHand = { ...hand };
+          
+          // Add comment count for all users
+          const comments = await storage.getCommentsByHand(hand.id);
+          enhancedHand.commentCount = comments.length;
+          
           if (userIsPlaying && req.user) {
             // Get partnership bidding for this user
             const userId = getUserId(req);
@@ -581,15 +587,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
             if (partnershipBid && partnershipBid.biddingSequence.length > 0) {
               // Calculate contract from bidding sequence
               const contract = calculateContractFromBidding(partnershipBid.biddingSequence);
-              return {
-                ...hand,
+              enhancedHand = {
+                ...enhancedHand,
                 finalContract: contract.finalContract,
                 declarer: contract.declarer,
               };
             }
           }
           
-          return hand;
+          return enhancedHand;
         })
       );
       
