@@ -1,7 +1,7 @@
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { LogOut, User, Settings, Shield } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
+import { LogOut, User, Settings, Shield, HelpCircle } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import type { User as UserType } from "@shared/schema";
 import tabletalkLogo from "@/assets/tabletalk-logo.svg";
@@ -56,6 +56,13 @@ export default function Header() {
                         </Link>
                       </DropdownMenuItem>
                     )}
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <a href="mailto:admin@tabletalk.cards" className="flex items-center cursor-pointer">
+                        <HelpCircle className="w-4 h-4 mr-2" />
+                        Help & Support
+                      </a>
+                    </DropdownMenuItem>
                     <DropdownMenuItem 
                       onClick={() => logoutMutation.mutate()}
                       disabled={logoutMutation.isPending}

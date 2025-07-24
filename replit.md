@@ -294,6 +294,7 @@ The `clean` command automatically loads sample data from the `/sample-data/` dir
 - July 24, 2025. **SAMPLE DATA SYSTEM EXPANSION** - Expanded sample data system to include both users and games. Renamed directory from `/sample-pbn-files/` to `/sample-data/` for broader scope. JSON configuration now defines both sample users (with credentials and user types) and game metadata. Admin user remains created by script for security. This separates data configuration from script logic for easier customization.
 - July 24, 2025. **PARTNERSHIP BIDDING SYSTEM FIXES** - Resolved three critical issues in partnership bidding: Fixed backend gameId validation error that prevented saving bidding sequences by ensuring gameId is properly extracted from request body. Fixed color display for diamonds and hearts in bidding tables to show red color as expected in both editing and display modes. Improved layout for monitor viewing with true 50/50 side-by-side split between hand display and bidding panel, increased overall width to max-w-7xl for better space utilization on large screens.
 - July 24, 2025. **COMMENT COUNT DISPLAY FIX** - Fixed issue where hands with comments were showing "No comments" badge instead of the actual comment count. Enhanced the `/api/games/:gameId/hands` route to calculate and include commentCount field for each hand by fetching comments and setting the count. Now hands with comments properly display the blue comment badge with correct count (e.g., "3 comments") instead of incorrectly showing "No comments".
+- July 24, 2025. **CONTACT SYSTEM IMPLEMENTATION** - Added basic contact/support system with two access points: Footer with "Contact: admin@tabletalk.cards" visible on all authenticated pages, and "Help & Support" option in header dropdown menu. Both link to admin@tabletalk.cards email. Footer includes copyright notice and appears consistently at bottom of page with proper flex layout. System designed to be easily expandable to full help center or ticketing system in future.
 
 ## TODO List & Future Enhancements
 
@@ -306,6 +307,7 @@ The `clean` command automatically loads sample data from the `/sample-data/` dir
 - **Replit Preview Environment**: Login works in standalone tabs but not in Replit's embedded preview due to iframe cookie restrictions. This is expected behavior and will work correctly in production deployment.
 
 ### Core Features to Add
+- [x] Contact/support system: email-based contact method (expandable to help center)
 - [ ] Partner/friend system: users can add partners, select who they played with during game upload
 - [ ] Partnership statistics: track performance and games played with specific partners
 - [ ] Add tags to hands and games for better organization and filtering
