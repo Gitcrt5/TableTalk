@@ -166,7 +166,7 @@ The project uses a unified database management system:
 
 ### Primary Scripts
 - **`database-manager.ts`** - Unified database operations with commands:
-  - `clean` - Reset to clean state (admin user only) 
+  - `clean` - Reset to clean state (admin user only + sample PBN files) 
   - `test` - Reset with test data (admin + test users)
   - `cleanup` - Delete only test users and their data
   - `clear` - Clear all tables (dangerous!)
@@ -174,11 +174,18 @@ The project uses a unified database management system:
 
 ### Usage Examples
 ```bash
-tsx scripts/database-manager.ts clean    # Production reset
+tsx scripts/database-manager.ts clean    # Production reset with sample data
 tsx scripts/database-manager.ts test     # Development with test data
 tsx scripts/database-manager.ts cleanup  # Remove test users only
 tsx scripts/data-integrity-checker.ts    # Check database integrity
 ```
+
+### Sample PBN Files
+The `clean` command now automatically loads sample PBN files from the `/sample-pbn-files/` directory:
+- Place PBN files in `/sample-pbn-files/`
+- Update `sample-data.json` with metadata for each file
+- Specify uploader email or use "random" for test users
+- Falls back to admin user if specified uploader not found
 
 ## Recent Changes
 
@@ -276,6 +283,7 @@ tsx scripts/data-integrity-checker.ts    # Check database integrity
 - July 23, 2025. **PARTNERSHIP BIDDING FIXES** - Comprehensive bug fixes for partnership bidding system: Fixed cache invalidation issues causing bidding details to revert after saving by adding proper query invalidation. Fixed partnership comment filtering to handle bidirectional relationships correctly - users can now see comments from both partners they added and partners who added them. Simplified partnership access UI by removing large warning boxes. Updated section title from "Official Bidding" to "Bidding" for cleaner interface. Fixed uploader name display in game details to show proper display names instead of UUIDs.
 - July 21, 2025. **DATA INTEGRITY VERIFICATION SYSTEM** - Implemented comprehensive database integrity checker that verifies all foreign key relationships, identifies orphaned records, and checks data consistency. System validates 16 different dependency relationships including hands→games, comments→hands/users, bidding records, partnerships, and game participation. Includes auto-fix capabilities for orphaned records and detailed reporting with severity levels (error/warning/info). Provides both check-only analysis and destructive fix operations with full logging and safety features.
 - July 21, 2025. **ADMIN PANEL INTEGRITY INTEGRATION** - Added data integrity verification system to admin panel with professional interface. Created new "Database Integrity" tab with summary cards, detailed issue listings, one-click integrity checking, and auto-fix functionality. System only runs checks when explicitly triggered by admin users, not automatically on page load. Provides comprehensive reporting with severity levels and clear recommendations for database maintenance.
+- July 23, 2025. **SAMPLE PBN FILE LOADING** - Implemented automatic sample PBN file loading system for database initialization. Created `/sample-pbn-files/` directory with JSON metadata configuration. The `clean` command now loads PBN files from this directory, using metadata to specify uploaders (with "random" option and admin fallback), titles, dates, and locations. This provides immediate sample data for new installations and demonstrations.
 
 ## TODO List & Future Enhancements
 

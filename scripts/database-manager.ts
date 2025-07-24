@@ -6,6 +6,9 @@ import {
 import { hashPassword } from "../server/auth";
 import { v4 as uuidv4 } from "uuid";
 import { eq } from "drizzle-orm";
+import { parsePBN } from "../server/services/pbn-parser";
+import * as fs from "fs";
+import * as path from "path";
 
 /**
  * Comprehensive database management utility
@@ -178,11 +181,115 @@ export async function deleteTestUsersAndData(): Promise<{
   return { deletedUsers, deletedGames, deletedHands, deletedComments };
 }
 
+async function loadSamplePBNFiles(): Promise<void> {
+  const sampleDir = path.join(process.cwd(), 'sample-pbn-files');
+  const metadataFile = path.join(sampleDir, 'sample-data.json');
+  
+  // Check if directory and metadata file exist
+  if (!fs.existsSync(sampleDir) || !fs.existsSync(metadataFile)) {
+    console.log("ℹ️  No sample PBN files directory found, skipping sample data");
+    return;
+  }
+  
+  console.log("📂 Loading sample PBN files...");
+  
+  try {
+    // Read metadata
+    const metadata = JSON.parse(fs.readFileSync(metadataFile, 'utf-8'));
+    const sampleGames = metadata['sample-games'] || [];
+    
+    let gamesLoaded = 0;
+    
+    for (const sampleGame of sampleGames) {
+      const pbnPath = path.join(sampleDir, sampleGame.file);
+      
+      if (!fs.existsSync(pbnPath)) {
+        console.log(`⚠️  PBN file not found: ${sampleGame.file}`);
+        continue;
+      }
+      
+      // Get uploader
+      let uploader;
+      if (sampleGame.uploadedBy === 'random') {
+        // Get random test user
+        const testUsers = await db.select().from(users).where(eq(users.userType, 'test'));
+        if (testUsers.length > 0) {
+          uploader = testUsers[Math.floor(Math.random() * testUsers.length)];
+        } else {
+          // Fallback to admin if no test users
+          [uploader] = await db.select().from(users).where(eq(users.email, 'admin@tabletalk.cards'));
+        }
+      } else {
+        // Try to find specified user
+        [uploader] = await db.select().from(users).where(eq(users.email, sampleGame.uploadedBy));
+        
+        if (!uploader) {
+          console.log(`⚠️  User ${sampleGame.uploadedBy} not found, using admin`);
+          [uploader] = await db.select().from(users).where(eq(users.email, 'admin@tabletalk.cards'));
+        }
+      }
+      
+      if (!uploader) {
+        console.log(`⚠️  Could not find uploader for ${sampleGame.file}, skipping`);
+        continue;
+      }
+      
+      // Read and parse PBN
+      const pbnContent = fs.readFileSync(pbnPath, 'utf-8');
+      const parsedPBN = parsePBN(pbnContent);
+      
+      if (!parsedPBN.hands || parsedPBN.hands.length === 0) {
+        console.log(`⚠️  No hands found in ${sampleGame.file}, skipping`);
+        continue;
+      }
+      
+      // Create game
+      const [game] = await db.insert(games).values({
+        title: sampleGame.title || parsedPBN.title || sampleGame.file,
+        tournament: parsedPBN.tournament,
+        round: parsedPBN.round,
+        pbnEvent: parsedPBN.event,
+        pbnSite: parsedPBN.site,
+        pbnDate: parsedPBN.date,
+        date: sampleGame.date || null,
+        location: sampleGame.location || null,
+        event: parsedPBN.event,
+        filename: sampleGame.file,
+        uploadedBy: uploader.id,
+        pbnContent: pbnContent,
+      }).returning();
+      
+      // Create hands
+      for (const handData of parsedPBN.hands) {
+        await db.insert(hands).values({
+          gameId: game.id,
+          ...handData
+        });
+      }
+      
+      console.log(`✅ Loaded ${sampleGame.file} (${parsedPBN.hands.length} hands) - uploaded by ${uploader.displayName || uploader.email}`);
+      gamesLoaded++;
+    }
+    
+    if (gamesLoaded > 0) {
+      console.log(`✅ Successfully loaded ${gamesLoaded} sample games`);
+    } else {
+      console.log("ℹ️  No sample games were loaded");
+    }
+    
+  } catch (error) {
+    console.error("❌ Error loading sample PBN files:", error);
+  }
+}
+
 export async function resetToCleanState(): Promise<void> {
   console.log("🔄 Resetting database to clean state...");
   
   await clearAllTables();
   await createAdminUser();
+  
+  // Load sample PBN files if available
+  await loadSamplePBNFiles();
   
   console.log("✅ Database reset completed");
   console.log("🎉 Clean database ready for use!");
@@ -425,7 +532,7 @@ async function main() {
         console.log("📖 Database Manager Usage:");
         console.log("");
         console.log("Commands:");
-        console.log("  clean   - Reset to clean state (admin user only)");
+        console.log("  clean   - Reset to clean state (admin user only + sample PBN files)");
         console.log("  test    - Reset with test data (admin + test users)");
         console.log("  cleanup - Delete only test users and their data");
         console.log("  clear   - Clear all tables (dangerous!)");
@@ -434,6 +541,9 @@ async function main() {
         console.log("  tsx scripts/database-manager.ts clean");
         console.log("  tsx scripts/database-manager.ts test");
         console.log("  tsx scripts/database-manager.ts cleanup");
+        console.log("");
+        console.log("Note: 'clean' command will also load sample PBN files from");
+        console.log("      sample-pbn-files/ directory if present");
         break;
     }
   } catch (error) {
