@@ -60,7 +60,7 @@ BASE_URL=https://yourdomain.replit.app
 ```
 
 ### 3. Post-Deployment Verification
-1. **Admin Login**: Test admin access with craig@craigandlee.com
+1. **Admin Login**: Test admin access with admin@tabletalk.cards
 2. **Clean Database**: Verify no test data visible
 3. **User Registration**: Test new user signup flow
 4. **Email Verification**: Confirm email system works

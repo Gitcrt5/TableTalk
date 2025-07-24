@@ -1,40 +1,40 @@
 {
   "users": [
     {
-      "email": "alice@example.com",
-      "password": "alice123",
+      "email": "a@test.com",
+      "password": "test123",
       "firstName": "Alice",
       "lastName": "Johnson",
       "displayName": "Alice J",
-      "userType": "player"
+      "userType": "test"
     },
     {
-      "email": "bob@example.com",
-      "password": "bob123",
+      "email": "b@test.com",
+      "password": "test123",
       "firstName": "Bob",
       "lastName": "Smith",
       "displayName": "Bob S",
-      "userType": "player"
+      "userType": "test"
     },
     {
-      "email": "carol@example.com",
-      "password": "carol123",
+      "email": "c@test.com",
+      "password": "test123",
       "firstName": "Carol",
       "lastName": "Williams",
       "displayName": "Carol W",
-      "userType": "player"
+      "userType": "test"
     },
     {
-      "email": "david@example.com",
-      "password": "david123",
+      "email": "c@test.com",
+      "password": "test123",
       "firstName": "David",
       "lastName": "Brown",
       "displayName": "David B",
       "userType": "test"
     },
     {
-      "email": "eve@example.com",
-      "password": "eve123",
+      "email": "d@test.com",
+      "password": "test123",
       "firstName": "Eve",
       "lastName": "Davis",
       "displayName": "Eve D",
@@ -44,24 +44,45 @@
   "games": [
     {
       "file": "example-game-1.pbn",
-      "uploadedBy": "alice@example.com",
-      "title": "Saturday Afternoon Pairs",
-      "date": "2025-01-18",
+      "uploadedBy": "a@test.com",
+      "title": "Friday Morning Pairs",
+      "date": "2025-07-04",
       "location": "Newcastle Bridge Club"
     },
     {
       "file": "example-game-2.pbn",
-      "uploadedBy": "bob@example.com",
-      "title": "Weekly Duplicate",
-      "date": "2025-01-20",
-      "location": "City Bridge Center"
+      "uploadedBy": "b@test.com",
+      "title": "Tuesday Morning Pairs",
+      "date": "2025-07-01",
+      "location": "Endor Bridge Center"
     },
     {
       "file": "example-game-3.pbn",
+      "uploadedBy": "c@test.com",
+      "title": "Sunday Potluck",
+      "date": "2025-07-06",
+      "location": "Tatooine Bridge Club"
+    },
+    {
+      "file": "example-game-4.pbn",
+      "uploadedBy": "d@test.com",
+      "title": "Friday Morning Pairs",
+      "date": "2025-07-11",
+      "location": "Newcastle Bridge Club"
+    },
+    {
+      "file": "example-game-5.pbn",
       "uploadedBy": "random",
       "title": "Club Championship",
       "date": "2025-01-22",
-      "location": "Newcastle Bridge Club"
+      "location": "Caladan Bridge Club"
+    },
+    {
+      "file": "example-game-6.pbn",
+      "uploadedBy": "random",
+      "title": "Weekly Pairs",
+      "date": "2025-01-22",
+      "location": "Arrakis Bridge Club"
     }
   ]
 }
