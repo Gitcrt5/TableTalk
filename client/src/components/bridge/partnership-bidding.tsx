@@ -399,6 +399,39 @@ export default function PartnershipBidding({ hand }: PartnershipBiddingProps) {
         {/* Editing interface */}
         {isEditing && (
           <div className="space-y-4">
+            {/* Current bidder indicator */}
+            <div className="text-sm text-text-secondary">
+              Current bidder: <span className="font-medium">{positions[currentBidder % 4]}</span>
+            </div>
+
+            {/* Bidding buttons - compact grid layout */}
+            <div className="space-y-2">
+              {Object.entries(BIDDING_LAYOUT).map(([suit, bids]) => (
+                <div key={suit} className="grid grid-cols-7 gap-1">
+                  {bids.map((bid) => {
+                    const isValid = isValidBid(bid, newBidding, currentBidder);
+                    const isRed = suit === "hearts" || suit === "diamonds" || 
+                                  (suit === "actions" && (bid === "Double" || bid === "Redouble"));
+                    
+                    return (
+                      <Button
+                        key={bid}
+                        onClick={() => handleBid(bid)}
+                        disabled={!isValid}
+                        variant="outline"
+                        size="sm"
+                        className={`text-xs px-1 py-1 h-8 min-w-0 ${
+                          isRed ? "text-red-600" : ""
+                        } ${!isValid ? "opacity-50" : ""}`}
+                      >
+                        {formatBid(bid)}
+                      </Button>
+                    );
+                  })}
+                </div>
+              ))}
+            </div>
+
             {/* Current bidding display */}
             {newBidding.length > 0 && (
               <div className="overflow-x-auto">
@@ -441,39 +474,6 @@ export default function PartnershipBidding({ hand }: PartnershipBiddingProps) {
                 </table>
               </div>
             )}
-
-            {/* Current bidder indicator */}
-            <div className="text-sm text-text-secondary">
-              Current bidder: <span className="font-medium">{positions[currentBidder % 4]}</span>
-            </div>
-
-            {/* Bidding buttons - compact grid layout */}
-            <div className="space-y-2">
-              {Object.entries(BIDDING_LAYOUT).map(([suit, bids]) => (
-                <div key={suit} className="grid grid-cols-7 gap-1">
-                  {bids.map((bid) => {
-                    const isValid = isValidBid(bid, newBidding, currentBidder);
-                    const isRed = suit === "hearts" || suit === "diamonds" || 
-                                  (suit === "actions" && (bid === "Double" || bid === "Redouble"));
-                    
-                    return (
-                      <Button
-                        key={bid}
-                        onClick={() => handleBid(bid)}
-                        disabled={!isValid}
-                        variant="outline"
-                        size="sm"
-                        className={`text-xs px-1 py-1 h-8 min-w-0 ${
-                          isRed ? "text-red-600" : ""
-                        } ${!isValid ? "opacity-50" : ""}`}
-                      >
-                        {formatBid(bid)}
-                      </Button>
-                    );
-                  })}
-                </div>
-              ))}
-            </div>
 
             {/* Action buttons */}
             <div className="flex justify-between pt-4">

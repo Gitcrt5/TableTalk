@@ -39,8 +39,16 @@
       "lastName": "Davis",
       "displayName": "Eve D",
       "userType": "test"
-    }
-  ],
+    },
+  {
+    "email": "han@solo.com",
+    "password": "test123",
+    "firstName": "Han",
+    "lastName": "Solo",
+    "displayName": "HanS",
+    "userType": "test"
+  }
+],
   "games": [
     {
       "file": "example-game-1.pbn",

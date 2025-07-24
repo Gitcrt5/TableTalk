@@ -422,11 +422,7 @@ export default function GameDetail() {
                       </div>
                     )}
                     
-                    {!hand.hasBidding && (
-                      <p className="text-text-secondary text-xs italic">
-                        Click to view hand layout and add bidding
-                      </p>
-                    )}
+
                   </div>
                   
 
