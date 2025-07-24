@@ -313,8 +313,10 @@ The `clean` command automatically loads sample data from the `/sample-data/` dir
 - [ ] Comment privacy system: partner comments, private notes, discussion filtering
 - [ ] Add filtering as well as search of the games list
 - [ ] Search and filter hands by criteria (dealer, vulnerability, convention)
+- [ ] Advanced hand filtering and search
 - [ ] User profiles and statistics dashboard
 - [ ] Hand statistics and analysis
+- [ ] Hand analysis tools and statistics
 - [ ] Email verification system with proper SendGrid configuration and domain verification
 - [ ] Email notifications for new comments, game uploads, and system announcements
 - [x] Password reset functionality via email
@@ -323,18 +325,24 @@ The `clean` command automatically loads sample data from the `/sample-data/` dir
 ### UI/UX Improvements
 - [ ] Add option for more compact view of the games list
 - [ ] Mobile-responsive design optimization
+- [ ] Mobile responsiveness improvements
 - [ ] Dark mode theme toggle
 - [ ] Keyboard shortcuts for navigation
 - [ ] Better loading states and error handling
 - [ ] Improved PBN upload with validation feedback
+- [ ] Improve error handling and user feedback
 
 ### Advanced Features (Future)
 - [ ] Automated game import from club websites - monitor results pages and automatically download PBN files when new games are added
 - [ ] Club website data import/scraping integration
+- [ ] Club integration features
 - [ ] Mobile app development
 - [ ] Real-time collaboration on hand analysis
+- [ ] Real-time collaboration
 - [ ] Advanced bidding analysis and suggestions
+- [ ] AI-powered bidding suggestions
 - [ ] Tournament management features
+- [ ] Advanced tournament management
 - [ ] Export hands to different formats (PDF, PBN, etc.)
 
 ### Data & Performance
@@ -342,6 +350,13 @@ The `clean` command automatically loads sample data from the `/sample-data/` dir
 - [ ] Caching strategy for better performance
 - [ ] File upload size limits and validation
 - [ ] Data export/import functionality
+
+### User Roles & Permissions (Future Enhancement)
+- [ ] Add users with varying levels of ability (Admin, Teacher, Player, Kibbitzer)
+- **Admin**: Full access, manage users, moderate content
+- **Teacher**: Create/edit educational content, manage student groups
+- **Player**: Standard access, upload games, comment on hands
+- **Kibbitzer**: View-only access, can comment but not upload
 
 ## User Preferences
 
