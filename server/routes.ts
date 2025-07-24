@@ -651,9 +651,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const handId = parseInt(req.params.id);
       const userId = getUserId(req);
-      const { partnerId, biddingSequence } = req.body;
+      const { gameId, partnerId, biddingSequence } = req.body;
 
       const biddingData = insertPartnershipBiddingSchema.parse({
+        gameId,
         handId,
         userId,
         partnerId,

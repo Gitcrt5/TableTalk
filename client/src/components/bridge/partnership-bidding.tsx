@@ -377,7 +377,8 @@ export default function PartnershipBidding({ hand }: PartnershipBiddingProps) {
                           <td key={posIndex} className="py-1">
                             {round[posIndex] ? (
                               <span className={`${
-                                round[posIndex] === "Double" || round[posIndex] === "Redouble" 
+                                round[posIndex] === "Double" || round[posIndex] === "Redouble" ||
+                                round[posIndex].includes("♥") || round[posIndex].includes("♦")
                                   ? "text-red-600 font-semibold" 
                                   : ""
                               }`}>
@@ -423,7 +424,8 @@ export default function PartnershipBidding({ hand }: PartnershipBiddingProps) {
                             <td key={posIndex} className="py-1">
                               {round[posIndex] ? (
                                 <span className={`${
-                                  round[posIndex] === "Double" || round[posIndex] === "Redouble" 
+                                  round[posIndex] === "Double" || round[posIndex] === "Redouble" ||
+                                  round[posIndex].includes("♥") || round[posIndex].includes("♦")
                                     ? "text-red-600 font-semibold" 
                                     : ""
                                 }`}>
