@@ -1,0 +1,26 @@
+User Flow & Access
+Any user can create a live game. That live game would only be valid for that user. They should be able to specify their partner, either when creating the game at the same time the title, date and location are set. But the partner can initially be left blank and/or added later. The game should be shown in the main game list but visible only to the user who created it and be tagged as "In progess".
+
+Data Integration
+Once the PBN file becomes available it can be uploaded by the player. This will then changed the status of the game from "In Progress" to "Played". It will then make the PBN file generally available to all users as if it had been uploaded via the current method. Their bidding will then be associated with that game and PBN file as it is now.
+Alterately the player can link their game to a PBN file uploaded by another user. When viewing the game they will have the ability to select a game. This will then associate the bidding entered with that game and set the game status to "Played"
+A player may be able to mark their game as "Played" without choosing a PBN. The PBN can be associated with that game later. In this case when looking at the hands the hand detail will be blank.
+
+Player/Partnership Tracking
+The user can select who is their partner for the game when creating the game. They can add their parner later. There is no need to track opposition partners.
+
+Bidding Interface
+A compact bid pad is preferable.
+Options to clear bidding (to start entering bidding for that hand again from the beginning), or to undo the most recent bid is a good start. Infinite undo is not needed. 
+
+Additional Data
+Just the lead card (e.g., "♠K").
+Result should just be the number of tricks taken by the declarer.
+Both, with scoring being optional, default to matchpoint.
+
+Multi-table/Session Support
+A user could have multiple "In Progress" games if they have created a game but not completed it before starting another. It is expected that multiple people may be playing the same game at the same time. I'm not sure how best to handle this if multiple people try and upload the PBN file at the same time after the game. We need to work on this. 
+
+Mobile-specific Design
+The most important thing is to be able to quickly and easily enter the bidding. The page for the board being bid on should not refresh or move unnecessarily. If the phone goes to sleep while waiting between bids it should not refresh or go to a different page when woken.
+Portrait is best if it can all fit.
