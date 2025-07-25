@@ -1,4 +1,4 @@
-import { games, hands, userBidding, comments, users, clubs, partners, gamePlayers, partnershipBidding, gameParticipants, type Game, type Hand, type UserBidding, type Comment, type User, type Club, type Partner, type GamePlayer, type PartnershipBidding, type GameParticipant, type InsertGame, type InsertHand, type InsertUserBidding, type InsertComment, type InsertClub, type InsertGamePlayer, type InsertPartnershipBidding, type InsertGameParticipant, type InsertPartner, type UpsertUser } from "@shared/schema";
+import { games, hands, userBidding, comments, users, clubs, partners, gamePlayers, partnershipBidding, gameParticipants, liveGames, liveHands, liveGameAccess, userFavoriteClubs, type Game, type Hand, type UserBidding, type Comment, type User, type Club, type Partner, type GamePlayer, type PartnershipBidding, type GameParticipant, type LiveGame, type LiveHand, type InsertGame, type InsertHand, type InsertUserBidding, type InsertComment, type InsertClub, type InsertGamePlayer, type InsertPartnershipBidding, type InsertGameParticipant, type InsertPartner, type InsertLiveGame, type InsertLiveHand, type UpsertUser } from "@shared/schema";
 
 export interface IStorage {
   // Users (required for Replit Auth)
@@ -122,6 +122,26 @@ export interface IStorage {
   verifyClub(id: number, adminUserId: string): Promise<boolean>;
   deleteClub(id: number): Promise<boolean>;
   setUserHomeClub(userId: string, clubId: number | null): Promise<boolean>;
+  
+  // Live Games (only for users with feature flag)
+  createLiveGame(game: InsertLiveGame): Promise<LiveGame>;
+  getLiveGame(id: number): Promise<LiveGame | undefined>;
+  updateLiveGame(id: number, updates: Partial<LiveGame>): Promise<LiveGame | undefined>;
+  getUserLiveGames(userId: string): Promise<LiveGame[]>;
+  
+  // Live Hands
+  createOrUpdateLiveHand(hand: InsertLiveHand): Promise<LiveHand>;
+  getLiveHandsByGame(liveGameId: number): Promise<LiveHand[]>;
+  getLiveHand(liveGameId: number, boardNumber: number): Promise<LiveHand | undefined>;
+  
+  // Live Game Access
+  grantLiveGameAccess(liveGameId: number, userId: string, accessType: string): Promise<void>;
+  checkLiveGameAccess(liveGameId: number, userId: string): Promise<boolean>;
+  
+  // User Favorite Clubs
+  addFavoriteClub(userId: string, clubId: number): Promise<void>;
+  removeFavoriteClub(userId: string, clubId: number): Promise<void>;
+  getUserFavoriteClubs(userId: string): Promise<Club[]>;
 }
 
 export class MemStorage implements IStorage {
@@ -757,6 +777,55 @@ export class MemStorage implements IStorage {
     // For memory storage, return games uploaded by user
     // In production, this would use DatabaseStorage which has proper implementation
     return Array.from(this.games.values()).filter(game => game.uploadedBy === userId);
+  }
+
+  // Live Games methods (placeholder implementations for in-memory storage)
+  async createLiveGame(game: InsertLiveGame): Promise<LiveGame> {
+    throw new Error("Live game functionality requires database implementation");
+  }
+
+  async getLiveGame(id: number): Promise<LiveGame | undefined> {
+    return undefined;
+  }
+
+  async updateLiveGame(id: number, updates: Partial<LiveGame>): Promise<LiveGame | undefined> {
+    return undefined;
+  }
+
+  async getUserLiveGames(userId: string): Promise<LiveGame[]> {
+    return [];
+  }
+
+  async createOrUpdateLiveHand(hand: InsertLiveHand): Promise<LiveHand> {
+    throw new Error("Live hand functionality requires database implementation");
+  }
+
+  async getLiveHandsByGame(liveGameId: number): Promise<LiveHand[]> {
+    return [];
+  }
+
+  async getLiveHand(liveGameId: number, boardNumber: number): Promise<LiveHand | undefined> {
+    return undefined;
+  }
+
+  async grantLiveGameAccess(liveGameId: number, userId: string, accessType: string): Promise<void> {
+    // No-op for in-memory storage
+  }
+
+  async checkLiveGameAccess(liveGameId: number, userId: string): Promise<boolean> {
+    return false;
+  }
+
+  async addFavoriteClub(userId: string, clubId: number): Promise<void> {
+    // No-op for in-memory storage
+  }
+
+  async removeFavoriteClub(userId: string, clubId: number): Promise<void> {
+    // No-op for in-memory storage
+  }
+
+  async getUserFavoriteClubs(userId: string): Promise<Club[]> {
+    return [];
   }
 }
 
@@ -1516,6 +1585,246 @@ export class DatabaseStorage implements IStorage {
     );
 
     return uniqueGames;
+  }
+
+  // Live Games methods (only for users with feature flag)
+  async createLiveGame(game: InsertLiveGame): Promise<LiveGame> {
+    const [liveGame] = await db.insert(liveGames).values(game).returning();
+    return liveGame;
+  }
+
+  async getLiveGame(id: number): Promise<LiveGame | undefined> {
+    const [liveGame] = await db.select().from(liveGames).where(eq(liveGames.id, id));
+    return liveGame;
+  }
+
+  async updateLiveGame(id: number, updates: Partial<LiveGame>): Promise<LiveGame | undefined> {
+    const [liveGame] = await db.update(liveGames)
+      .set(updates)
+      .where(eq(liveGames.id, id))
+      .returning();
+    return liveGame;
+  }
+
+  async getUserLiveGames(userId: string): Promise<LiveGame[]> {
+    // Get games created by user or where user has access
+    const createdGames = await db.select().from(liveGames)
+      .where(eq(liveGames.createdBy, userId));
+    
+    const accessibleGames = await db
+      .select({
+        id: liveGames.id,
+        title: liveGames.title,
+        clubId: liveGames.clubId,
+        gameDate: liveGames.gameDate,
+        createdBy: liveGames.createdBy,
+        partnerId: liveGames.partnerId,
+        status: liveGames.status,
+        createdAt: liveGames.createdAt,
+        updatedAt: liveGames.updatedAt,
+      })
+      .from(liveGames)
+      .innerJoin(liveGameAccess, eq(liveGames.id, liveGameAccess.liveGameId))
+      .where(eq(liveGameAccess.userId, userId));
+    
+    // Combine and deduplicate
+    const allGames = [...createdGames, ...accessibleGames];
+    const uniqueGames = allGames.filter((game, index, self) => 
+      index === self.findIndex(g => g.id === game.id)
+    );
+    
+    return uniqueGames;
+  }
+
+  // Live Hands methods
+  async createOrUpdateLiveHand(hand: InsertLiveHand): Promise<LiveHand> {
+    // Check if hand already exists
+    const existing = await db.select().from(liveHands)
+      .where(
+        and(
+          eq(liveHands.liveGameId, hand.liveGameId),
+          eq(liveHands.boardNumber, hand.boardNumber)
+        )
+      );
+    
+    if (existing.length > 0) {
+      // Update existing hand
+      const [updated] = await db.update(liveHands)
+        .set(hand)
+        .where(
+          and(
+            eq(liveHands.liveGameId, hand.liveGameId),
+            eq(liveHands.boardNumber, hand.boardNumber)
+          )
+        )
+        .returning();
+      return updated;
+    } else {
+      // Create new hand
+      const [created] = await db.insert(liveHands).values(hand).returning();
+      return created;
+    }
+  }
+
+  async getLiveHandsByGame(liveGameId: number): Promise<LiveHand[]> {
+    return await db.select().from(liveHands)
+      .where(eq(liveHands.liveGameId, liveGameId))
+      .orderBy(liveHands.boardNumber);
+  }
+
+  async getLiveHand(liveGameId: number, boardNumber: number): Promise<LiveHand | undefined> {
+    const [hand] = await db.select().from(liveHands)
+      .where(
+        and(
+          eq(liveHands.liveGameId, liveGameId),
+          eq(liveHands.boardNumber, boardNumber)
+        )
+      );
+    return hand;
+  }
+
+  // Live Game Access methods
+  async grantLiveGameAccess(liveGameId: number, userId: string, accessType: string): Promise<void> {
+    await db.insert(liveGameAccess).values({
+      liveGameId,
+      userId,
+      accessType,
+    }).onConflictDoNothing();
+  }
+
+  async checkLiveGameAccess(liveGameId: number, userId: string): Promise<boolean> {
+    const [access] = await db.select().from(liveGameAccess)
+      .where(
+        and(
+          eq(liveGameAccess.liveGameId, liveGameId),
+          eq(liveGameAccess.userId, userId)
+        )
+      );
+    return !!access;
+  }
+
+  // Clubs management methods
+  async createClub(club: InsertClub): Promise<Club> {
+    const [newClub] = await db.insert(clubs).values(club).returning();
+    return newClub;
+  }
+
+  async getClub(id: number): Promise<Club | undefined> {
+    const [club] = await db.select().from(clubs).where(eq(clubs.id, id));
+    return club;
+  }
+
+  async updateClub(id: number, updates: Partial<Club>): Promise<Club | undefined> {
+    const [updated] = await db
+      .update(clubs)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(clubs.id, id))
+      .returning();
+    return updated;
+  }
+
+  async getAllClubs(): Promise<Club[]> {
+    return await db.select().from(clubs).orderBy(clubs.name);
+  }
+
+  async getVerifiedClubs(): Promise<Club[]> {
+    return await db.select().from(clubs)
+      .where(sql`${clubs.verifiedAt} IS NOT NULL`)
+      .orderBy(clubs.name);
+  }
+
+  async searchClubs(query: string): Promise<Club[]> {
+    const lowercaseQuery = `%${query.toLowerCase()}%`;
+    return await db
+      .select()
+      .from(clubs)
+      .where(
+        sql`LOWER(${clubs.name}) LIKE ${lowercaseQuery}`
+      )
+      .orderBy(clubs.name);
+  }
+
+  async verifyClub(id: number, adminUserId: string): Promise<boolean> {
+    try {
+      const [updated] = await db
+        .update(clubs)
+        .set({
+          verifiedAt: new Date(),
+          verifiedBy: adminUserId,
+          updatedAt: new Date(),
+        })
+        .where(eq(clubs.id, id))
+        .returning();
+      return !!updated;
+    } catch (error) {
+      console.error("Error verifying club:", error);
+      return false;
+    }
+  }
+
+  async deleteClub(id: number): Promise<boolean> {
+    try {
+      await db.delete(clubs).where(eq(clubs.id, id));
+      return true;
+    } catch (error) {
+      console.error("Error deleting club:", error);
+      return false;
+    }
+  }
+
+  async setUserHomeClub(userId: string, clubId: number | null): Promise<boolean> {
+    try {
+      const [updated] = await db
+        .update(users)
+        .set({
+          homeClubId: clubId,
+          updatedAt: new Date(),
+        })
+        .where(eq(users.id, userId))
+        .returning();
+      return !!updated;
+    } catch (error) {
+      console.error("Error setting user home club:", error);
+      return false;
+    }
+  }
+
+  // User Favorite Clubs methods
+  async addFavoriteClub(userId: string, clubId: number): Promise<void> {
+    await db.insert(userFavoriteClubs).values({
+      userId,
+      clubId,
+    }).onConflictDoNothing();
+  }
+
+  async removeFavoriteClub(userId: string, clubId: number): Promise<void> {
+    await db.delete(userFavoriteClubs)
+      .where(
+        and(
+          eq(userFavoriteClubs.userId, userId),
+          eq(userFavoriteClubs.clubId, clubId)
+        )
+      );
+  }
+
+  async getUserFavoriteClubs(userId: string): Promise<Club[]> {
+    return await db
+      .select({
+        id: clubs.id,
+        name: clubs.name,
+        state: clubs.state,
+        country: clubs.country,
+        website: clubs.website,
+        contactEmail: clubs.contactEmail,
+        contactPhone: clubs.contactPhone,
+        verifiedAt: clubs.verifiedAt,
+        verifiedBy: clubs.verifiedBy,
+        createdAt: clubs.createdAt,
+        updatedAt: clubs.updatedAt,
+      })
+      .from(clubs)
+      .innerJoin(userFavoriteClubs, eq(clubs.id, userFavoriteClubs.clubId))
+      .where(eq(userFavoriteClubs.userId, userId));
   }
 }
 

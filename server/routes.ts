@@ -1367,6 +1367,192 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Live Games routes (only for users with feature flag)
+  app.get("/api/user/favorite-clubs", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = getUserId(req);
+      const user = await storage.getUser(userId);
+      
+      if (!user?.featureFlags?.liveGames) {
+        return res.status(403).json({ error: "Feature not available" });
+      }
+      
+      const favoriteClubs = await storage.getUserFavoriteClubs(userId);
+      res.json(favoriteClubs);
+    } catch (error) {
+      console.error("Error fetching favorite clubs:", error);
+      res.status(500).json({ error: "Failed to fetch favorite clubs" });
+    }
+  });
+
+  app.get("/api/clubs", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = getUserId(req);
+      const user = await storage.getUser(userId);
+      
+      if (!user?.featureFlags?.liveGames) {
+        return res.status(403).json({ error: "Feature not available" });
+      }
+      
+      const clubs = await storage.getAllClubs();
+      res.json(clubs);
+    } catch (error) {
+      console.error("Error fetching clubs:", error);
+      res.status(500).json({ error: "Failed to fetch clubs" });
+    }
+  });
+
+  app.post("/api/live-games", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = getUserId(req);
+      const user = await storage.getUser(userId);
+      
+      if (!user?.featureFlags?.liveGames) {
+        return res.status(403).json({ error: "Feature not available" });
+      }
+      
+      const { title, clubId, gameDate, partnerId } = req.body;
+      
+      if (!title || !clubId || !gameDate) {
+        return res.status(400).json({ error: "Title, club, and date are required" });
+      }
+      
+      const liveGame = await storage.createLiveGame({
+        title,
+        clubId: parseInt(clubId),
+        gameDate: new Date(gameDate),
+        createdBy: userId,
+        partnerId: partnerId || null,
+        status: "active"
+      });
+      
+      // Grant access to creator
+      await storage.grantLiveGameAccess(liveGame.id, userId, "owner");
+      
+      // Grant access to partner if specified
+      if (partnerId) {
+        await storage.grantLiveGameAccess(liveGame.id, partnerId, "player");
+      }
+      
+      res.json(liveGame);
+    } catch (error) {
+      console.error("Error creating live game:", error);
+      res.status(500).json({ error: "Failed to create live game" });
+    }
+  });
+
+  app.get("/api/live-games", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = getUserId(req);
+      const user = await storage.getUser(userId);
+      
+      if (!user?.featureFlags?.liveGames) {
+        return res.status(403).json({ error: "Feature not available" });
+      }
+      
+      const liveGames = await storage.getUserLiveGames(userId);
+      res.json(liveGames);
+    } catch (error) {
+      console.error("Error fetching live games:", error);
+      res.status(500).json({ error: "Failed to fetch live games" });
+    }
+  });
+
+  app.get("/api/live-games/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = getUserId(req);
+      const user = await storage.getUser(userId);
+      const gameId = parseInt(req.params.id);
+      
+      if (!user?.featureFlags?.liveGames) {
+        return res.status(403).json({ error: "Feature not available" });
+      }
+      
+      const hasAccess = await storage.checkLiveGameAccess(gameId, userId);
+      if (!hasAccess) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+      
+      const liveGame = await storage.getLiveGame(gameId);
+      if (!liveGame) {
+        return res.status(404).json({ error: "Game not found" });
+      }
+      
+      res.json(liveGame);
+    } catch (error) {
+      console.error("Error fetching live game:", error);
+      res.status(500).json({ error: "Failed to fetch live game" });
+    }
+  });
+
+  app.post("/api/live-games/:id/hands", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = getUserId(req);
+      const user = await storage.getUser(userId);
+      const liveGameId = parseInt(req.params.id);
+      
+      if (!user?.featureFlags?.liveGames) {
+        return res.status(403).json({ error: "Feature not available" });
+      }
+      
+      const hasAccess = await storage.checkLiveGameAccess(liveGameId, userId);
+      if (!hasAccess) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+      
+      const { boardNumber, dealer, vulnerability, northHand, southHand, eastHand, westHand, bidding } = req.body;
+      
+      if (!boardNumber || !dealer || !vulnerability) {
+        return res.status(400).json({ error: "Board number, dealer, and vulnerability are required" });
+      }
+      
+      const hand = await storage.createOrUpdateLiveHand({
+        liveGameId,
+        boardNumber,
+        dealer,
+        vulnerability,
+        northHand: northHand || "",
+        southHand: southHand || "",
+        eastHand: eastHand || "",
+        westHand: westHand || "",
+        bidding: bidding || []
+      });
+      
+      res.json(hand);
+    } catch (error) {
+      console.error("Error creating/updating live hand:", error);
+      res.status(500).json({ error: "Failed to create/update hand" });
+    }
+  });
+
+  app.get("/api/live-games/:id/hands/:boardNumber", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = getUserId(req);
+      const user = await storage.getUser(userId);
+      const liveGameId = parseInt(req.params.id);
+      const boardNumber = parseInt(req.params.boardNumber);
+      
+      if (!user?.featureFlags?.liveGames) {
+        return res.status(403).json({ error: "Feature not available" });
+      }
+      
+      const hasAccess = await storage.checkLiveGameAccess(liveGameId, userId);
+      if (!hasAccess) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+      
+      const hand = await storage.getLiveHand(liveGameId, boardNumber);
+      if (!hand) {
+        return res.status(404).json({ error: "Hand not found" });
+      }
+      
+      res.json(hand);
+    } catch (error) {
+      console.error("Error fetching live hand:", error);
+      res.status(500).json({ error: "Failed to fetch hand" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

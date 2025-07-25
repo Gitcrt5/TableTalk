@@ -48,6 +48,14 @@ export default function Dashboard() {
               <Upload className="h-4 w-4" />
               <span>Upload PBN</span>
             </Button>
+            {user?.featureFlags?.liveGames && (
+              <Link href="/live-games/create">
+                <Button variant="outline" className="flex items-center space-x-2 whitespace-nowrap">
+                  <FileText className="h-4 w-4" />
+                  <span>Create Live Game</span>
+                </Button>
+              </Link>
+            )}
           </div>
         </CardContent>
       </Card>

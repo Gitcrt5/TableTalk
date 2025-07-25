@@ -196,6 +196,7 @@ The `clean` command automatically loads sample data from the `/sample-data/` dir
 
 ## Recent Changes
 
+- July 25, 2025. **LIVE GAMES FEATURE IMPLEMENTATION STARTED** - Added database schema for live games functionality including tables for live_games, live_hands, live_game_access, and user_favorite_clubs. Feature flag system implemented to control access during development. Added API routes and storage methods for creating and managing live games. Created UI for creating live games with club selection and partner options. Feature currently enabled only for users with liveGames feature flag.
 - June 25, 2025. Initial setup with full-featured bridge platform
 - June 25, 2025. Simplified to MVP focusing on core features: games list, hands view, bidding input, and comments
 - June 25, 2025. Enhanced UI with better hand display, improved search, and visual polish for better user experience

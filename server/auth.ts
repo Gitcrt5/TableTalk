@@ -319,6 +319,7 @@ export function setupLocalAuth(app: Express) {
       authType: user.authType,
       userType: user.userType,
       emailVerified: user.emailVerified,
+      featureFlags: user.featureFlags,
     });
   });
 

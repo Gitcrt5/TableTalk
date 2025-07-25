@@ -40,6 +40,8 @@ export const users = pgTable("users", {
   // User status for soft deletion
   isActive: boolean("is_active").default(true),
   deactivatedAt: timestamp("deactivated_at"),
+  // Feature flags for gradual rollout
+  featureFlags: jsonb("feature_flags").default({}),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -201,13 +203,7 @@ export type InsertUserBidding = z.infer<typeof insertUserBiddingSchema>;
 export type InsertPartnershipBidding = z.infer<typeof insertPartnershipBiddingSchema>;
 export type InsertComment = z.infer<typeof insertCommentSchema>;
 
-export const insertClubSchema = createInsertSchema(clubs).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-  verifiedAt: true,
-});
-export type InsertClub = z.infer<typeof insertClubSchema>;
+
 export type Club = typeof clubs.$inferSelect;
 
 // Partners table for user relationships
@@ -244,4 +240,75 @@ export type GameParticipant = typeof gameParticipants.$inferSelect;
 
 // User types for authentication
 export type UpsertUser = typeof users.$inferInsert;
-export type User = typeof users.$inferSelect;
+export type User = typeof users.$inferSelect & {
+  featureFlags?: {
+    liveGames?: boolean;
+    [key: string]: any;
+  };
+};
+
+// Live games tables (only visible to users with feature flag)
+export const liveGames = pgTable("live_games", {
+  id: serial("id").primaryKey(),
+  title: varchar("title").notNull(),
+  clubId: integer("club_id"),
+  gameDate: timestamp("game_date").notNull(),
+  createdBy: varchar("created_by").notNull(),
+  partnerId: varchar("partner_id"),
+  status: varchar("status").default("in_progress"), // in_progress, completed, linked
+  linkedGameId: integer("linked_game_id"), // Links to games table when PBN found
+  visibility: varchar("visibility").default("private"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const liveHands = pgTable("live_hands", {
+  id: serial("id").primaryKey(),
+  liveGameId: integer("live_game_id").notNull(),
+  boardNumber: integer("board_number").notNull(),
+  biddingSequence: jsonb("bidding_sequence").$type<string[]>(),
+  openingLead: varchar("opening_lead"), // e.g., "SK"
+  tricksTaken: integer("tricks_taken"),
+  scoreMp: varchar("score_mp"), // Matchpoint score
+  scoreImp: varchar("score_imp"), // IMP score
+  notes: text("notes"),
+  lastModified: timestamp("last_modified").defaultNow(),
+});
+
+export const liveGameAccess = pgTable("live_game_access", {
+  liveGameId: integer("live_game_id").notNull(),
+  userId: varchar("user_id").notNull(),
+  accessType: varchar("access_type").default("view"), // view, edit
+  grantedAt: timestamp("granted_at").defaultNow(),
+});
+
+export const userFavoriteClubs = pgTable("user_favorite_clubs", {
+  userId: varchar("user_id").notNull(),
+  clubId: integer("club_id").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Insert schemas for live games
+export const insertLiveGameSchema = createInsertSchema(liveGames).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertLiveHandSchema = createInsertSchema(liveHands).omit({
+  id: true,
+  lastModified: true,
+});
+
+export const insertClubSchema = createInsertSchema(clubs).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  verifiedAt: true,
+});
+
+// Types for live games
+export type LiveGame = typeof liveGames.$inferSelect;
+export type LiveHand = typeof liveHands.$inferSelect;
+export type InsertLiveGame = z.infer<typeof insertLiveGameSchema>;
+export type InsertLiveHand = z.infer<typeof insertLiveHandSchema>;
