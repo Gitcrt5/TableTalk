@@ -1,0 +1,41 @@
+I think in order to be able to do what I envision we may need to split out different elements.
+
+This is what I take as the important infomation. Please not - this is not a formal definition, just my attempt at outlining the information we are delaing with to help the discussion. This is not meant to be a database deinition, just talking points.
+Game
+  Definition
+    This defines tyhe details of a game that is played. 
+  Data
+    Name
+    Date
+    Location
+
+PBN File
+  Definition 
+    This is a file that contains the details of the hands in the game. The PBN definition allows for more details but at this stage we are only using the hand definitions.
+  Data
+    As per PBN definition
+
+Partnership 
+  Definition
+    This specifies which 2 players were partners for a specific game.
+  Data 
+    Game
+	Partner 1
+	Partner 2
+	
+Hand (AKA Board)
+  Definition
+    This defines the details on an individual hand from a game.
+  Data
+    Game
+	Dealer
+	Vulnerability
+	Deal
+	
+The main issue is that currently there is no single point of truth for the definition of a game. What one user specifies for the name and location may be different from what nother user will use. This could cause issues when one person uploads the PBN file and others search for or use the game. It could also cause conflicts if more than 1 player tries to upload a PBN file.
+
+In the future I can see that clubs may upload game details with PBN files that players can use. Until then we will need to use user supplied data with inherrent inconsistencies that we do our best to mitigate. I can supply a list of bridge clubs. Players could have a "Home" club which would be the default location when there needs to be a choice. We could also have Favourite clubs which would be a short list to choose from, and then a full list available. When players specify a location they need to choose from this list. There would be a choice "Other" if one is not specified.
+
+The possibility of duplicate PBN files should be allowed for given the above. When a user uploads a PBN it could check against existing PBN files. How this is done should balance resource (CPU and database) utilisation against effeciency. This may not be a feasible option long term. If a duplicate is found it could present the games it found and ask if one of those games should be used. If yes then use that game, otherwise then prompt for the name, date, location.
+
+Based on this, what are the issues currently faced? What are some options for moving forward with exensability and scalability in mind?
