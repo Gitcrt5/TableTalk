@@ -1703,6 +1703,12 @@ export class DatabaseStorage implements IStorage {
     return !!access;
   }
 
+  async getLiveGameHands(liveGameId: number): Promise<LiveHand[]> {
+    return await db.select().from(liveHands)
+      .where(eq(liveHands.liveGameId, liveGameId))
+      .orderBy(liveHands.boardNumber);
+  }
+
   // Clubs management methods
   async createClub(club: InsertClub): Promise<Club> {
     const [newClub] = await db.insert(clubs).values(club).returning();

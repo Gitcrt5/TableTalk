@@ -12,6 +12,20 @@ import { Link, useLocation } from "wouter";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 
+interface Club {
+  id: number;
+  name: string;
+  isActive: boolean;
+}
+
+interface Partner {
+  id: string;
+  email: string;
+  displayName: string;
+  firstName: string;
+  lastName: string;
+}
+
 export default function LiveGameCreate() {
   const { user } = useAuth();
   const [_, setLocation] = useLocation();
@@ -43,19 +57,19 @@ export default function LiveGameCreate() {
   }
 
   // Fetch user's favorite clubs
-  const { data: favoriteClubs = [] } = useQuery({
+  const { data: favoriteClubs = [] } = useQuery<Club[]>({
     queryKey: ["/api/user/favorite-clubs"],
     enabled: hasLiveGamesFeature,
   });
 
   // Fetch all clubs
-  const { data: allClubs = [] } = useQuery({
+  const { data: allClubs = [] } = useQuery<Club[]>({
     queryKey: ["/api/clubs"],
     enabled: hasLiveGamesFeature,
   });
 
   // Fetch user's partners
-  const { data: partners = [] } = useQuery({
+  const { data: partners = [] } = useQuery<Partner[]>({
     queryKey: ["/api/user/partners"],
     enabled: hasLiveGamesFeature,
   });
@@ -77,7 +91,7 @@ export default function LiveGameCreate() {
         title: "Game created",
         description: "You can now start entering boards.",
       });
-      setLocation(`/live-games/${data.id}/board/1`);
+      setLocation(`/live-games/${data.id}`);
     },
     onError: () => {
       toast({
@@ -126,7 +140,7 @@ export default function LiveGameCreate() {
                         <Star className="w-3 h-3 mr-1" />
                         Favorites
                       </div>
-                      {favoriteClubs.map((club: any) => (
+                      {favoriteClubs.map((club) => (
                         <SelectItem key={club.id} value={club.id.toString()}>
                           {club.name}
                         </SelectItem>
@@ -135,7 +149,7 @@ export default function LiveGameCreate() {
                     </>
                   )}
                   <div className="px-2 py-1 text-xs text-muted-foreground">All Clubs</div>
-                  {allClubs.map((club: any) => (
+                  {allClubs.map((club) => (
                     <SelectItem key={club.id} value={club.id.toString()}>
                       {club.name}
                     </SelectItem>
@@ -177,7 +191,7 @@ export default function LiveGameCreate() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="">No partner</SelectItem>
-                  {partners.map((partner: any) => (
+                  {partners.map((partner) => (
                     <SelectItem key={partner.id} value={partner.id}>
                       {partner.displayName || partner.firstName} {partner.lastName}
                     </SelectItem>

@@ -1401,6 +1401,72 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Live Games routes (only for users with feature flag)
+  app.get("/api/live-games", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = getUserId(req);
+      const user = await storage.getUser(userId);
+      
+      if (!user?.featureFlags?.liveGames) {
+        return res.status(403).json({ error: "Feature not available" });
+      }
+      
+      const liveGames = await storage.getUserLiveGames(userId);
+      res.json(liveGames);
+    } catch (error) {
+      console.error("Error fetching live games:", error);
+      res.status(500).json({ error: "Failed to fetch live games" });
+    }
+  });
+
+  app.get("/api/live-games/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = getUserId(req);
+      const user = await storage.getUser(userId);
+      const gameId = parseInt(req.params.id);
+      
+      if (!user?.featureFlags?.liveGames) {
+        return res.status(403).json({ error: "Feature not available" });
+      }
+      
+      const game = await storage.getLiveGame(gameId);
+      
+      if (!game) {
+        return res.status(404).json({ error: "Live game not found" });
+      }
+      
+      // Check access
+      if (game.createdBy !== userId) {
+        const hasAccess = await storage.checkLiveGameAccess(gameId, userId);
+        if (!hasAccess) {
+          return res.status(403).json({ error: "Access denied" });
+        }
+      }
+      
+      res.json(game);
+    } catch (error) {
+      console.error("Error fetching live game:", error);
+      res.status(500).json({ error: "Failed to fetch live game" });
+    }
+  });
+
+  app.get("/api/live-games/:id/hands", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = getUserId(req);
+      const user = await storage.getUser(userId);
+      const gameId = parseInt(req.params.id);
+      
+      if (!user?.featureFlags?.liveGames) {
+        return res.status(403).json({ error: "Feature not available" });
+      }
+      
+      const hands = await storage.getLiveGameHands(gameId);
+      res.json(hands);
+    } catch (error) {
+      console.error("Error fetching live game hands:", error);
+      res.status(500).json({ error: "Failed to fetch hands" });
+    }
+  });
+
   app.get("/api/user/favorite-clubs", isAuthenticated, async (req: any, res) => {
     try {
       const userId = getUserId(req);
@@ -1548,7 +1614,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         southHand: southHand || "",
         eastHand: eastHand || "",
         westHand: westHand || "",
-        bidding: bidding || []
+        biddingSequence: bidding || []
       });
       
       res.json(hand);

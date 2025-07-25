@@ -266,6 +266,12 @@ export const liveHands = pgTable("live_hands", {
   id: serial("id").primaryKey(),
   liveGameId: integer("live_game_id").notNull(),
   boardNumber: integer("board_number").notNull(),
+  dealer: varchar("dealer", { length: 10 }), // N, S, E, W
+  vulnerability: varchar("vulnerability", { length: 20 }), // None, NS, EW, Both
+  northHand: varchar("north_hand", { length: 50 }),
+  southHand: varchar("south_hand", { length: 50 }),
+  eastHand: varchar("east_hand", { length: 50 }),
+  westHand: varchar("west_hand", { length: 50 }),
   biddingSequence: jsonb("bidding_sequence").$type<string[]>(),
   openingLead: varchar("opening_lead"), // e.g., "SK"
   tricksTaken: integer("tricks_taken"),
