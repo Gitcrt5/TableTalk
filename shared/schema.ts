@@ -203,9 +203,6 @@ export type InsertUserBidding = z.infer<typeof insertUserBiddingSchema>;
 export type InsertPartnershipBidding = z.infer<typeof insertPartnershipBiddingSchema>;
 export type InsertComment = z.infer<typeof insertCommentSchema>;
 
-
-export type Club = typeof clubs.$inferSelect;
-
 // Partners table for user relationships
 export const partners = pgTable("partners", {
   id: serial("id").primaryKey(),
@@ -318,3 +315,5 @@ export type LiveGame = typeof liveGames.$inferSelect;
 export type LiveHand = typeof liveHands.$inferSelect;
 export type InsertLiveGame = z.infer<typeof insertLiveGameSchema>;
 export type InsertLiveHand = z.infer<typeof insertLiveHandSchema>;
+export type InsertClub = z.infer<typeof insertClubSchema>;
+export type Club = typeof clubs.$inferSelect;
