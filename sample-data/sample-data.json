@@ -6,7 +6,10 @@
       "firstName": "Alice",
       "lastName": "Johnson",
       "displayName": "Alice J",
-      "userType": "test"
+      "userType": "test",
+      "featureFlags": {
+        "liveGames": true
+      }
     },
     {
       "email": "b@test.com",
@@ -14,7 +17,10 @@
       "firstName": "Bob",
       "lastName": "Smith",
       "displayName": "Bob S",
-      "userType": "test"
+      "userType": "test",
+      "featureFlags": {
+        "liveGames": true
+      }
     },
     {
       "email": "c@test.com",
@@ -22,33 +28,45 @@
       "firstName": "Carol",
       "lastName": "Williams",
       "displayName": "Carol W",
-      "userType": "test"
-    },
-    {
-      "email": "c@test.com",
-      "password": "test123",
-      "firstName": "David",
-      "lastName": "Brown",
-      "displayName": "David B",
-      "userType": "test"
+      "userType": "test",
+      "featureFlags": {
+        "liveGames": false
+      }
     },
     {
       "email": "d@test.com",
       "password": "test123",
+      "firstName": "David",
+      "lastName": "Brown",
+      "displayName": "David B",
+      "userType": "test",
+      "featureFlags": {
+        "liveGames": true
+      }
+    },
+    {
+      "email": "e@test.com",
+      "password": "test123",
       "firstName": "Eve",
       "lastName": "Davis",
       "displayName": "Eve D",
-      "userType": "test"
+      "userType": "test",
+      "featureFlags": {
+        "liveGames": false
+      }
     },
-  {
-    "email": "han@solo.com",
-    "password": "test123",
-    "firstName": "Han",
-    "lastName": "Solo",
-    "displayName": "HanS",
-    "userType": "test"
-  }
-],
+    {
+      "email": "han@solo.com",
+      "password": "test123",
+      "firstName": "Han",
+      "lastName": "Solo",
+      "displayName": "HanS",
+      "userType": "test",
+      "featureFlags": {
+        "liveGames": true
+      }
+    }
+  ],
   "games": [
     {
       "file": "example-game-1.pbn",

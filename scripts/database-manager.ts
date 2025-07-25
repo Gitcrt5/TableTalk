@@ -216,9 +216,11 @@ async function loadSampleData(): Promise<void> {
             authType: "local",
             userType: userData.userType || "player",
             emailVerified: true,
-            isActive: true
+            isActive: true,
+            featureFlags: userData.featureFlags || {}
           });
-          console.log(`✅ Created user: ${userData.email} (${userData.userType})`);
+          const flags = userData.featureFlags ? Object.entries(userData.featureFlags).filter(([_, v]) => v).map(([k]) => k).join(', ') : 'none';
+          console.log(`✅ Created user: ${userData.email} (${userData.userType}) - flags: ${flags}`);
           usersCreated++;
         } catch (error) {
           console.log(`⚠️  Failed to create user ${userData.email}: ${error instanceof Error ? error.message : String(error)}`);
