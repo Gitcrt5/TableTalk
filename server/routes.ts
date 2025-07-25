@@ -984,6 +984,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update user feature flags endpoint
+  app.patch("/api/admin/users/:id/feature-flags", isAuthenticated, async (req: any, res) => {
+    try {
+      const adminUser = req.user;
+      if (adminUser.userType !== "admin") {
+        return res.status(403).json({ error: "Admin access required" });
+      }
+
+      const targetUserId = req.params.id;
+      const { featureFlags } = req.body;
+      
+      if (!featureFlags || typeof featureFlags !== 'object') {
+        return res.status(400).json({ error: "Invalid feature flags format" });
+      }
+
+      const updatedUser = await storage.updateUser(targetUserId, { featureFlags });
+      
+      if (!updatedUser) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      res.json({ 
+        id: updatedUser.id,
+        email: updatedUser.email,
+        displayName: updatedUser.displayName,
+        featureFlags: updatedUser.featureFlags 
+      });
+    } catch (error) {
+      console.error("Error updating feature flags:", error);
+      res.status(500).json({ error: "Failed to update feature flags" });
+    }
+  });
+
   // Clean test data endpoint
   app.post("/api/admin/cleanup-test-data", isAuthenticated, async (req: any, res) => {
     try {

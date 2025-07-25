@@ -4,10 +4,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Settings, Users, Database, Shield, BarChart3 } from "lucide-react";
+import { Settings, Users, Database, Shield, BarChart3, Flag } from "lucide-react";
 import { Link } from "wouter";
 import UserManagement from "@/components/admin/user-management";
 import DatabaseIntegrity from "@/components/admin/database-integrity";
+import FeatureFlags from "@/components/admin/feature-flags";
 
 export default function AdminPage() {
   const { user } = useAuth();
@@ -60,7 +61,7 @@ export default function AdminPage() {
       </div>
 
       <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="overview" className="flex items-center gap-2">
             <BarChart3 className="h-4 w-4" />
             Overview
@@ -72,6 +73,10 @@ export default function AdminPage() {
           <TabsTrigger value="database" className="flex items-center gap-2">
             <Database className="h-4 w-4" />
             Database Integrity
+          </TabsTrigger>
+          <TabsTrigger value="features" className="flex items-center gap-2">
+            <Flag className="h-4 w-4" />
+            Feature Flags
           </TabsTrigger>
         </TabsList>
 
@@ -130,6 +135,10 @@ export default function AdminPage() {
 
         <TabsContent value="database" className="space-y-6">
           <DatabaseIntegrity />
+        </TabsContent>
+
+        <TabsContent value="features" className="space-y-6">
+          <FeatureFlags />
         </TabsContent>
       </Tabs>
 
