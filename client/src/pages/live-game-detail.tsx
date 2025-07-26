@@ -357,13 +357,43 @@ export default function LiveGameDetail() {
                         <div className="grid grid-cols-2 gap-2">
                           <div>
                             <Select
-                              value={formData.openingLead?.slice(-1) || "none"}
+                              value={formData.openingLead ? 
+                                (formData.openingLead.length >= 2 ? formData.openingLead.slice(0, -1) : "none") : 
+                                "none"
+                              }
+                              onValueChange={(card) => {
+                                if (card === "none") {
+                                  setFormData({ ...formData, openingLead: undefined });
+                                } else {
+                                  const currentSuit = formData.openingLead ? formData.openingLead.slice(-1) : '♠';
+                                  setFormData({ ...formData, openingLead: card + currentSuit });
+                                }
+                              }}
+                            >
+                              <SelectTrigger className="h-8">
+                                <SelectValue placeholder="Card" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="none">-</SelectItem>
+                                {cardValues.map((card) => (
+                                  <SelectItem key={card} value={card}>
+                                    {card}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div>
+                            <Select
+                              value={formData.openingLead ? formData.openingLead.slice(-1) : "none"}
                               onValueChange={(suit) => {
                                 if (suit === "none") {
                                   setFormData({ ...formData, openingLead: undefined });
                                 } else {
-                                  const card = formData.openingLead?.slice(0, -1) || 'A';
-                                  setFormData({ ...formData, openingLead: suit + card });
+                                  const currentCard = formData.openingLead ? 
+                                    (formData.openingLead.length >= 2 ? formData.openingLead.slice(0, -1) : 'A') : 
+                                    'A';
+                                  setFormData({ ...formData, openingLead: currentCard + suit });
                                 }
                               }}
                             >
@@ -377,31 +407,6 @@ export default function LiveGameDetail() {
                                     <span className={suit === '♥' || suit === '♦' ? 'text-red-600' : ''}>
                                       {suit}
                                     </span>
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          <div>
-                            <Select
-                              value={formData.openingLead?.slice(0, -1) || "none"}
-                              onValueChange={(card) => {
-                                if (card === "none") {
-                                  setFormData({ ...formData, openingLead: undefined });
-                                } else {
-                                  const suit = formData.openingLead?.slice(-1) || '♠';
-                                  setFormData({ ...formData, openingLead: suit + card });
-                                }
-                              }}
-                            >
-                              <SelectTrigger className="h-8">
-                                <SelectValue placeholder="Card" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="none">-</SelectItem>
-                                {cardValues.map((card) => (
-                                  <SelectItem key={card} value={card}>
-                                    {card}
                                   </SelectItem>
                                 ))}
                               </SelectContent>
