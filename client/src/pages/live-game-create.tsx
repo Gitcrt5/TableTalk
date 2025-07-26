@@ -77,10 +77,16 @@ export default function LiveGameCreate() {
   // Create live game mutation
   const createGameMutation = useMutation({
     mutationFn: async (data: typeof formData) => {
+      // Convert "none" to null for the API
+      const apiData = {
+        ...data,
+        partnerId: data.partnerId === "none" ? null : data.partnerId
+      };
+      
       const response = await fetch("/api/live-games", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: JSON.stringify(apiData),
       });
       if (!response.ok) throw new Error("Failed to create game");
       return response.json();
@@ -190,7 +196,7 @@ export default function LiveGameCreate() {
                   <SelectValue placeholder="Select partner" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">No partner</SelectItem>
+                  <SelectItem value="none">No partner</SelectItem>
                   {partners.map((partner) => (
                     <SelectItem key={partner.id} value={partner.id}>
                       {partner.displayName || partner.firstName} {partner.lastName}
