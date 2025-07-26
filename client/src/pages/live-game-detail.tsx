@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { format } from "date-fns";
-import { ArrowLeft, Plus, Calendar, MapPin, Users, Edit2, Save, X } from "lucide-react";
+import { ArrowLeft, Plus, Calendar, MapPin, Users, Edit2, Save, X, Minus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import BiddingTable from "@/components/bridge/bidding-table";
 
@@ -54,6 +54,8 @@ export default function LiveGameDetail() {
   const { toast } = useToast();
   const [editingBoard, setEditingBoard] = useState<number | null>(null);
   const [formData, setFormData] = useState<Partial<LiveHand>>({});
+  const [currentBidding, setCurrentBidding] = useState<string[]>([]);
+  const [currentTricks, setCurrentTricks] = useState<number>(7);
 
   const { data: game, isLoading: gameLoading } = useQuery<LiveGame>({
     queryKey: [`/api/live-games/${id}`],
@@ -91,8 +93,56 @@ export default function LiveGameDetail() {
   const startEditingBoard = (boardNumber: number) => {
     const existingHand = hands.find(h => h.boardNumber === boardNumber);
     setFormData(existingHand || { boardNumber });
+    setCurrentBidding(existingHand?.biddingSequence || []);
+    setCurrentTricks(existingHand?.tricksTaken || 7);
     setEditingBoard(boardNumber);
   };
+
+  // Bidding helper functions
+  const addBid = (bid: string) => {
+    const newBidding = [...currentBidding, bid];
+    setCurrentBidding(newBidding);
+    setFormData({ ...formData, biddingSequence: newBidding });
+  };
+
+  const undoBid = () => {
+    if (currentBidding.length > 0) {
+      const newBidding = currentBidding.slice(0, -1);
+      setCurrentBidding(newBidding);
+      setFormData({ ...formData, biddingSequence: newBidding });
+    }
+  };
+
+  const clearBidding = () => {
+    setCurrentBidding([]);
+    setFormData({ ...formData, biddingSequence: [] });
+  };
+
+  // Trick counter helpers
+  const adjustTricks = (delta: number) => {
+    const newTricks = Math.max(0, Math.min(13, currentTricks + delta));
+    setCurrentTricks(newTricks);
+    setFormData({ ...formData, tricksTaken: newTricks });
+  };
+
+  // Bid generation
+  const generateBids = () => {
+    const levels = ['1', '2', '3', '4', '5', '6', '7'];
+    const suits = ['♣', '♦', '♥', '♠', 'NT'];
+    const bids = [];
+    
+    for (const level of levels) {
+      for (const suit of suits) {
+        bids.push(level + suit);
+      }
+    }
+    
+    return bids;
+  };
+
+  const specialBids = ['Pass', 'Double', 'Redouble'];
+  const allBids = generateBids();
+  const cards = ['A', 'K', 'Q', 'J', '10', '9', '8', '7', '6', '5', '4', '3', '2'];
 
   const handleSave = () => {
     if (!editingBoard) return;
@@ -105,6 +155,8 @@ export default function LiveGameDetail() {
   const cancelEditing = () => {
     setEditingBoard(null);
     setFormData({});
+    setCurrentBidding([]);
+    setCurrentTricks(7);
   };
 
   if (gameLoading || handsLoading) {
@@ -207,73 +259,172 @@ export default function LiveGameDetail() {
               </CardHeader>
               <CardContent className="pt-0">
                 {isEditing ? (
-                  <div className="space-y-3">
-                    {/* Dealer and Vulnerability */}
-                    <div className="grid grid-cols-2 gap-2">
-                      <div>
-                        <label className="text-xs font-medium text-muted-foreground">Dealer</label>
-                        <Select
-                          value={formData.dealer || ""}
-                          onValueChange={(value) => setFormData({ ...formData, dealer: value })}
-                        >
-                          <SelectTrigger className="h-8">
-                            <SelectValue placeholder="Select" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="N">North</SelectItem>
-                            <SelectItem value="S">South</SelectItem>
-                            <SelectItem value="E">East</SelectItem>
-                            <SelectItem value="W">West</SelectItem>
-                          </SelectContent>
-                        </Select>
+                  <div className="space-y-4">
+                    {/* Navigation hint */}
+                    <div className="text-center text-sm text-muted-foreground">
+                      Swipe for next board →
+                    </div>
+
+                    {/* BIDDING Section */}
+                    <div>
+                      <h4 className="font-semibold mb-2">BIDDING</h4>
+                      
+                      {/* Current bidding sequence display */}
+                      <div className="bg-muted p-2 rounded mb-2 min-h-[60px]">
+                        <div className="grid grid-cols-4 gap-1 text-center text-xs font-medium mb-1">
+                          <span>N</span><span>E</span><span>S</span><span>W</span>
+                        </div>
+                        <div className="grid grid-cols-4 gap-1 text-center text-sm">
+                          {Array.from({ length: Math.max(4, currentBidding.length) }).map((_, i) => (
+                            <div key={i} className="p-1 min-h-[24px] bg-background rounded text-xs">
+                              {currentBidding[i] || '-'}
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                      <div>
-                        <label className="text-xs font-medium text-muted-foreground">Vul</label>
-                        <Select
-                          value={formData.vulnerability || ""}
-                          onValueChange={(value) => setFormData({ ...formData, vulnerability: value })}
-                        >
-                          <SelectTrigger className="h-8">
-                            <SelectValue placeholder="Select" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="None">None</SelectItem>
-                            <SelectItem value="NS">NS</SelectItem>
-                            <SelectItem value="EW">EW</SelectItem>
-                            <SelectItem value="Both">Both</SelectItem>
-                          </SelectContent>
-                        </Select>
+
+                      {/* Compact Bid Pad */}
+                      <div className="space-y-2">
+                        {/* Numbered bids in compact grid */}
+                        <div className="grid grid-cols-7 gap-1">
+                          {allBids.map((bid) => {
+                            const level = bid[0];
+                            const suit = bid.slice(1);
+                            const isRed = suit === '♥' || suit === '♦';
+                            return (
+                              <Button
+                                key={bid}
+                                variant="outline"
+                                size="sm"
+                                className={`h-8 text-xs p-1 ${isRed ? 'text-red-600' : ''}`}
+                                onClick={() => addBid(bid)}
+                              >
+                                {level}{suit}
+                              </Button>
+                            );
+                          })}
+                        </div>
+
+                        {/* Special bids */}
+                        <div className="grid grid-cols-3 gap-1">
+                          {specialBids.map((bid) => (
+                            <Button
+                              key={bid}
+                              variant="outline"
+                              size="sm"
+                              className={`h-8 text-xs ${bid === 'Double' || bid === 'Redouble' ? 'text-red-600' : ''}`}
+                              onClick={() => addBid(bid)}
+                            >
+                              {bid}
+                            </Button>
+                          ))}
+                        </div>
+
+                        {/* Bidding controls */}
+                        <div className="flex gap-2">
+                          <Button variant="outline" size="sm" onClick={clearBidding}>
+                            Clear
+                          </Button>
+                          <Button variant="outline" size="sm" onClick={undoBid}>
+                            Undo
+                          </Button>
+                        </div>
                       </div>
                     </div>
 
-                    {/* Results */}
-                    <div className="grid grid-cols-2 gap-2">
-                      <div>
-                        <label className="text-xs font-medium text-muted-foreground">Tricks</label>
-                        <Input
-                          type="number"
-                          min="0"
-                          max="13"
-                          className="h-8"
-                          value={formData.tricksTaken || ""}
-                          onChange={(e) => setFormData({ ...formData, tricksTaken: parseInt(e.target.value) || undefined })}
-                          placeholder="0-13"
-                        />
+                    {/* PLAY Section */}
+                    <div>
+                      <h4 className="font-semibold mb-2">PLAY (Optional)</h4>
+                      
+                      {/* Opening Lead */}
+                      <div className="mb-3">
+                        <label className="text-xs font-medium text-muted-foreground block mb-1">Lead:</label>
+                        <div className="grid grid-cols-4 gap-1 mb-2">
+                          {['♠', '♥', '♦', '♣'].map((suit) => (
+                            <Button
+                              key={suit}
+                              variant="outline"
+                              size="sm"
+                              className={`h-8 text-sm ${suit === '♥' || suit === '♦' ? 'text-red-600' : ''}`}
+                              onClick={() => setFormData({ ...formData, openingLead: suit })}
+                            >
+                              {suit}
+                            </Button>
+                          ))}
+                        </div>
+                        <div className="grid grid-cols-6 gap-1">
+                          {cards.map((card) => (
+                            <Button
+                              key={card}
+                              variant="outline"
+                              size="sm"
+                              className="h-8 text-xs"
+                              onClick={() => {
+                                const suit = formData.openingLead || '♠';
+                                setFormData({ ...formData, openingLead: suit + card });
+                              }}
+                            >
+                              {card}
+                            </Button>
+                          ))}
+                        </div>
+                        {formData.openingLead && (
+                          <div className="mt-1 text-sm">
+                            Selected: <span className="font-medium">{formData.openingLead}</span>
+                          </div>
+                        )}
                       </div>
-                      <div>
-                        <label className="text-xs font-medium text-muted-foreground">MP Score</label>
-                        <Input
-                          className="h-8"
-                          value={formData.scoreMp || ""}
-                          onChange={(e) => setFormData({ ...formData, scoreMp: e.target.value })}
-                          placeholder="e.g., 75%"
-                        />
+
+                      {/* Tricks taken */}
+                      <div className="mb-3">
+                        <label className="text-xs font-medium text-muted-foreground block mb-1">Tricks:</label>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => adjustTricks(-1)}
+                            disabled={currentTricks <= 0}
+                          >
+                            <Minus className="h-3 w-3" />
+                          </Button>
+                          <span className="w-8 text-center font-medium">{currentTricks}</span>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => adjustTricks(1)}
+                            disabled={currentTricks >= 13}
+                          >
+                            <Plus className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* Scores */}
+                      <div className="grid grid-cols-2 gap-2 mb-3">
+                        <div>
+                          <label className="text-xs font-medium text-muted-foreground">MP</label>
+                          <Input
+                            className="h-8"
+                            value={formData.scoreMp || ""}
+                            onChange={(e) => setFormData({ ...formData, scoreMp: e.target.value })}
+                            placeholder="75%"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs font-medium text-muted-foreground">IMP</label>
+                          <Input
+                            className="h-8"
+                            value={formData.scoreImp || ""}
+                            onChange={(e) => setFormData({ ...formData, scoreImp: e.target.value })}
+                            placeholder="+2"
+                          />
+                        </div>
                       </div>
                     </div>
 
                     {/* Notes */}
                     <div>
-                      <label className="text-xs font-medium text-muted-foreground">Notes</label>
+                      <label className="text-xs font-medium text-muted-foreground block mb-1">Notes:</label>
                       <Textarea
                         className="h-16 resize-none"
                         value={formData.notes || ""}
@@ -307,6 +458,36 @@ export default function LiveGameDetail() {
                   <div className="space-y-2 text-sm">
                     {hand ? (
                       <>
+                        {/* Bidding sequence display */}
+                        {hand.biddingSequence && hand.biddingSequence.length > 0 && (
+                          <div className="mb-3">
+                            <div className="text-xs font-medium text-muted-foreground mb-1">Bidding:</div>
+                            <div className="bg-muted p-2 rounded">
+                              <div className="grid grid-cols-4 gap-1 text-center text-xs font-medium mb-1">
+                                <span>N</span><span>E</span><span>S</span><span>W</span>
+                              </div>
+                              <div className="grid grid-cols-4 gap-1 text-center text-xs">
+                                {Array.from({ length: Math.max(4, hand.biddingSequence.length) }).map((_, i) => (
+                                  <div key={i} className="p-1 min-h-[20px] bg-background rounded">
+                                    {hand.biddingSequence![i] || '-'}
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Opening lead */}
+                        {hand.openingLead && (
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Lead:</span>
+                            <span className={hand.openingLead.includes('♥') || hand.openingLead.includes('♦') ? 'text-red-600' : ''}>
+                              {hand.openingLead}
+                            </span>
+                          </div>
+                        )}
+
+                        {/* Basic info */}
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">Dealer:</span>
                           <span>{hand.dealer || "-"}</span>
@@ -315,20 +496,34 @@ export default function LiveGameDetail() {
                           <span className="text-muted-foreground">Vul:</span>
                           <span>{hand.vulnerability || "-"}</span>
                         </div>
+
+                        {/* Play results */}
                         {hand.tricksTaken !== undefined && (
                           <div className="flex justify-between">
                             <span className="text-muted-foreground">Tricks:</span>
                             <span>{hand.tricksTaken}</span>
                           </div>
                         )}
-                        {hand.scoreMp && (
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">MP:</span>
-                            <span>{hand.scoreMp}</span>
-                          </div>
-                        )}
+                        
+                        {/* Scores */}
+                        <div className="flex gap-4">
+                          {hand.scoreMp && (
+                            <div className="flex justify-between flex-1">
+                              <span className="text-muted-foreground">MP:</span>
+                              <span>{hand.scoreMp}</span>
+                            </div>
+                          )}
+                          {hand.scoreImp && (
+                            <div className="flex justify-between flex-1">
+                              <span className="text-muted-foreground">IMP:</span>
+                              <span>{hand.scoreImp}</span>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Notes */}
                         {hand.notes && (
-                          <div className="text-xs text-muted-foreground mt-2">
+                          <div className="text-xs text-muted-foreground mt-2 p-2 bg-muted rounded">
                             {hand.notes}
                           </div>
                         )}
