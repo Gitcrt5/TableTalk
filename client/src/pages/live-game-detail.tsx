@@ -92,7 +92,19 @@ export default function LiveGameDetail() {
 
   const startEditingBoard = (boardNumber: number) => {
     const existingHand = hands.find(h => h.boardNumber === boardNumber);
-    setFormData(existingHand || { boardNumber });
+    
+    // Calculate default dealer and vulnerability for this board number
+    const dealers = ['North', 'East', 'South', 'West'];
+    const vulnerabilities = ['None', 'NS', 'EW', 'Both'];
+    const defaultDealer = dealers[(boardNumber - 1) % 4];
+    const vulnIndex = Math.floor((boardNumber - 1) / 4) % 4;
+    const defaultVulnerability = vulnerabilities[vulnIndex];
+    
+    setFormData(existingHand || { 
+      boardNumber,
+      dealer: defaultDealer,
+      vulnerability: defaultVulnerability
+    });
     setCurrentBidding(existingHand?.biddingSequence || []);
     setCurrentTricks(existingHand?.tricksTaken || 7);
     setEditingBoard(boardNumber);
@@ -180,10 +192,25 @@ export default function LiveGameDetail() {
 
   const handleSave = () => {
     if (!editingBoard) return;
-    createOrUpdateMutation.mutate({
+    
+    // Ensure required fields are present
+    const saveData = {
       ...formData,
       boardNumber: editingBoard,
-    });
+      bidding: currentBidding, // API expects 'bidding' not 'biddingSequence'
+    };
+    
+    // Ensure we have required fields
+    if (!saveData.dealer || !saveData.vulnerability) {
+      toast({
+        title: "Missing Information",
+        description: "Dealer and vulnerability are required.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    createOrUpdateMutation.mutate(saveData);
   };
 
   const cancelEditing = () => {
