@@ -378,91 +378,104 @@ export default function LiveGameDetail() {
                     <div>
                       <h4 className="font-semibold mb-2">PLAY (Optional)</h4>
                       
-                      {/* Opening Lead */}
-                      <div className="mb-3">
-                        <label className="text-xs font-medium text-muted-foreground block mb-1">Lead:</label>
-                        <div className="grid grid-cols-2 gap-2">
-                          <div>
-                            <Select
-                              value={formData.openingLead ? 
-                                (formData.openingLead.length >= 2 ? formData.openingLead.slice(0, -1) : "none") : 
-                                "none"
-                              }
-                              onValueChange={(card) => {
-                                if (card === "none") {
-                                  setFormData({ ...formData, openingLead: undefined });
-                                } else {
-                                  const currentSuit = formData.openingLead ? formData.openingLead.slice(-1) : '♠';
-                                  setFormData({ ...formData, openingLead: card + currentSuit });
+                      {/* Lead and Tricks on same line */}
+                      <div className="grid grid-cols-2 gap-4 mb-3">
+                        {/* Opening Lead */}
+                        <div>
+                          <label className="text-xs font-medium text-muted-foreground block mb-1">Lead:</label>
+                          <div className="grid grid-cols-2 gap-1">
+                            <div>
+                              <Select
+                                value={formData.openingLead ? 
+                                  (formData.openingLead.length >= 2 ? formData.openingLead.slice(0, -1) : "none") : 
+                                  "none"
                                 }
-                              }}
-                            >
-                              <SelectTrigger className="h-8">
-                                <SelectValue placeholder="Card" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="none">-</SelectItem>
-                                {cardValues.map((card) => (
-                                  <SelectItem key={card} value={card}>
-                                    {card}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          <div>
-                            <Select
-                              value={formData.openingLead ? formData.openingLead.slice(-1) : "none"}
-                              onValueChange={(suit) => {
-                                if (suit === "none") {
-                                  setFormData({ ...formData, openingLead: undefined });
-                                } else {
-                                  const currentCard = formData.openingLead ? 
-                                    (formData.openingLead.length >= 2 ? formData.openingLead.slice(0, -1) : 'A') : 
-                                    'A';
-                                  setFormData({ ...formData, openingLead: currentCard + suit });
-                                }
-                              }}
-                            >
-                              <SelectTrigger className="h-8">
-                                <SelectValue placeholder="Suit" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="none">-</SelectItem>
-                                {suits.map((suit) => (
-                                  <SelectItem key={suit} value={suit}>
-                                    <span className={suit === '♥' || suit === '♦' ? 'text-red-600' : ''}>
-                                      {suit}
-                                    </span>
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
+                                onValueChange={(card) => {
+                                  if (card === "none") {
+                                    setFormData({ ...formData, openingLead: undefined });
+                                  } else {
+                                    const currentSuit = formData.openingLead ? formData.openingLead.slice(-1) : '';
+                                    if (currentSuit) {
+                                      setFormData({ ...formData, openingLead: card + currentSuit });
+                                    } else {
+                                      // Don't auto-select suit, just set the card part
+                                      setFormData({ ...formData, openingLead: card });
+                                    }
+                                  }
+                                }}
+                              >
+                                <SelectTrigger className="h-8">
+                                  <SelectValue placeholder="Card" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="none">-</SelectItem>
+                                  {cardValues.map((card) => (
+                                    <SelectItem key={card} value={card}>
+                                      {card}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <div>
+                              <Select
+                                value={formData.openingLead ? formData.openingLead.slice(-1) : "none"}
+                                onValueChange={(suit) => {
+                                  if (suit === "none") {
+                                    setFormData({ ...formData, openingLead: undefined });
+                                  } else {
+                                    const currentCard = formData.openingLead ? 
+                                      (formData.openingLead.length >= 2 ? formData.openingLead.slice(0, -1) : '') : 
+                                      '';
+                                    if (currentCard) {
+                                      setFormData({ ...formData, openingLead: currentCard + suit });
+                                    } else {
+                                      // Don't auto-select card, just set the suit part
+                                      setFormData({ ...formData, openingLead: suit });
+                                    }
+                                  }
+                                }}
+                              >
+                                <SelectTrigger className="h-8">
+                                  <SelectValue placeholder="Suit" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="none">-</SelectItem>
+                                  {suits.map((suit) => (
+                                    <SelectItem key={suit} value={suit}>
+                                      <span className={suit === '♥' || suit === '♦' ? 'text-red-600' : ''}>
+                                        {suit}
+                                      </span>
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
                           </div>
                         </div>
-                      </div>
 
-                      {/* Tricks taken */}
-                      <div className="mb-3">
-                        <label className="text-xs font-medium text-muted-foreground block mb-1">Tricks:</label>
-                        <div className="flex items-center gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => adjustTricks(-1)}
-                            disabled={currentTricks <= 0}
-                          >
-                            <Minus className="h-3 w-3" />
-                          </Button>
-                          <span className="w-8 text-center font-medium">{currentTricks}</span>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => adjustTricks(1)}
-                            disabled={currentTricks >= 13}
-                          >
-                            <Plus className="h-3 w-3" />
-                          </Button>
+                        {/* Tricks taken */}
+                        <div>
+                          <label className="text-xs font-medium text-muted-foreground block mb-1">Tricks:</label>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => adjustTricks(-1)}
+                              disabled={currentTricks <= 0}
+                            >
+                              <Minus className="h-3 w-3" />
+                            </Button>
+                            <span className="w-8 text-center font-medium">{currentTricks}</span>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => adjustTricks(1)}
+                              disabled={currentTricks >= 13}
+                            >
+                              <Plus className="h-3 w-3" />
+                            </Button>
+                          </div>
                         </div>
                       </div>
 
