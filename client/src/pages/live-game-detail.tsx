@@ -125,6 +125,37 @@ export default function LiveGameDetail() {
     setFormData({ ...formData, tricksTaken: newTricks });
   };
 
+  // Bid validation - determine if a bid is valid based on current sequence
+  const isValidBid = (bid: string) => {
+    if (currentBidding.length === 0) return true;
+    
+    const lastBid = currentBidding[currentBidding.length - 1];
+    if (bid === 'Pass' || bid === 'Double' || bid === 'Redouble') return true;
+    
+    // If last bid was Pass, Double, or Redouble, any bid is valid
+    if (lastBid === 'Pass' || lastBid === 'Double' || lastBid === 'Redouble') return true;
+    
+    // For numbered bids, must be higher than the last numbered bid
+    const lastNumberedBid = [...currentBidding].reverse().find(b => 
+      b !== 'Pass' && b !== 'Double' && b !== 'Redouble'
+    );
+    
+    if (!lastNumberedBid) return true;
+    
+    const bidValue = getBidValue(bid);
+    const lastBidValue = getBidValue(lastNumberedBid);
+    
+    return bidValue > lastBidValue;
+  };
+
+  // Helper to get numeric value of a bid for comparison
+  const getBidValue = (bid: string): number => {
+    const level = parseInt(bid[0]);
+    const suit = bid.slice(1);
+    const suitValues = { '♣': 0, '♦': 1, '♥': 2, '♠': 3, 'NT': 4 };
+    return level * 5 + (suitValues[suit as keyof typeof suitValues] || 0);
+  };
+
   // Bid generation
   const generateBids = () => {
     const levels = ['1', '2', '3', '4', '5', '6', '7'];
@@ -142,7 +173,21 @@ export default function LiveGameDetail() {
 
   const specialBids = ['Pass', 'Double', 'Redouble'];
   const allBids = generateBids();
-  const cards = ['A', 'K', 'Q', 'J', '10', '9', '8', '7', '6', '5', '4', '3', '2'];
+  
+  // Generate opening lead options
+  const generateLeadOptions = () => {
+    const suits = ['♠', '♥', '♦', '♣'];
+    const cards = ['A', 'K', 'Q', 'J', '10', '9', '8', '7', '6', '5', '4', '3', '2'];
+    const options = [];
+    
+    for (const suit of suits) {
+      for (const card of cards) {
+        options.push({ value: suit + card, label: suit + card });
+      }
+    }
+    
+    return options;
+  };
 
   const handleSave = () => {
     if (!editingBoard) return;
@@ -192,47 +237,27 @@ export default function LiveGameDetail() {
   const boardNumbers = Array.from({ length: 24 }, (_, i) => i + 1);
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Game Header */}
-      <div className="mb-6">
-        <Link href="/live-games">
-          <Button variant="ghost" size="sm" className="mb-4">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Live Games
-          </Button>
-        </Link>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-start justify-between mb-4">
-              <h1 className="text-2xl font-bold">{game.title}</h1>
-              <Badge variant={game.status === "completed" ? "default" : "secondary"}>
-                {game.status}
-              </Badge>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-              <div className="flex items-center gap-1">
-                <Calendar className="w-4 h-4" />
-                <span>{format(new Date(game.gameDate), "PPP")}</span>
-              </div>
-
-              {game.clubName && (
-                <div className="flex items-center gap-1">
-                  <MapPin className="w-4 h-4" />
-                  <span>{game.clubName}</span>
-                </div>
-              )}
-
-              {game.partnerName && (
-                <div className="flex items-center gap-1">
-                  <Users className="w-4 h-4" />
-                  <span>Partner: {game.partnerName}</span>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+    <div className="max-w-6xl mx-auto px-4 py-4">
+      {/* Compact Game Header */}
+      <div className="mb-4">
+        <div className="flex items-center justify-between mb-2">
+          <Link href="/live-games">
+            <Button variant="ghost" size="sm" className="p-2">
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+          </Link>
+          <Badge 
+            variant={game.status === 'active' ? 'default' : 'secondary'}
+            className="text-xs"
+          >
+            {game.status}
+          </Badge>
+        </div>
+        <h1 className="text-xl font-bold mb-1">{game.title}</h1>
+        <div className="text-sm text-muted-foreground">
+          {format(new Date(game.gameDate), 'MMM d')} • {game.clubName}
+          {game.partnerName && ` • Partner: ${game.partnerName}`}
+        </div>
       </div>
 
       {/* Boards Grid */}
@@ -260,29 +285,10 @@ export default function LiveGameDetail() {
               <CardContent className="pt-0">
                 {isEditing ? (
                   <div className="space-y-4">
-                    {/* Navigation hint */}
-                    <div className="text-center text-sm text-muted-foreground">
-                      Swipe for next board →
-                    </div>
-
                     {/* BIDDING Section */}
                     <div>
                       <h4 className="font-semibold mb-2">BIDDING</h4>
                       
-                      {/* Current bidding sequence display */}
-                      <div className="bg-muted p-2 rounded mb-2 min-h-[60px]">
-                        <div className="grid grid-cols-4 gap-1 text-center text-xs font-medium mb-1">
-                          <span>N</span><span>E</span><span>S</span><span>W</span>
-                        </div>
-                        <div className="grid grid-cols-4 gap-1 text-center text-sm">
-                          {Array.from({ length: Math.max(4, currentBidding.length) }).map((_, i) => (
-                            <div key={i} className="p-1 min-h-[24px] bg-background rounded text-xs">
-                              {currentBidding[i] || '-'}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
                       {/* Compact Bid Pad */}
                       <div className="space-y-2">
                         {/* Numbered bids in compact grid */}
@@ -291,13 +297,15 @@ export default function LiveGameDetail() {
                             const level = bid[0];
                             const suit = bid.slice(1);
                             const isRed = suit === '♥' || suit === '♦';
+                            const isValid = isValidBid(bid);
                             return (
                               <Button
                                 key={bid}
                                 variant="outline"
                                 size="sm"
-                                className={`h-8 text-xs p-1 ${isRed ? 'text-red-600' : ''}`}
-                                onClick={() => addBid(bid)}
+                                className={`h-8 text-xs p-1 ${isRed ? 'text-red-600' : ''} ${!isValid ? 'opacity-40 cursor-not-allowed' : ''}`}
+                                onClick={() => isValid && addBid(bid)}
+                                disabled={!isValid}
                               >
                                 {level}{suit}
                               </Button>
@@ -330,6 +338,20 @@ export default function LiveGameDetail() {
                           </Button>
                         </div>
                       </div>
+
+                      {/* Current bidding sequence display - moved below */}
+                      <div className="bg-muted p-2 rounded mt-2 min-h-[60px]">
+                        <div className="grid grid-cols-4 gap-1 text-center text-xs font-medium mb-1">
+                          <span>N</span><span>E</span><span>S</span><span>W</span>
+                        </div>
+                        <div className="grid grid-cols-4 gap-1 text-center text-sm">
+                          {Array.from({ length: Math.max(4, currentBidding.length) }).map((_, i) => (
+                            <div key={i} className="p-1 min-h-[24px] bg-background rounded text-xs">
+                              {currentBidding[i] || '-'}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
                     </div>
 
                     {/* PLAY Section */}
@@ -339,40 +361,24 @@ export default function LiveGameDetail() {
                       {/* Opening Lead */}
                       <div className="mb-3">
                         <label className="text-xs font-medium text-muted-foreground block mb-1">Lead:</label>
-                        <div className="grid grid-cols-4 gap-1 mb-2">
-                          {['♠', '♥', '♦', '♣'].map((suit) => (
-                            <Button
-                              key={suit}
-                              variant="outline"
-                              size="sm"
-                              className={`h-8 text-sm ${suit === '♥' || suit === '♦' ? 'text-red-600' : ''}`}
-                              onClick={() => setFormData({ ...formData, openingLead: suit })}
-                            >
-                              {suit}
-                            </Button>
-                          ))}
-                        </div>
-                        <div className="grid grid-cols-6 gap-1">
-                          {cards.map((card) => (
-                            <Button
-                              key={card}
-                              variant="outline"
-                              size="sm"
-                              className="h-8 text-xs"
-                              onClick={() => {
-                                const suit = formData.openingLead || '♠';
-                                setFormData({ ...formData, openingLead: suit + card });
-                              }}
-                            >
-                              {card}
-                            </Button>
-                          ))}
-                        </div>
-                        {formData.openingLead && (
-                          <div className="mt-1 text-sm">
-                            Selected: <span className="font-medium">{formData.openingLead}</span>
-                          </div>
-                        )}
+                        <Select
+                          value={formData.openingLead || "none"}
+                          onValueChange={(value) => setFormData({ ...formData, openingLead: value === "none" ? undefined : value })}
+                        >
+                          <SelectTrigger className="h-8">
+                            <SelectValue placeholder="Select opening lead" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">None</SelectItem>
+                            {generateLeadOptions().map((option) => (
+                              <SelectItem key={option.value} value={option.value}>
+                                <span className={option.value.includes('♥') || option.value.includes('♦') ? 'text-red-600' : ''}>
+                                  {option.label}
+                                </span>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
 
                       {/* Tricks taken */}
