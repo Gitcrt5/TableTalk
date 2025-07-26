@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useAuth } from "@/hooks/useAuth";
@@ -50,7 +50,7 @@ export default function LiveGameDetail() {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
   const { toast } = useToast();
-  const [partnerEmail, setPartnerEmail] = useState("");
+  const [selectedPartnerId, setSelectedPartnerId] = useState("");
   const [isPartnerDialogOpen, setIsPartnerDialogOpen] = useState(false);
 
   const { data: game, isLoading: gameLoading } = useQuery<LiveGame>({
@@ -59,6 +59,10 @@ export default function LiveGameDetail() {
 
   const { data: hands = [], isLoading: handsLoading } = useQuery<LiveHand[]>({
     queryKey: [`/api/live-games/${id}/hands`],
+  });
+
+  const { data: partners = [] } = useQuery({
+    queryKey: ["/api/user/partners"],
   });
 
   const finalizeGameMutation = useMutation({
@@ -84,16 +88,16 @@ export default function LiveGameDetail() {
   });
 
   const updatePartnerMutation = useMutation({
-    mutationFn: async (email: string) => {
+    mutationFn: async (partnerId: string) => {
       return apiRequest(`/api/live-games/${id}/partner`, {
         method: "PUT",
-        body: JSON.stringify({ partnerEmail: email }),
+        body: JSON.stringify({ partnerId }),
       });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/live-games/${id}`] });
       setIsPartnerDialogOpen(false);
-      setPartnerEmail("");
+      setSelectedPartnerId("");
       toast({
         title: "Partner Updated",
         description: "Partner information has been updated successfully.",
@@ -113,15 +117,15 @@ export default function LiveGameDetail() {
   };
 
   const handleUpdatePartner = () => {
-    if (!partnerEmail.trim()) {
+    if (!selectedPartnerId) {
       toast({
-        title: "Invalid Email",
-        description: "Please enter a valid email address.",
+        title: "No Partner Selected",
+        description: "Please select a partner from the list.",
         variant: "destructive",
       });
       return;
     }
-    updatePartnerMutation.mutate(partnerEmail.trim());
+    updatePartnerMutation.mutate(selectedPartnerId);
   };
 
   if (gameLoading || handsLoading) {
@@ -188,14 +192,19 @@ export default function LiveGameDetail() {
                 </DialogHeader>
                 <div className="space-y-4">
                   <div>
-                    <Label htmlFor="partner-email">Partner Email</Label>
-                    <Input
-                      id="partner-email"
-                      type="email"
-                      placeholder="Enter partner's email address"
-                      value={partnerEmail}
-                      onChange={(e) => setPartnerEmail(e.target.value)}
-                    />
+                    <Label htmlFor="partner-select">Select Partner</Label>
+                    <Select value={selectedPartnerId} onValueChange={setSelectedPartnerId}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Choose a partner" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {partners.map((partner: any) => (
+                          <SelectItem key={partner.id} value={partner.id}>
+                            {partner.displayName || partner.firstName || partner.email}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div className="flex justify-end gap-2">
                     <Button variant="outline" onClick={() => setIsPartnerDialogOpen(false)}>
@@ -218,7 +227,7 @@ export default function LiveGameDetail() {
                 <AlertDialogTrigger asChild>
                   <Button variant="default" size="sm">
                     <CheckCircle className="h-4 w-4 mr-2" />
-                    Finalize Game
+                    Finalize
                   </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>

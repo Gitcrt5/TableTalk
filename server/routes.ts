@@ -1690,7 +1690,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = getUserId(req);
       const user = await storage.getUser(userId);
       const gameId = parseInt(req.params.id);
-      const { partnerEmail } = req.body;
+      const { partnerId } = req.body;
       
       if (!user?.featureFlags?.liveGames) {
         return res.status(403).json({ error: "Feature not available" });
@@ -1707,14 +1707,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ error: "Access denied" });
       }
       
-      // Find partner by email
-      const partner = await storage.getUserByEmail(partnerEmail);
+      // Verify partner exists
+      const partner = await storage.getUser(partnerId);
       if (!partner) {
-        return res.status(400).json({ error: "Partner not found with that email address" });
+        return res.status(400).json({ error: "Partner not found" });
       }
       
       // Update game partner
-      await storage.updateLiveGame(gameId, { partnerId: partner.id });
+      await storage.updateLiveGame(gameId, { partnerId });
       
       res.json({ success: true });
     } catch (error) {
