@@ -174,20 +174,9 @@ export default function LiveGameDetail() {
   const specialBids = ['Pass', 'Double', 'Redouble'];
   const allBids = generateBids();
   
-  // Generate opening lead options
-  const generateLeadOptions = () => {
-    const suits = ['♠', '♥', '♦', '♣'];
-    const cards = ['A', 'K', 'Q', 'J', '10', '9', '8', '7', '6', '5', '4', '3', '2'];
-    const options = [];
-    
-    for (const suit of suits) {
-      for (const card of cards) {
-        options.push({ value: suit + card, label: suit + card });
-      }
-    }
-    
-    return options;
-  };
+  // Generate card and suit options for lead selection
+  const cardValues = ['A', 'K', 'Q', 'J', '10', '9', '8', '7', '6', '5', '4', '3', '2'];
+  const suits = ['♠', '♥', '♦', '♣'];
 
   const handleSave = () => {
     if (!editingBoard) return;
@@ -345,11 +334,15 @@ export default function LiveGameDetail() {
                           <span>N</span><span>E</span><span>S</span><span>W</span>
                         </div>
                         <div className="grid grid-cols-4 gap-1 text-center text-sm">
-                          {Array.from({ length: Math.max(4, currentBidding.length) }).map((_, i) => (
-                            <div key={i} className="p-1 min-h-[24px] bg-background rounded text-xs">
-                              {currentBidding[i] || '-'}
-                            </div>
-                          ))}
+                          {Array.from({ length: Math.max(4, currentBidding.length) }).map((_, i) => {
+                            const bid = currentBidding[i];
+                            const isRedBid = bid && (bid.includes('♥') || bid.includes('♦'));
+                            return (
+                              <div key={i} className={`p-1 min-h-[24px] bg-background rounded text-xs ${isRedBid ? 'text-red-600' : ''}`}>
+                                {bid || '-'}
+                              </div>
+                            );
+                          })}
                         </div>
                       </div>
                     </div>
@@ -361,24 +354,60 @@ export default function LiveGameDetail() {
                       {/* Opening Lead */}
                       <div className="mb-3">
                         <label className="text-xs font-medium text-muted-foreground block mb-1">Lead:</label>
-                        <Select
-                          value={formData.openingLead || "none"}
-                          onValueChange={(value) => setFormData({ ...formData, openingLead: value === "none" ? undefined : value })}
-                        >
-                          <SelectTrigger className="h-8">
-                            <SelectValue placeholder="Select opening lead" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="none">None</SelectItem>
-                            {generateLeadOptions().map((option) => (
-                              <SelectItem key={option.value} value={option.value}>
-                                <span className={option.value.includes('♥') || option.value.includes('♦') ? 'text-red-600' : ''}>
-                                  {option.label}
-                                </span>
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <Select
+                              value={formData.openingLead?.slice(-1) || "none"}
+                              onValueChange={(suit) => {
+                                if (suit === "none") {
+                                  setFormData({ ...formData, openingLead: undefined });
+                                } else {
+                                  const card = formData.openingLead?.slice(0, -1) || 'A';
+                                  setFormData({ ...formData, openingLead: suit + card });
+                                }
+                              }}
+                            >
+                              <SelectTrigger className="h-8">
+                                <SelectValue placeholder="Suit" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="none">-</SelectItem>
+                                {suits.map((suit) => (
+                                  <SelectItem key={suit} value={suit}>
+                                    <span className={suit === '♥' || suit === '♦' ? 'text-red-600' : ''}>
+                                      {suit}
+                                    </span>
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div>
+                            <Select
+                              value={formData.openingLead?.slice(0, -1) || "none"}
+                              onValueChange={(card) => {
+                                if (card === "none") {
+                                  setFormData({ ...formData, openingLead: undefined });
+                                } else {
+                                  const suit = formData.openingLead?.slice(-1) || '♠';
+                                  setFormData({ ...formData, openingLead: suit + card });
+                                }
+                              }}
+                            >
+                              <SelectTrigger className="h-8">
+                                <SelectValue placeholder="Card" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="none">-</SelectItem>
+                                {cardValues.map((card) => (
+                                  <SelectItem key={card} value={card}>
+                                    {card}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
                       </div>
 
                       {/* Tricks taken */}
@@ -405,27 +434,7 @@ export default function LiveGameDetail() {
                         </div>
                       </div>
 
-                      {/* Scores */}
-                      <div className="grid grid-cols-2 gap-2 mb-3">
-                        <div>
-                          <label className="text-xs font-medium text-muted-foreground">MP</label>
-                          <Input
-                            className="h-8"
-                            value={formData.scoreMp || ""}
-                            onChange={(e) => setFormData({ ...formData, scoreMp: e.target.value })}
-                            placeholder="75%"
-                          />
-                        </div>
-                        <div>
-                          <label className="text-xs font-medium text-muted-foreground">IMP</label>
-                          <Input
-                            className="h-8"
-                            value={formData.scoreImp || ""}
-                            onChange={(e) => setFormData({ ...formData, scoreImp: e.target.value })}
-                            placeholder="+2"
-                          />
-                        </div>
-                      </div>
+
                     </div>
 
                     {/* Notes */}
@@ -473,11 +482,15 @@ export default function LiveGameDetail() {
                                 <span>N</span><span>E</span><span>S</span><span>W</span>
                               </div>
                               <div className="grid grid-cols-4 gap-1 text-center text-xs">
-                                {Array.from({ length: Math.max(4, hand.biddingSequence.length) }).map((_, i) => (
-                                  <div key={i} className="p-1 min-h-[20px] bg-background rounded">
-                                    {hand.biddingSequence![i] || '-'}
-                                  </div>
-                                ))}
+                                {Array.from({ length: Math.max(4, hand.biddingSequence.length) }).map((_, i) => {
+                                  const bid = hand.biddingSequence![i];
+                                  const isRedBid = bid && (bid.includes('♥') || bid.includes('♦'));
+                                  return (
+                                    <div key={i} className={`p-1 min-h-[20px] bg-background rounded ${isRedBid ? 'text-red-600' : ''}`}>
+                                      {bid || '-'}
+                                    </div>
+                                  );
+                                })}
                               </div>
                             </div>
                           </div>
@@ -511,21 +524,7 @@ export default function LiveGameDetail() {
                           </div>
                         )}
                         
-                        {/* Scores */}
-                        <div className="flex gap-4">
-                          {hand.scoreMp && (
-                            <div className="flex justify-between flex-1">
-                              <span className="text-muted-foreground">MP:</span>
-                              <span>{hand.scoreMp}</span>
-                            </div>
-                          )}
-                          {hand.scoreImp && (
-                            <div className="flex justify-between flex-1">
-                              <span className="text-muted-foreground">IMP:</span>
-                              <span>{hand.scoreImp}</span>
-                            </div>
-                          )}
-                        </div>
+
 
                         {/* Notes */}
                         {hand.notes && (
