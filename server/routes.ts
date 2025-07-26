@@ -1652,6 +1652,77 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Finalize live game
+  app.post("/api/live-games/:id/finalize", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = getUserId(req);
+      const user = await storage.getUser(userId);
+      const gameId = parseInt(req.params.id);
+      
+      if (!user?.featureFlags?.liveGames) {
+        return res.status(403).json({ error: "Feature not available" });
+      }
+      
+      const liveGame = await storage.getLiveGame(gameId);
+      if (!liveGame) {
+        return res.status(404).json({ error: "Game not found" });
+      }
+      
+      // Check if user has access to finalize this game
+      const hasAccess = await storage.checkLiveGameAccess(gameId, userId);
+      if (!hasAccess) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+      
+      // Update game status to completed
+      await storage.updateLiveGame(gameId, { status: 'completed' });
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error finalizing live game:", error);
+      res.status(500).json({ error: "Failed to finalize game" });
+    }
+  });
+
+  // Update live game partner
+  app.put("/api/live-games/:id/partner", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = getUserId(req);
+      const user = await storage.getUser(userId);
+      const gameId = parseInt(req.params.id);
+      const { partnerEmail } = req.body;
+      
+      if (!user?.featureFlags?.liveGames) {
+        return res.status(403).json({ error: "Feature not available" });
+      }
+      
+      const liveGame = await storage.getLiveGame(gameId);
+      if (!liveGame) {
+        return res.status(404).json({ error: "Game not found" });
+      }
+      
+      // Check if user has access to modify this game
+      const hasAccess = await storage.checkLiveGameAccess(gameId, userId);
+      if (!hasAccess) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+      
+      // Find partner by email
+      const partner = await storage.getUserByEmail(partnerEmail);
+      if (!partner) {
+        return res.status(400).json({ error: "Partner not found with that email address" });
+      }
+      
+      // Update game partner
+      await storage.updateLiveGame(gameId, { partnerId: partner.id });
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error updating live game partner:", error);
+      res.status(500).json({ error: "Failed to update partner" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
