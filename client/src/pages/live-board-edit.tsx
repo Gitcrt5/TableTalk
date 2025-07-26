@@ -77,10 +77,16 @@ export default function LiveBoardEdit() {
     } else {
       // Calculate default dealer and vulnerability for this board number
       const dealers = ['North', 'East', 'South', 'West'];
-      const vulnerabilities = ['None', 'NS', 'EW', 'Both'];
       const defaultDealer = dealers[(boardNum - 1) % 4];
-      const vulnIndex = Math.floor((boardNum - 1) / 4) % 4;
-      const defaultVulnerability = vulnerabilities[vulnIndex];
+      
+      // Vulnerability pattern: repeats every 16 boards
+      const vulnPattern = [
+        'None', 'NS', 'EW', 'Both',
+        'NS', 'EW', 'Both', 'None',
+        'EW', 'Both', 'None', 'NS',
+        'Both', 'None', 'NS', 'EW'
+      ];
+      const defaultVulnerability = vulnPattern[(boardNum - 1) % 16];
       
       setFormData({ 
         boardNumber: boardNum,
