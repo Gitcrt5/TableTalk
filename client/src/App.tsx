@@ -19,7 +19,8 @@ import ResetPasswordPage from "@/pages/reset-password";
 import NotFound from "@/pages/not-found";
 import LiveGameCreate from "@/pages/live-game-create";
 import LiveGames from "@/pages/live-games";
-import LiveGameDetail from "@/pages/live-game-detail";
+import LiveGameDetail from "@/pages/live-game-detail-simple";
+import LiveBoardEdit from "@/pages/live-board-edit";
 import { useAuth } from "@/hooks/useAuth";
 
 function Router() {
@@ -67,6 +68,7 @@ function Router() {
           <Route path="/hands/:id" component={HandDetail} />
           <Route path="/live-games" component={LiveGames} />
           <Route path="/live-games/create" component={LiveGameCreate} />
+          <Route path="/live-games/:id/board/:boardNumber" component={LiveBoardEdit} />
           <Route path="/live-games/:id" component={LiveGameDetail} />
           <Route path="/account" component={AccountPage} />
           <Route path="/admin" component={AdminPage} />
