@@ -1607,9 +1607,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUserLiveGames(userId: string): Promise<LiveGame[]> {
-    // Get games created by user or where user has access
+    // Get games created by user or where user has access - exclude completed games
     const createdGames = await db.select().from(liveGames)
-      .where(eq(liveGames.createdBy, userId));
+      .where(and(
+        eq(liveGames.createdBy, userId),
+        ne(liveGames.status, 'completed')
+      ));
     
     const accessibleGames = await db
       .select({
@@ -1625,7 +1628,10 @@ export class DatabaseStorage implements IStorage {
       })
       .from(liveGames)
       .innerJoin(liveGameAccess, eq(liveGames.id, liveGameAccess.liveGameId))
-      .where(eq(liveGameAccess.userId, userId));
+      .where(and(
+        eq(liveGameAccess.userId, userId),
+        ne(liveGames.status, 'completed')
+      ));
     
     // Combine and deduplicate
     const allGames = [...createdGames, ...accessibleGames];
@@ -1707,6 +1713,90 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(liveHands)
       .where(eq(liveHands.liveGameId, liveGameId))
       .orderBy(liveHands.boardNumber);
+  }
+
+  // Convert completed live game to regular game
+  async convertLiveGameToRegularGame(liveGameId: number): Promise<Game | undefined> {
+    const liveGame = await this.getLiveGame(liveGameId);
+    if (!liveGame || liveGame.status !== 'completed') {
+      return undefined;
+    }
+
+    // Get club name for location
+    const club = await this.getClub(liveGame.clubId);
+    const location = club ? club.name : 'Unknown Club';
+
+    // Create regular game entry
+    const gameData = {
+      title: liveGame.title,
+      date: liveGame.gameDate.toISOString().split('T')[0], // Format as YYYY-MM-DD
+      location: location,
+      event: 'Live Game',
+      uploadedBy: liveGame.createdBy,
+      filename: `live-game-${liveGameId}.pbn`,
+      pbnContent: await this.generatePbnFromLiveGame(liveGameId),
+      clubId: liveGame.clubId,
+      tournament: null,
+      round: null,
+      pbnEvent: null,
+      pbnSite: null,
+      pbnDate: null,
+    };
+
+    const [newGame] = await db.insert(games).values(gameData).returning();
+
+    // Convert live hands to regular hands
+    const liveHands = await this.getLiveGameHands(liveGameId);
+    for (const liveHand of liveHands) {
+      await db.insert(hands).values({
+        gameId: newGame.id,
+        boardNumber: liveHand.boardNumber,
+        dealer: liveHand.dealer || 'North',
+        vulnerability: liveHand.vulnerability || 'None',
+        northHand: liveHand.northHand || '',
+        southHand: liveHand.southHand || '',
+        eastHand: liveHand.eastHand || '',
+        westHand: liveHand.westHand || '',
+        actualBidding: liveHand.biddingSequence || [],
+        result: null,
+        finalContract: null,
+        declarer: null,
+      });
+    }
+
+    // Link the live game to the regular game
+    await this.updateLiveGame(liveGameId, { linkedGameId: newGame.id });
+
+    return newGame;
+  }
+
+  // Generate PBN content from live game data
+  private async generatePbnFromLiveGame(liveGameId: number): Promise<string> {
+    const liveGame = await this.getLiveGame(liveGameId);
+    const liveHands = await this.getLiveGameHands(liveGameId);
+    
+    if (!liveGame) return '';
+
+    let pbnContent = `[Event "${liveGame.title}"]\n`;
+    pbnContent += `[Date "${liveGame.gameDate.toISOString().split('T')[0]}"]\n`;
+    pbnContent += `[Site "Live Game"]\n\n`;
+
+    for (const hand of liveHands) {
+      pbnContent += `[Board "${hand.boardNumber}"]\n`;
+      pbnContent += `[Dealer "${hand.dealer || 'North'}"]\n`;
+      pbnContent += `[Vulnerable "${hand.vulnerability || 'None'}"]\n`;
+      
+      if (hand.northHand) pbnContent += `[Deal "N:${hand.northHand}.${hand.southHand}.${hand.eastHand}.${hand.westHand}"]\n`;
+      if (hand.biddingSequence && hand.biddingSequence.length > 0) {
+        pbnContent += `[Auction "${hand.dealer || 'North'}"]\n`;
+        pbnContent += hand.biddingSequence.join(' ') + '\n';
+      }
+      if (hand.notes) pbnContent += `[Note "${hand.notes}"]\n`;
+      
+      pbnContent += '\n';
+    }
+
+    return pbnContent;
   }
 
   // Clubs management methods

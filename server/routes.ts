@@ -1677,7 +1677,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Update game status to completed
       await storage.updateLiveGame(gameId, { status: 'completed' });
       
-      res.json({ success: true });
+      // Convert to regular game so it appears in the main games list
+      const regularGame = await storage.convertLiveGameToRegularGame(gameId);
+      
+      res.json({ 
+        success: true, 
+        gameId: regularGame?.id,
+        message: "Game finalized and moved to main games list"
+      });
     } catch (error) {
       console.error("Error finalizing live game:", error);
       res.status(500).json({ error: "Failed to finalize game" });
