@@ -458,6 +458,7 @@ export default function PartnershipBidding({ hand }: PartnershipBiddingProps) {
                               {round[posIndex] ? (
                                 <span className={`${
                                   round[posIndex] === "Double" || round[posIndex] === "Redouble" ||
+                                  round[posIndex] === "X" || round[posIndex] === "XX" ||
                                   round[posIndex].includes("♥") || round[posIndex].includes("♦")
                                     ? "text-red-600 font-semibold" 
                                     : ""

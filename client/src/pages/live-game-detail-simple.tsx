@@ -303,10 +303,11 @@ export default function LiveGameDetail() {
                           <div className="grid grid-cols-4 gap-1 text-center text-xs">
                             {Array.from({ length: Math.max(4, hand.biddingSequence.length) }).map((_, i) => {
                               const bid = hand.biddingSequence![i];
-                              const isRedBid = bid && (bid.includes('♥') || bid.includes('♦'));
+                              const isRedBid = bid && (bid.includes('♥') || bid.includes('♦') || bid === 'Double' || bid === 'Redouble');
+                              const displayBid = bid === "Double" ? "X" : bid === "Redouble" ? "XX" : bid;
                               return (
                                 <div key={i} className={`p-1 min-h-[20px] bg-background rounded ${isRedBid ? 'text-red-600' : ''}`}>
-                                  {bid || '-'}
+                                  {displayBid || '-'}
                                 </div>
                               );
                             })}

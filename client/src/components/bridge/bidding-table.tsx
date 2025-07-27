@@ -27,8 +27,9 @@ export default function BiddingTable({
   const formatBid = (bid: string) => {
     if (!bid || bid === "Pass" || bid === "-") return bid;
     
-    // Handle special bids that shouldn't be converted
-    if (bid === "Double" || bid === "Redouble") return bid;
+    // Handle special bids - convert to X/XX notation
+    if (bid === "Double") return "X";
+    if (bid === "Redouble") return "XX";
     
     // Handle bids like "1NT", "4♠", etc.
     if (bid.includes('♠') || bid.includes('♥') || bid.includes('♦') || bid.includes('♣')) {

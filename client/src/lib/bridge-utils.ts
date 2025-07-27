@@ -173,10 +173,10 @@ export function formatContract(contract: string): { contractPart: string; declar
 export function formatBid(bid: string): string {
   if (!bid) return "";
   
-  // Handle special bids
-  if (bid === "Pass" || bid === "Double" || bid === "Redouble") {
-    return bid;
-  }
+  // Handle special bids - convert Double/Redouble to X/XX notation
+  if (bid === "Pass") return bid;
+  if (bid === "Double") return "X";
+  if (bid === "Redouble") return "XX";
   
   // Replace suit abbreviations with symbols - keep existing format intact
   return bid;

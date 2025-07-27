@@ -173,7 +173,7 @@ export default function BiddingPractice({ hand, userId }: BiddingPracticeProps) 
                     onClick={() => handleBid(bid)}
                     className={`text-xs ${isDoubleAction ? 'text-red-600' : ''}`}
                   >
-                    {bid}
+                    {bid === "Double" ? "X" : bid === "Redouble" ? "XX" : bid}
                   </Button>
                 );
               })}

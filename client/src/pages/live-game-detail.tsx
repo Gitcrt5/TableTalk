@@ -345,7 +345,7 @@ export default function LiveGameDetail() {
                               className={`h-8 text-xs ${bid === 'Double' || bid === 'Redouble' ? 'text-red-600' : ''}`}
                               onClick={() => addBid(bid)}
                             >
-                              {bid}
+                              {bid === "Double" ? "X" : bid === "Redouble" ? "XX" : bid}
                             </Button>
                           ))}
                         </div>
@@ -369,10 +369,11 @@ export default function LiveGameDetail() {
                         <div className="grid grid-cols-4 gap-1 text-center text-sm">
                           {Array.from({ length: Math.max(4, currentBidding.length) }).map((_, i) => {
                             const bid = currentBidding[i];
-                            const isRedBid = bid && (bid.includes('♥') || bid.includes('♦'));
+                            const isRedBid = bid && (bid.includes('♥') || bid.includes('♦') || bid === 'Double' || bid === 'Redouble');
+                            const displayBid = bid === "Double" ? "X" : bid === "Redouble" ? "XX" : bid;
                             return (
                               <div key={i} className={`p-1 min-h-[24px] bg-background rounded text-xs ${isRedBid ? 'text-red-600' : ''}`}>
-                                {bid || '-'}
+                                {displayBid || '-'}
                               </div>
                             );
                           })}
@@ -535,10 +536,11 @@ export default function LiveGameDetail() {
                               <div className="grid grid-cols-4 gap-1 text-center text-xs">
                                 {Array.from({ length: Math.max(4, hand.biddingSequence.length) }).map((_, i) => {
                                   const bid = hand.biddingSequence![i];
-                                  const isRedBid = bid && (bid.includes('♥') || bid.includes('♦'));
+                                  const isRedBid = bid && (bid.includes('♥') || bid.includes('♦') || bid === 'Double' || bid === 'Redouble');
+                                  const displayBid = bid === "Double" ? "X" : bid === "Redouble" ? "XX" : bid;
                                   return (
                                     <div key={i} className={`p-1 min-h-[20px] bg-background rounded ${isRedBid ? 'text-red-600' : ''}`}>
-                                      {bid || '-'}
+                                      {displayBid || '-'}
                                     </div>
                                   );
                                 })}
