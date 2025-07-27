@@ -255,6 +255,9 @@ export const liveGames = pgTable("live_games", {
   status: varchar("status").default("in_progress"), // in_progress, completed, linked
   linkedGameId: integer("linked_game_id"), // Links to games table when PBN found
   visibility: varchar("visibility").default("private"),
+  pbnContent: text("pbn_content"), // Attached PBN file content
+  pbnFilename: varchar("pbn_filename"), // Original PBN filename
+  pbnUploadedAt: timestamp("pbn_uploaded_at"), // When PBN was attached
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

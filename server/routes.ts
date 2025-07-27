@@ -1730,6 +1730,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Attach PBN file to live game
+  app.post("/api/live-games/:id/attach-pbn", isAuthenticated, upload.single('file'), async (req: any, res) => {
+    try {
+      const userId = getUserId(req);
+      const user = await storage.getUser(userId);
+      const gameId = parseInt(req.params.id);
+      
+      if (!user?.featureFlags?.liveGames) {
+        return res.status(403).json({ error: "Feature not available" });
+      }
+      
+      const liveGame = await storage.getLiveGame(gameId);
+      if (!liveGame) {
+        return res.status(404).json({ error: "Game not found" });
+      }
+      
+      // Check if user has access to this game
+      const hasAccess = await storage.checkLiveGameAccess(gameId, userId);
+      if (!hasAccess) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+
+      let pbnContent: string;
+      let filename: string;
+
+      if (req.file) {
+        // File upload
+        pbnContent = req.file.buffer.toString('utf-8');
+        filename = req.file.originalname;
+      } else if (req.body.pbnContent && req.body.filename) {
+        // Direct content upload
+        pbnContent = req.body.pbnContent;
+        filename = req.body.filename;
+      } else {
+        return res.status(400).json({ error: "No PBN file or content provided" });
+      }
+
+      if (!pbnContent.trim()) {
+        return res.status(400).json({ error: "PBN file is empty" });
+      }
+
+      // Attach PBN to live game with merging
+      const result = await storage.attachPbnToLiveGame(gameId, pbnContent, filename);
+      
+      if (result.success) {
+        res.json({
+          success: true,
+          message: "PBN file attached successfully",
+          mergedBoards: result.mergedBoards,
+          conflicts: result.conflicts,
+        });
+      } else {
+        res.status(500).json({ error: "Failed to attach PBN file" });
+      }
+    } catch (error) {
+      console.error("Error attaching PBN to live game:", error);
+      res.status(500).json({ error: "Failed to attach PBN file" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

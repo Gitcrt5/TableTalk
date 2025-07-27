@@ -10,9 +10,10 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { ArrowLeft, Edit2, Users, CheckCircle } from "lucide-react";
+import { ArrowLeft, Edit2, Users, CheckCircle, FileText } from "lucide-react";
 import { format } from "date-fns";
 import { useState } from "react";
+import PbnAttachmentDialog from "@/components/PbnAttachmentDialog";
 
 interface LiveGame {
   id: number;
@@ -25,6 +26,9 @@ interface LiveGame {
   partnerName?: string;
   status: string;
   visibility: string;
+  pbnContent?: string;
+  pbnFilename?: string;
+  pbnUploadedAt?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -224,6 +228,14 @@ export default function LiveGameDetail() {
               </DialogContent>
             </Dialog>
 
+            {/* PBN Attachment */}
+            <PbnAttachmentDialog liveGameId={game.id}>
+              <Button variant="outline" size="sm">
+                <FileText className="h-4 w-4 mr-2" />
+                {game.pbnFilename ? "Update PBN" : "Attach PBN"}
+              </Button>
+            </PbnAttachmentDialog>
+
             {/* Finalize Game */}
             {game.status === 'active' && (
               <AlertDialog>
@@ -260,6 +272,7 @@ export default function LiveGameDetail() {
         <div className="text-sm text-muted-foreground">
           {format(new Date(game.gameDate), 'MMM d')} • {game.clubName}
           {game.partnerName && ` • Partner: ${game.partnerName}`}
+          {game.pbnFilename && ` • PBN: ${game.pbnFilename}`}
         </div>
       </div>
 

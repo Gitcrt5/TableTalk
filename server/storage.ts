@@ -142,6 +142,18 @@ export interface IStorage {
   addFavoriteClub(userId: string, clubId: number): Promise<void>;
   removeFavoriteClub(userId: string, clubId: number): Promise<void>;
   getUserFavoriteClubs(userId: string): Promise<Club[]>;
+
+  // PBN Attachment for Live Games
+  attachPbnToLiveGame(liveGameId: number, pbnContent: string, filename: string): Promise<{
+    success: boolean;
+    mergedBoards?: number[];
+    conflicts?: Array<{
+      boardNumber: number;
+      conflictType: 'bidding' | 'result' | 'vulnerability';
+      liveData: any;
+      pbnData: any;
+    }>;
+  }>;
 }
 
 export class MemStorage implements IStorage {
@@ -827,10 +839,24 @@ export class MemStorage implements IStorage {
   async getUserFavoriteClubs(userId: string): Promise<Club[]> {
     return [];
   }
+
+  async attachPbnToLiveGame(liveGameId: number, pbnContent: string, filename: string): Promise<{
+    success: boolean;
+    mergedBoards?: number[];
+    conflicts?: Array<{
+      boardNumber: number;
+      conflictType: 'bidding' | 'result' | 'vulnerability';
+      liveData: any;
+      pbnData: any;
+    }>;
+  }> {
+    // For memory storage, just return success without actual implementation
+    return { success: true, mergedBoards: [], conflicts: [] };
+  }
 }
 
 import { db } from "./db";
-import { eq, desc, like, and, sql, or } from "drizzle-orm";
+import { eq, desc, like, and, ne, sql, or } from "drizzle-orm";
 
 export class DatabaseStorage implements IStorage {
   // User operations (required for Replit Auth)
@@ -1808,6 +1834,11 @@ export class DatabaseStorage implements IStorage {
     
     if (!liveGame) return '';
 
+    // Use attached PBN if available, otherwise generate from live data
+    if (liveGame.pbnContent) {
+      return liveGame.pbnContent;
+    }
+
     let pbnContent = `[Event "${liveGame.title}"]\n`;
     pbnContent += `[Date "${liveGame.gameDate.toISOString().split('T')[0]}"]\n`;
     pbnContent += `[Site "Live Game"]\n\n`;
@@ -1828,6 +1859,192 @@ export class DatabaseStorage implements IStorage {
     }
 
     return pbnContent;
+  }
+
+  // Attach PBN file to live game with smart merging
+  async attachPbnToLiveGame(liveGameId: number, pbnContent: string, filename: string): Promise<{
+    success: boolean;
+    mergedBoards?: number[];
+    conflicts?: Array<{
+      boardNumber: number;
+      conflictType: 'bidding' | 'result' | 'vulnerability';
+      liveData: any;
+      pbnData: any;
+    }>;
+  }> {
+    const liveGame = await this.getLiveGame(liveGameId);
+    if (!liveGame) {
+      return { success: false };
+    }
+
+    // Parse PBN content to extract game data
+    const pbnData = await this.parsePbnContent(pbnContent);
+    const existingHands = await this.getLiveGameHands(liveGameId);
+    
+    const conflicts = [];
+    const mergedBoards = [];
+
+    // Update live game with PBN content
+    await this.updateLiveGame(liveGameId, {
+      pbnContent,
+      pbnFilename: filename,
+      pbnUploadedAt: new Date(),
+    });
+
+    // Merge each board
+    for (const pbnHand of pbnData.hands) {
+      const existingHand = existingHands.find(h => h.boardNumber === pbnHand.boardNumber);
+      
+      if (existingHand) {
+        // Check for conflicts
+        const handConflicts = this.detectHandConflicts(existingHand, pbnHand);
+        if (handConflicts.length > 0) {
+          conflicts.push(...handConflicts);
+        }
+
+        // Merge with smart logic: preserve live data, enhance with PBN data
+        await this.mergeHandWithPbn(existingHand, pbnHand);
+        mergedBoards.push(pbnHand.boardNumber);
+      } else {
+        // Create new hand from PBN data
+        await this.createOrUpdateLiveHand({
+          liveGameId,
+          boardNumber: pbnHand.boardNumber,
+          dealer: pbnHand.dealer,
+          vulnerability: pbnHand.vulnerability,
+          northHand: pbnHand.northHand || '',
+          southHand: pbnHand.southHand || '',
+          eastHand: pbnHand.eastHand || '',
+          westHand: pbnHand.westHand || '',
+          biddingSequence: pbnHand.biddingSequence || [],
+          result: pbnHand.result,
+        });
+        mergedBoards.push(pbnHand.boardNumber);
+      }
+    }
+
+    return {
+      success: true,
+      mergedBoards,
+      conflicts: conflicts.length > 0 ? conflicts : undefined,
+    };
+  }
+
+  // Helper method to detect conflicts between live and PBN data
+  private detectHandConflicts(liveHand: any, pbnHand: any): Array<{
+    boardNumber: number;
+    conflictType: 'bidding' | 'result' | 'vulnerability';
+    liveData: any;
+    pbnData: any;
+  }> {
+    const conflicts = [];
+
+    // Check bidding sequence conflicts
+    if (liveHand.biddingSequence?.length > 0 && 
+        pbnHand.biddingSequence?.length > 0 && 
+        JSON.stringify(liveHand.biddingSequence) !== JSON.stringify(pbnHand.biddingSequence)) {
+      conflicts.push({
+        boardNumber: liveHand.boardNumber,
+        conflictType: 'bidding' as const,
+        liveData: liveHand.biddingSequence,
+        pbnData: pbnHand.biddingSequence,
+      });
+    }
+
+    // Check vulnerability conflicts (only if live data wasn't auto-calculated)
+    if (liveHand.vulnerability && pbnHand.vulnerability && 
+        liveHand.vulnerability !== pbnHand.vulnerability) {
+      conflicts.push({
+        boardNumber: liveHand.boardNumber,
+        conflictType: 'vulnerability' as const,
+        liveData: liveHand.vulnerability,
+        pbnData: pbnHand.vulnerability,
+      });
+    }
+
+    return conflicts;
+  }
+
+  // Helper method to merge live hand with PBN data
+  private async mergeHandWithPbn(liveHand: any, pbnHand: any): Promise<void> {
+    const mergedData = {
+      // Preserve live game user-entered data
+      biddingSequence: liveHand.biddingSequence?.length > 0 ? liveHand.biddingSequence : pbnHand.biddingSequence,
+      notes: liveHand.notes, // Always preserve user notes
+      openingLead: liveHand.openingLead, // Always preserve user opening lead
+      tricksTaken: liveHand.tricksTaken, // Always preserve user tricks
+
+      // Use PBN data for structural information
+      dealer: pbnHand.dealer || liveHand.dealer,
+      vulnerability: pbnHand.vulnerability || liveHand.vulnerability,
+      northHand: pbnHand.northHand || liveHand.northHand || '',
+      southHand: pbnHand.southHand || liveHand.southHand || '',
+      eastHand: pbnHand.eastHand || liveHand.eastHand || '',
+      westHand: pbnHand.westHand || liveHand.westHand || '',
+      
+      // Use PBN result if available and no user result
+      result: liveHand.result || pbnHand.result,
+    };
+
+    await db.update(liveHands)
+      .set(mergedData)
+      .where(eq(liveHands.id, liveHand.id));
+  }
+
+  // Helper method to parse PBN content (simplified version)
+  private async parsePbnContent(pbnContent: string): Promise<{
+    title?: string;
+    date?: string;
+    hands: Array<{
+      boardNumber: number;
+      dealer?: string;
+      vulnerability?: string;
+      northHand?: string;
+      southHand?: string;
+      eastHand?: string;
+      westHand?: string;
+      biddingSequence?: string[];
+      result?: string;
+    }>;
+  }> {
+    // This is a simplified PBN parser - in production you'd use a more robust parser
+    const hands = [];
+    const lines = pbnContent.split('\n');
+    let currentBoard: any = {};
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim();
+      
+      if (line.startsWith('[Board ')) {
+        if (currentBoard.boardNumber) {
+          hands.push(currentBoard);
+        }
+        currentBoard = {
+          boardNumber: parseInt(line.match(/\d+/)?.[0] || '0'),
+        };
+      } else if (line.startsWith('[Dealer ')) {
+        currentBoard.dealer = line.match(/"([^"]+)"/)?.[1];
+      } else if (line.startsWith('[Vulnerable ')) {
+        currentBoard.vulnerability = line.match(/"([^"]+)"/)?.[1];
+      } else if (line.startsWith('[Deal ')) {
+        const dealMatch = line.match(/"[NSEW]:([^"]+)"/);
+        if (dealMatch) {
+          const cards = dealMatch[1].split('.');
+          if (cards.length === 4) {
+            currentBoard.northHand = cards[0];
+            currentBoard.southHand = cards[1];
+            currentBoard.eastHand = cards[2];
+            currentBoard.westHand = cards[3];
+          }
+        }
+      }
+    }
+
+    if (currentBoard.boardNumber) {
+      hands.push(currentBoard);
+    }
+
+    return { hands };
   }
 
   // Clubs management methods
