@@ -72,10 +72,13 @@ export default function LiveGameDetail() {
       });
     },
     onSuccess: () => {
+      // Invalidate both live games and regular games caches
       queryClient.invalidateQueries({ queryKey: [`/api/live-games/${id}`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/live-games"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/games"] });
       toast({
         title: "Game Finalized",
-        description: "The live game has been converted to a completed game.",
+        description: "The live game has been converted to a completed game and moved to the main games list.",
       });
     },
     onError: () => {

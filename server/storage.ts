@@ -1745,10 +1745,30 @@ export class DatabaseStorage implements IStorage {
 
     const [newGame] = await db.insert(games).values(gameData).returning();
 
-    // Convert live hands to regular hands
+    // Add creator as game participant
+    await db.insert(gamePlayers).values({
+      gameId: newGame.id,
+      userId: liveGame.createdBy,
+      partnerId: liveGame.partnerId,
+      position: null,
+      addedBy: liveGame.createdBy,
+    });
+
+    // Add partner as game participant if exists
+    if (liveGame.partnerId) {
+      await db.insert(gamePlayers).values({
+        gameId: newGame.id,
+        userId: liveGame.partnerId,
+        partnerId: liveGame.createdBy,
+        position: null,
+        addedBy: liveGame.createdBy,
+      });
+    }
+
+    // Convert live hands to regular hands with bidding sequences
     const liveHands = await this.getLiveGameHands(liveGameId);
     for (const liveHand of liveHands) {
-      await db.insert(hands).values({
+      const [newHand] = await db.insert(hands).values({
         gameId: newGame.id,
         boardNumber: liveHand.boardNumber,
         dealer: liveHand.dealer || 'North',
@@ -1761,7 +1781,18 @@ export class DatabaseStorage implements IStorage {
         result: null,
         finalContract: null,
         declarer: null,
-      });
+      }).returning();
+
+      // Transfer bidding sequences as partnership bidding if exists
+      if (liveHand.biddingSequence && liveHand.biddingSequence.length > 0) {
+        await db.insert(partnershipBidding).values({
+          handId: newHand.id,
+          gameId: newGame.id,
+          userId: liveGame.createdBy,
+          partnerId: liveGame.partnerId,
+          biddingSequence: liveHand.biddingSequence,
+        });
+      }
     }
 
     // Link the live game to the regular game
