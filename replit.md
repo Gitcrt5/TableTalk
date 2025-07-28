@@ -385,6 +385,8 @@ User wants to track ideas and future enhancements systematically.
 IMPORTANT: Always verify implementation requests before making changes to code - user wants brainstorming discussions completed before implementation begins.
 **Target Audience**: Many users will be older bridge players who are not technologically adept. Navigation and use should be obvious and easy - prioritize simplicity and clarity in all UI/UX decisions.
 
+**Mobile Optimization Strategy**: Only specific screens need mobile phone optimization (currently: live bidding entry). Other screens should work well on small screens with proper dynamic sizing to prevent overlapping elements, but don't need to be specifically optimized for mobile phone use.
+
 ## Design Decisions & Context Preservation
 
 **Memory System**: User emphasized importance of documenting design decisions in files like replit.md for permanent context retention across sessions. Always update this file when making architectural changes or design decisions.
