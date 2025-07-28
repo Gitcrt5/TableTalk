@@ -410,3 +410,10 @@ IMPORTANT: Always verify implementation requests before making changes to code -
 - Live games can have PBN attached at any time during active state
 - After finalization, live games become regular games with [ACTIVE] tag removed
 - Post-creation navigation: always go to game page (live bidding interface or hand list)
+
+**Technical Architecture for Unified Games**:
+- Unified games table replacing separate games/liveGames tables
+- Enhanced /api/games endpoint with tag information (isActive, hasPbn, commentCount, hasBidding)
+- Remove "Live Games" navigation tab entirely
+- Global clubs database with user favorite clubs and home club defaults
+- Bridge clubs list to be supplied by user for worldwide coverage
