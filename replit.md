@@ -418,6 +418,16 @@ IMPORTANT: Always verify implementation requests before making changes to code -
 - Global clubs database with user favorite clubs and home club defaults
 - Bridge clubs list to be supplied by user for worldwide coverage
 
+**Multi-Step Registration Flow**:
+- Step 1: Email/password (mandatory, creates account)
+- Step 2: Personal info - first name, last name, display name (mandatory) 
+- Step 3: Home club selection (optional, completed when home club specified)
+- Step 4: Partner connections (optional, completed when ≥1 partner specified)
+- Steps 1-2 required for account creation; if abandoned, all data forgotten
+- Steps 3-4 optional with gentle prompting via progress bar on main page
+- No feature blocking - all features available after steps 1-2
+- Progress tracking: profileCompletionStep field, ongoing top banner until complete
+
 **Database Schema Management**:
 IMPORTANT: Whenever database schema is modified, always verify:
 - Sample data (sample-data.json) includes data for all required fields
