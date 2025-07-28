@@ -18,6 +18,7 @@ interface RegularGamePbnAttachmentProps {
 interface AttachmentResult {
   success: boolean;
   message: string;
+  newHandsCount?: number;
 }
 
 export default function RegularGamePbnAttachment({ gameId, children, onSuccess }: RegularGamePbnAttachmentProps) {
@@ -47,7 +48,7 @@ export default function RegularGamePbnAttachment({ gameId, children, onSuccess }
       
       toast({
         title: "PBN File Attached",
-        description: result.message,
+        description: result.message + (result.newHandsCount ? ` (${result.newHandsCount} new hands added)` : ''),
       });
 
       setOpen(false);

@@ -1844,6 +1844,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         res.json({
           success: true,
           message: result.message,
+          newHandsCount: result.newHandsCount,
         });
       } else {
         res.status(500).json({ error: "Failed to attach PBN file" });

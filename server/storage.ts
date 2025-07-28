@@ -1839,6 +1839,7 @@ export class DatabaseStorage implements IStorage {
   async attachPbnToRegularGame(gameId: number, pbnContent: string, filename: string): Promise<{
     success: boolean;
     message?: string;
+    newHandsCount?: number;
   }> {
     const game = await this.getGame(gameId);
     if (!game) {
@@ -1851,12 +1852,23 @@ export class DatabaseStorage implements IStorage {
       return { success: false };
     }
 
-    // Update the game's PBN content
+    // Parse PBN content to extract game data
+    const pbnData = await this.parsePbnContent(pbnContent);
+    const existingHands = await this.getHands(gameId);
+    
+    // Update the game's PBN content and metadata
     await db.update(games)
       .set({
         pbnContent,
         filename,
         uploadedAt: new Date(),
+        // Update metadata from PBN if available
+        ...(pbnData.title && { title: pbnData.title }),
+        ...(pbnData.date && { pbnDate: pbnData.date }),
+        ...(pbnData.event && { pbnEvent: pbnData.event }),
+        ...(pbnData.site && { pbnSite: pbnData.site }),
+        ...(pbnData.tournament && { tournament: pbnData.tournament }),
+        ...(pbnData.round && { round: pbnData.round }),
       })
       .where(eq(games.id, gameId));
 
@@ -1867,9 +1879,61 @@ export class DatabaseStorage implements IStorage {
       pbnUploadedAt: new Date(),
     });
 
+    // Create or update hands from PBN data
+    let newHandsCount = 0;
+    for (const pbnHand of pbnData.hands) {
+      const existingHand = existingHands.find(h => h.boardNumber === pbnHand.boardNumber);
+      
+      if (existingHand) {
+        // Update existing hand with PBN data, preserving any existing bidding
+        await db.update(hands)
+          .set({
+            dealer: pbnHand.dealer,
+            vulnerability: pbnHand.vulnerability,
+            northHand: pbnHand.northHand || '',
+            southHand: pbnHand.southHand || '',
+            eastHand: pbnHand.eastHand || '',
+            westHand: pbnHand.westHand || '',
+            result: pbnHand.result || existingHand.result,
+            // Only add bidding if hand doesn't already have partnership bidding
+            ...(pbnHand.biddingSequence && pbnHand.biddingSequence.length > 0 && {
+              actualBidding: pbnHand.biddingSequence
+            }),
+          })
+          .where(eq(hands.id, existingHand.id));
+      } else {
+        // Create new hand from PBN data
+        const [newHand] = await db.insert(hands).values({
+          gameId: gameId,
+          boardNumber: pbnHand.boardNumber,
+          dealer: pbnHand.dealer,
+          vulnerability: pbnHand.vulnerability,
+          northHand: pbnHand.northHand || '',
+          southHand: pbnHand.southHand || '',
+          eastHand: pbnHand.eastHand || '',
+          westHand: pbnHand.westHand || '',
+          actualBidding: pbnHand.biddingSequence || [],
+          result: pbnHand.result,
+        }).returning();
+        newHandsCount++;
+
+        // If PBN has bidding sequence, add it as partnership bidding for the game creator
+        if (pbnHand.biddingSequence && pbnHand.biddingSequence.length > 0) {
+          await db.insert(partnershipBidding).values({
+            handId: newHand.id,
+            gameId: gameId,
+            userId: game.uploadedBy,
+            partnerId: linkedLiveGame.partnerId,
+            biddingSequence: pbnHand.biddingSequence,
+          });
+        }
+      }
+    }
+
     return { 
       success: true, 
-      message: "PBN file attached successfully" 
+      message: `PBN file attached successfully${newHandsCount > 0 ? ` (${newHandsCount} new hands added)` : ''}`,
+      newHandsCount
     };
   }
 
