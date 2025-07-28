@@ -65,7 +65,7 @@ export default function LiveGameDetail() {
     queryKey: [`/api/live-games/${id}/hands`],
   });
 
-  const { data: partners = [] } = useQuery({
+  const { data: partners = [] } = useQuery<any[]>({
     queryKey: ["/api/user/partners"],
   });
 
@@ -178,19 +178,12 @@ export default function LiveGameDetail() {
             </Button>
           </Link>
           <div className="flex items-center gap-2">
-            <Badge 
-              variant={game.status === 'active' ? 'default' : 'secondary'}
-              className="text-xs"
-            >
-              {game.status}
-            </Badge>
-            
             {/* Partner Management */}
             <Dialog open={isPartnerDialogOpen} onOpenChange={setIsPartnerDialogOpen}>
               <DialogTrigger asChild>
                 <Button variant="outline" size="sm">
-                  <Users className="h-4 w-4 mr-2" />
-                  {game.partnerName ? "Change Partner" : "Add Partner"}
+                  <Users className="h-4 w-4 mr-1" />
+                  {game.partnerName ? "Partner" : "Partner"}
                 </Button>
               </DialogTrigger>
               <DialogContent>
@@ -231,8 +224,8 @@ export default function LiveGameDetail() {
             {/* PBN Attachment */}
             <PbnAttachmentDialog liveGameId={game.id}>
               <Button variant="outline" size="sm">
-                <FileText className="h-4 w-4 mr-2" />
-                {game.pbnFilename ? "Update PBN" : "Attach PBN"}
+                <FileText className="h-4 w-4 mr-1" />
+                {game.pbnFilename ? "PBN" : "Add PBN"}
               </Button>
             </PbnAttachmentDialog>
 

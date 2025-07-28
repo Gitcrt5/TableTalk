@@ -35,11 +35,18 @@ export default function PbnAttachmentDialog({ liveGameId, children, onSuccess }:
   const { toast } = useToast();
 
   const attachPbnMutation = useMutation({
-    mutationFn: async (formData: FormData) => {
-      return apiRequest(`/api/live-games/${liveGameId}/attach-pbn`, {
+    mutationFn: async (formData: FormData): Promise<AttachmentResult> => {
+      const response = await fetch(`/api/live-games/${liveGameId}/attach-pbn`, {
         method: "POST",
         body: formData,
       });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to attach PBN file');
+      }
+      
+      return response.json();
     },
     onSuccess: (result: AttachmentResult) => {
       queryClient.invalidateQueries({ queryKey: [`/api/live-games/${liveGameId}`] });
