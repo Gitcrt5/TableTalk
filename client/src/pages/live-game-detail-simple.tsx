@@ -1,4 +1,4 @@
-import { useParams, Link } from "wouter";
+import { useParams, Link, useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -54,6 +54,7 @@ export default function LiveGameDetail() {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
   const { toast } = useToast();
+  const [, navigate] = useLocation();
   const [selectedPartnerId, setSelectedPartnerId] = useState("");
   const [isPartnerDialogOpen, setIsPartnerDialogOpen] = useState(false);
 
@@ -75,15 +76,24 @@ export default function LiveGameDetail() {
         method: "POST",
       });
     },
-    onSuccess: () => {
-      // Invalidate both live games and regular games caches
-      queryClient.invalidateQueries({ queryKey: [`/api/live-games/${id}`] });
-      queryClient.invalidateQueries({ queryKey: ["/api/live-games"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/games"] });
+    onSuccess: async (result: any) => {
+      // Force invalidate and refetch all game-related queries
+      await queryClient.invalidateQueries({ queryKey: [`/api/live-games/${id}`] });
+      await queryClient.invalidateQueries({ queryKey: ["/api/live-games"] });
+      await queryClient.invalidateQueries({ queryKey: ["/api/games"] });
+      
+      // Force refetch the games list to ensure fresh data
+      await queryClient.refetchQueries({ queryKey: ["/api/games"] });
+      
       toast({
         title: "Game Finalized",
         description: "The live game has been converted to a completed game and moved to the main games list.",
       });
+      
+      // Navigate to the main dashboard after a brief delay to ensure cache is updated
+      setTimeout(() => {
+        navigate("/");
+      }, 1000);
     },
     onError: () => {
       toast({

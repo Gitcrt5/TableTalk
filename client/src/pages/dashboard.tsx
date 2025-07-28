@@ -20,6 +20,7 @@ export default function Dashboard() {
     queryKey: ["/api/games"],
     staleTime: 0, // Always refetch on page load to get fresh data
     refetchOnWindowFocus: true, // Refetch when window regains focus
+    refetchOnMount: true, // Always refetch when component mounts
   });
 
   const filteredGames = games?.filter(game => 
