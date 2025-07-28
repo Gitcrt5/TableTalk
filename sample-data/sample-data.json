@@ -1,4 +1,51 @@
 {
+  "clubs": [
+    {
+      "name": "Newcastle Bridge Club",
+      "location": "Newcastle, NSW, Australia",
+      "website": "https://newcastlebridge.com.au"
+    },
+    {
+      "name": "Adelaide Bridge Club",
+      "location": "Adelaide, SA, Australia", 
+      "website": "https://adelaidebridge.com.au"
+    },
+    {
+      "name": "Melbourne Bridge Club",
+      "location": "Melbourne, VIC, Australia",
+      "website": "https://melbournebridge.com.au"
+    },
+    {
+      "name": "Sydney Bridge Centre",
+      "location": "Sydney, NSW, Australia",
+      "website": "https://sydneybridgecentre.com"
+    },
+    {
+      "name": "Brisbane Bridge Club", 
+      "location": "Brisbane, QLD, Australia",
+      "website": "https://brisbanebridge.com.au"
+    },
+    {
+      "name": "Endor Bridge Center",
+      "location": "Endor Forest, Outer Rim",
+      "website": null
+    },
+    {
+      "name": "Tatooine Bridge Club",
+      "location": "Mos Eisley, Tatooine",
+      "website": null
+    },
+    {
+      "name": "Caladan Bridge Club", 
+      "location": "Caladan Palace, Caladan",
+      "website": null
+    },
+    {
+      "name": "Arrakis Bridge Club",
+      "location": "Arrakeen, Arrakis",
+      "website": null
+    }
+  ],
   "users": [
     {
       "email": "a@test.com",
@@ -7,6 +54,8 @@
       "lastName": "Johnson",
       "displayName": "Alice J",
       "userType": "test",
+      "homeClub": "Newcastle Bridge Club",
+      "favoriteClubs": ["Newcastle Bridge Club", "Sydney Bridge Centre", "Melbourne Bridge Club"],
       "featureFlags": {
         "liveGames": true
       }
@@ -18,6 +67,8 @@
       "lastName": "Smith",
       "displayName": "Bob S",
       "userType": "test",
+      "homeClub": "Adelaide Bridge Club",
+      "favoriteClubs": ["Adelaide Bridge Club"],
       "featureFlags": {
         "liveGames": true
       }
@@ -29,6 +80,8 @@
       "lastName": "Williams",
       "displayName": "Carol W",
       "userType": "test",
+      "homeClub": "Melbourne Bridge Club",
+      "favoriteClubs": ["Melbourne Bridge Club"],
       "featureFlags": {
         "liveGames": false
       }
@@ -40,6 +93,8 @@
       "lastName": "Brown",
       "displayName": "David B",
       "userType": "test",
+      "homeClub": "Sydney Bridge Centre",
+      "favoriteClubs": ["Sydney Bridge Centre"],
       "featureFlags": {
         "liveGames": true
       }
@@ -51,6 +106,8 @@
       "lastName": "Davis",
       "displayName": "Eve D",
       "userType": "test",
+      "homeClub": "Brisbane Bridge Club",
+      "favoriteClubs": ["Brisbane Bridge Club"],
       "featureFlags": {
         "liveGames": false
       }
@@ -62,6 +119,8 @@
       "lastName": "Solo",
       "displayName": "HanS",
       "userType": "test",
+      "homeClub": "Endor Bridge Center",
+      "favoriteClubs": ["Endor Bridge Center"],
       "featureFlags": {
         "liveGames": true
       }
