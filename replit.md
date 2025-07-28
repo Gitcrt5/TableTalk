@@ -400,3 +400,13 @@ IMPORTANT: Always verify implementation requests before making changes to code -
 **Database Architecture**: Uses linkedGameId field to connect live games to regular games after finalization. This enables PBN attachment capability for finalized games.
 
 **Cache Invalidation**: Critical for ensuring finalized live games appear in main games list. System includes automatic navigation, forced cache refetch, and enhanced dashboard query options.
+
+**Unified Game Creation Workflow**: 
+- Single "Create Game" button on main dashboard (no separate live games page)
+- Step 1: Basic info form (name required, date required with current date default, location optional, club optional with user's home club default)
+- Step 2: Content method selection via labeled buttons ("Upload PBN File" vs "Start Live Bidding")
+- PBN upload → file selection → game page showing hands
+- Live game creation → live game page for bidding entry
+- Live games can have PBN attached at any time during active state
+- After finalization, live games become regular games with [ACTIVE] tag removed
+- Post-creation navigation: always go to game page (live bidding interface or hand list)
