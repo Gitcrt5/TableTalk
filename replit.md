@@ -417,3 +417,10 @@ IMPORTANT: Always verify implementation requests before making changes to code -
 - Remove "Live Games" navigation tab entirely
 - Global clubs database with user favorite clubs and home club defaults
 - Bridge clubs list to be supplied by user for worldwide coverage
+
+**Database Schema Management**:
+IMPORTANT: Whenever database schema is modified, always verify:
+- Sample data (sample-data.json) includes data for all required fields
+- Database deletion scripts remove all related tables and data
+- Database loading scripts handle all new fields and relationships
+- All sample data is valid and matches new schema requirements
