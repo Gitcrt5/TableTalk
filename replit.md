@@ -196,6 +196,7 @@ The `clean` command automatically loads sample data from the `/sample-data/` dir
 
 ## Recent Changes
 
+- July 28, 2025. **PBN ATTACHMENT SYSTEM FIXES** - Fixed critical issue where attaching PBN files to finalized live games only stored content but didn't create hands. Enhanced `attachPbnToRegularGame` method to parse PBN content and create ALL hands from file (not just those with bidding sequences). System now preserves existing live game data while importing complete PBN structure. Added feedback showing count of newly imported hands. This ensures games like #110 get all hands when PBN files are attached, not just the 2 with bidding.
 - July 28, 2025. **MOBILE UX IMPROVEMENTS AND CACHE INVALIDATION FIXES** - Streamlined live game header for iPhone compatibility by changing "Add Partner" to "Partner", removing redundant "active" badge, and shortening "Attach PBN" to "Add PBN". Fixed critical cache invalidation issue where finalized live games didn't appear in main games list without manual refresh by adding automatic navigation, forced cache refetch, and enhanced dashboard query options. Fixed games list display bug showing phantom PBN files for live games without attached files. Resolved PBN attachment dialog API communication issues with proper Response handling.
 - July 25, 2025. **LIVE GAMES FEATURE IMPLEMENTATION STARTED** - Added database schema for live games functionality including tables for live_games, live_hands, live_game_access, and user_favorite_clubs. Feature flag system implemented to control access during development. Added API routes and storage methods for creating and managing live games. Created UI for creating live games with club selection and partner options. Feature currently enabled only for users with liveGames feature flag.
 - July 25, 2025. **FEATURE FLAGS IN SAMPLE DATA** - Updated sample-data.json to include featureFlags field for test users. Modified database-manager.ts to handle feature flags when loading sample data. Test users Alice, Bob, David, and Han have liveGames enabled while Carol and Eve have it disabled. This allows consistent test environments with pre-configured feature access.
@@ -382,3 +383,9 @@ Preferred communication style: Simple, everyday language.
 User prefers MVP approach: Start simple and add features incrementally rather than building complex systems upfront.
 User wants to track ideas and future enhancements systematically.
 IMPORTANT: Always verify implementation requests before making changes to code - user wants brainstorming discussions completed before implementation begins.
+
+## Design Decisions & Context Preservation
+
+**Memory System**: User emphasized importance of documenting design decisions in files like replit.md for permanent context retention across sessions. Always update this file when making architectural changes or design decisions.
+
+**PBN Merge Strategy**: When attaching PBN files to live games, preserve live data (bidding sequences, notes, opening leads) while using PBN data for hand distributions and event metadata. Import ALL hands from PBN files regardless of whether they have bidding sequences.
