@@ -1825,6 +1825,52 @@ export class DatabaseStorage implements IStorage {
     await this.updateLiveGame(liveGameId, { linkedGameId: newGame.id });
 
     return newGame;
+
+  }
+
+  // Check if a regular game originated from a live game
+  async getLinkedLiveGame(gameId: number): Promise<LiveGame | undefined> {
+    const [liveGame] = await db.select().from(liveGames)
+      .where(eq(liveGames.linkedGameId, gameId));
+    return liveGame;
+  }
+
+  // Attach PBN to regular game (for games that originated from live games)
+  async attachPbnToRegularGame(gameId: number, pbnContent: string, filename: string): Promise<{
+    success: boolean;
+    message?: string;
+  }> {
+    const game = await this.getGame(gameId);
+    if (!game) {
+      return { success: false };
+    }
+
+    // Check if this game originated from a live game
+    const linkedLiveGame = await this.getLinkedLiveGame(gameId);
+    if (!linkedLiveGame) {
+      return { success: false };
+    }
+
+    // Update the game's PBN content
+    await db.update(games)
+      .set({
+        pbnContent,
+        filename,
+        uploadedAt: new Date(),
+      })
+      .where(eq(games.id, gameId));
+
+    // Also update the linked live game
+    await this.updateLiveGame(linkedLiveGame.id, {
+      pbnContent,
+      pbnFilename: filename,
+      pbnUploadedAt: new Date(),
+    });
+
+    return { 
+      success: true, 
+      message: "PBN file attached successfully" 
+    };
   }
 
   // Generate PBN content from live game data

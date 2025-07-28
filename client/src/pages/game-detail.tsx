@@ -7,9 +7,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { ArrowLeft, Calendar, User, Users, Plus, UserPlus } from "lucide-react";
+import { ArrowLeft, Calendar, User, Users, Plus, UserPlus, FileText } from "lucide-react";
 import { Link, useParams } from "wouter";
 import GameEditForm from "@/components/game-edit-form";
+import RegularGamePbnAttachment from "@/components/RegularGamePbnAttachment";
 import { useAuth } from "@/hooks/useAuth";
 import { formatContract } from "@/lib/bridge-utils";
 import { apiRequest } from "@/lib/queryClient";
@@ -28,7 +29,7 @@ export default function GameDetail() {
   const searchParams = new URLSearchParams(window.location.search);
   const shouldAutoEdit = searchParams.get('edit') === 'true';
   
-  const { data: game, isLoading: gameLoading } = useQuery<Game>({
+  const { data: game, isLoading: gameLoading } = useQuery<Game & { canAttachPbn?: boolean; originatedFromLiveGame?: boolean }>({
     queryKey: [`/api/games/${gameId}`],
     enabled: !!gameId,
   });
@@ -176,9 +177,19 @@ export default function GameDetail() {
             <h1 className="text-3xl font-bold text-text-primary">
               {game.title}
             </h1>
-            {user && user.id === game.uploadedBy && (
-              <GameEditForm game={game} autoOpen={shouldAutoEdit} />
-            )}
+            <div className="flex items-center space-x-2">
+              {user && user.id === game.uploadedBy && (
+                <GameEditForm game={game} autoOpen={shouldAutoEdit} />
+              )}
+              {user && user.id === game.uploadedBy && game.canAttachPbn && (
+                <RegularGamePbnAttachment gameId={gameId}>
+                  <Button variant="outline" size="sm">
+                    <FileText className="h-4 w-4 mr-2" />
+                    Attach PBN
+                  </Button>
+                </RegularGamePbnAttachment>
+              )}
+            </div>
           </div>
           <div className="flex flex-wrap items-center gap-4 text-text-secondary">
             {game.date && (

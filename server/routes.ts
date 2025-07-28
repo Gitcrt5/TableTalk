@@ -162,7 +162,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Game not found" });
       }
       
-      res.json(game);
+      // Check if this game originated from a live game
+      const linkedLiveGame = await storage.getLinkedLiveGame(id);
+      
+      res.json({
+        ...game,
+        canAttachPbn: !!linkedLiveGame, // Can attach PBN if it came from a live game
+        originatedFromLiveGame: !!linkedLiveGame,
+      });
     } catch (error) {
       console.error("Error fetching game:", error);
       res.status(500).json({ error: "Failed to fetch game" });
@@ -1786,6 +1793,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     } catch (error) {
       console.error("Error attaching PBN to live game:", error);
+      res.status(500).json({ error: "Failed to attach PBN file" });
+    }
+  });
+
+  // Attach PBN to regular game (for games that originated from live games)
+  app.post("/api/games/:id/attach-pbn", isAuthenticated, upload.single('file'), async (req: any, res) => {
+    try {
+      const userId = getUserId(req);
+      const gameId = parseInt(req.params.id);
+      
+      const game = await storage.getGame(gameId);
+      if (!game) {
+        return res.status(404).json({ error: "Game not found" });
+      }
+
+      // Check if this game originated from a live game
+      const linkedLiveGame = await storage.getLinkedLiveGame(gameId);
+      if (!linkedLiveGame) {
+        return res.status(403).json({ error: "PBN attachment not available for this game" });
+      }
+
+      // Check if user has permission (must be the original creator)
+      if (game.uploadedBy !== userId) {
+        return res.status(403).json({ error: "Only the game creator can attach PBN files" });
+      }
+
+      let pbnContent: string;
+      let filename: string;
+
+      if (req.file) {
+        // File upload
+        pbnContent = req.file.buffer.toString('utf-8');
+        filename = req.file.originalname;
+      } else if (req.body.pbnContent && req.body.filename) {
+        // Direct content upload
+        pbnContent = req.body.pbnContent;
+        filename = req.body.filename;
+      } else {
+        return res.status(400).json({ error: "No PBN file or content provided" });
+      }
+
+      if (!pbnContent.trim()) {
+        return res.status(400).json({ error: "PBN file is empty" });
+      }
+
+      const result = await storage.attachPbnToRegularGame(gameId, pbnContent, filename);
+      
+      if (result.success) {
+        res.json({
+          success: true,
+          message: result.message,
+        });
+      } else {
+        res.status(500).json({ error: "Failed to attach PBN file" });
+      }
+    } catch (error) {
+      console.error("Error attaching PBN to regular game:", error);
       res.status(500).json({ error: "Failed to attach PBN file" });
     }
   });
