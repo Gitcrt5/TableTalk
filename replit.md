@@ -389,3 +389,11 @@ IMPORTANT: Always verify implementation requests before making changes to code -
 **Memory System**: User emphasized importance of documenting design decisions in files like replit.md for permanent context retention across sessions. Always update this file when making architectural changes or design decisions.
 
 **PBN Merge Strategy**: When attaching PBN files to live games, preserve live data (bidding sequences, notes, opening leads) while using PBN data for hand distributions and event metadata. Import ALL hands from PBN files regardless of whether they have bidding sequences.
+
+**Live Games Authentication**: Live game saves require proper user login. Test users available: a@test.com, b@test.com, d@test.com, han@solo.com (password: test123). Live games feature available only for users with liveGames feature flag (Alice, Bob, David, Han).
+
+**Mobile Optimization Priority**: Interface designed for real-time table use during bridge games. Mobile UX takes priority for live game features.
+
+**Database Architecture**: Uses linkedGameId field to connect live games to regular games after finalization. This enables PBN attachment capability for finalized games.
+
+**Cache Invalidation**: Critical for ensuring finalized live games appear in main games list. System includes automatic navigation, forced cache refetch, and enhanced dashboard query options.
