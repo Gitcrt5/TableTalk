@@ -383,6 +383,7 @@ Preferred communication style: Simple, everyday language.
 User prefers MVP approach: Start simple and add features incrementally rather than building complex systems upfront.
 User wants to track ideas and future enhancements systematically.
 IMPORTANT: Always verify implementation requests before making changes to code - user wants brainstorming discussions completed before implementation begins.
+**Target Audience**: Many users will be older bridge players who are not technologically adept. Navigation and use should be obvious and easy - prioritize simplicity and clarity in all UI/UX decisions.
 
 ## Design Decisions & Context Preservation
 
