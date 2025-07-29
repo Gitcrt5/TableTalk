@@ -208,7 +208,39 @@ async function loadSampleData(): Promise<void> {
     // Read metadata
     const metadata = JSON.parse(fs.readFileSync(metadataFile, 'utf-8'));
     
-    // Load users first
+    // Load clubs first (needed for user home clubs)
+    const sampleClubs = metadata.clubs || [];
+    if (sampleClubs.length > 0) {
+      console.log("🏢 Creating sample clubs...");
+      let clubsCreated = 0;
+      
+      for (const clubData of sampleClubs) {
+        try {
+          await db.insert(clubs).values({
+            name: clubData.name,
+            location: clubData.location,
+            state: clubData.state,
+            country: clubData.country,
+            website: clubData.website,
+            email: clubData.email || null,
+            isActive: clubData.isActive !== false,
+            createdBy: (await db.select().from(users).where(eq(users.email, 'admin@tabletalk.cards')))[0]?.id || uuidv4(),
+            createdAt: new Date(),
+            updatedAt: new Date()
+          });
+          console.log(`✅ Created club: ${clubData.name} (${clubData.location})`);
+          clubsCreated++;
+        } catch (error) {
+          console.log(`⚠️  Failed to create club ${clubData.name}: ${error instanceof Error ? error.message : String(error)}`);
+        }
+      }
+      
+      if (clubsCreated > 0) {
+        console.log(`✅ Successfully created ${clubsCreated} sample clubs`);
+      }
+    }
+
+    // Load users
     const sampleUsers = metadata.users || [];
     if (sampleUsers.length > 0) {
       console.log("👥 Creating sample users...");
