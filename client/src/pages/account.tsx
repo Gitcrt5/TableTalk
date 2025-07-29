@@ -1,14 +1,14 @@
 import { useState } from "react";
 import { ProfileManagement } from "@/components/account/profile-management";
 import { PasswordManagement } from "@/components/account/password-management";
-import { UserStats } from "@/components/account/user-stats";
+
 import { PartnerManagement } from "@/components/account/partner-management";
 import ClubManagement from "@/components/account/club-management";
 import { useAuth } from "@/hooks/useAuth";
 
 export default function AccountPage() {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<"profile" | "password" | "partners" | "clubs" | "stats">("profile");
+  const [activeTab, setActiveTab] = useState<"profile" | "password" | "partners" | "clubs">("profile");
 
   if (!user) {
     return <div>Loading...</div>;
@@ -65,16 +65,6 @@ export default function AccountPage() {
           >
             Clubs
           </button>
-          <button
-            onClick={() => setActiveTab("stats")}
-            className={`py-2 px-1 border-b-2 font-medium text-sm ${
-              activeTab === "stats"
-                ? "border-blue-500 text-blue-600"
-                : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-            }`}
-          >
-            Stats
-          </button>
         </div>
 
         <div className="mt-8">
@@ -83,7 +73,6 @@ export default function AccountPage() {
           {activeTab === "password" && <PasswordManagement />}
           {activeTab === "partners" && <PartnerManagement />}
           {activeTab === "clubs" && <ClubManagement />}
-          {activeTab === "stats" && <UserStats />}
         </div>
       </div>
     </div>
