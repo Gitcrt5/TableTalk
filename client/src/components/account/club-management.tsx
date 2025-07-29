@@ -188,57 +188,96 @@ export default function ClubManagement() {
             </div>
           )}
           
-          <div className="flex gap-2">
-            <Select value={selectedClubId} onValueChange={setSelectedClubId}>
-              <SelectTrigger className="flex-1">
-                <SelectValue placeholder="Search and select a club..." />
-              </SelectTrigger>
-              <SelectContent>
-                {searchQuery.length >= 2 && (
-                  <>
-                    {searchLoading && (
-                      <SelectItem value="loading" disabled>Searching...</SelectItem>
-                    )}
-                    {!searchLoading && searchResults.length === 0 && (
-                      <SelectItem value="no-results" disabled>No clubs found</SelectItem>
-                    )}
-                    {searchResults.map((club: Club) => (
-                      <SelectItem key={club.id} value={club.id.toString()}>
-                        <div>
-                          <div className="font-medium">{club.name}</div>
-                          <div className="text-xs text-muted-foreground">
-                            {formatClubLocation(club)}
-                          </div>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            {/* Search Box - Left Side */}
+            <div className="space-y-2">
+              <Label htmlFor="club-search">Search Clubs</Label>
+              <div className="relative">
+                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="club-search"
+                  placeholder="Type club name or location..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              {searchQuery.length > 0 && searchQuery.length < 2 && (
+                <p className="text-xs text-muted-foreground">Type at least 2 characters</p>
+              )}
+            </div>
+
+            {/* Club Results - Right Side */}
+            <div className="lg:col-span-2 space-y-2">
+              <Label>Select Club</Label>
+              <div className="border rounded-lg min-h-[120px] max-h-[300px] overflow-y-auto">
+                {searchQuery.length < 2 && (
+                  <div className="p-4 text-center text-muted-foreground">
+                    Search for clubs to see results here
+                  </div>
                 )}
-              </SelectContent>
-            </Select>
-            <Input
-              placeholder="Type to search clubs..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="flex-1"
-            />
-            <Button 
-              onClick={handleSetHomeClub}
-              disabled={setHomeClubMutation.isPending}
-            >
-              {setHomeClubMutation.isPending ? "Setting..." : "Set Home Club"}
-            </Button>
+                
+                {searchQuery.length >= 2 && searchLoading && (
+                  <div className="p-4 text-center text-muted-foreground">
+                    Searching clubs...
+                  </div>
+                )}
+                
+                {searchQuery.length >= 2 && !searchLoading && searchResults.length === 0 && (
+                  <div className="p-4 text-center text-muted-foreground">
+                    No clubs found matching "{searchQuery}"
+                  </div>
+                )}
+                
+                {searchResults.map((club: Club) => (
+                  <div 
+                    key={club.id} 
+                    className={`p-3 border-b last:border-b-0 hover:bg-muted/50 cursor-pointer transition-colors ${
+                      selectedClubId === club.id.toString() ? 'bg-blue-50 border-blue-200' : ''
+                    }`}
+                    onClick={() => setSelectedClubId(club.id.toString())}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <h4 className="font-medium text-sm">{club.name}</h4>
+                        <p className="text-xs text-muted-foreground flex items-center gap-1">
+                          <MapPin className="w-3 h-3" />
+                          {formatClubLocation(club)}
+                        </p>
+                        {homeClub?.id === club.id && (
+                          <Badge variant="secondary" className="text-xs mt-1">Current Home</Badge>
+                        )}
+                      </div>
+                      {selectedClubId === club.id.toString() && (
+                        <div className="w-4 h-4 rounded-full bg-blue-500 flex items-center justify-center">
+                          <div className="w-2 h-2 rounded-full bg-white"></div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
           
-          {homeClub && (
+          <div className="flex gap-2">
             <Button 
-              variant="outline" 
-              onClick={() => setHomeClubMutation.mutate(null)}
-              disabled={setHomeClubMutation.isPending}
+              onClick={handleSetHomeClub}
+              disabled={setHomeClubMutation.isPending || !selectedClubId}
+              className="flex-1"
             >
-              Clear Home Club
+              {setHomeClubMutation.isPending ? "Setting..." : "Set as Home Club"}
             </Button>
-          )}
+            {homeClub && (
+              <Button 
+                variant="outline" 
+                onClick={() => setHomeClubMutation.mutate(null)}
+                disabled={setHomeClubMutation.isPending}
+              >
+                Clear Home Club
+              </Button>
+            )}
+          </div>
         </CardContent>
       </Card>
 
