@@ -1,7 +1,7 @@
 import { db } from "../server/db";
 import { 
   users, games, hands, comments, userBidding, partnershipBidding, 
-  partners, gameParticipants, gamePlayers, clubs
+  partners, gameParticipants, gamePlayers, clubs, gameAccess, userFavoriteClubs
 } from "../shared/schema";
 import { eq, inArray, and, sql, isNull, isNotNull } from "drizzle-orm";
 
@@ -45,6 +45,8 @@ class DataIntegrityChecker {
     await this.checkOrphanedPartnershipBidding();
     await this.checkOrphanedGamePlayers();
     await this.checkOrphanedGameParticipants();
+    await this.checkOrphanedGameAccess();
+    await this.checkOrphanedUserFavoriteClubs();
     await this.checkOrphanedPartners();
     await this.checkInvalidGameUploaders();
     await this.checkInvalidClubReferences();
@@ -289,6 +291,82 @@ class DataIntegrityChecker {
         description: `Game participant ${participant.id} references non-existent game ${participant.gameId}`,
         recordId: participant.id,
         fixAction: 'DELETE FROM game_participants WHERE id = ?'
+      });
+    }
+  }
+
+  async checkOrphanedGameAccess(): Promise<void> {
+    // Check game access records with invalid game references
+    const orphanedByGame = await db
+      .select({ gameId: gameAccess.gameId, userId: gameAccess.userId })
+      .from(gameAccess)
+      .leftJoin(games, eq(gameAccess.gameId, games.id))
+      .where(isNull(games.id));
+    
+    for (const access of orphanedByGame) {
+      this.addIssue({
+        severity: 'error',
+        table: 'gameAccess',
+        type: 'orphaned',
+        description: `Game access record for user ${access.userId} references non-existent game ${access.gameId}`,
+        recordId: `${access.gameId}-${access.userId}`,
+        fixAction: 'DELETE FROM game_access WHERE game_id = ? AND user_id = ?'
+      });
+    }
+    
+    // Check game access records with invalid user references
+    const orphanedByUser = await db
+      .select({ gameId: gameAccess.gameId, userId: gameAccess.userId })
+      .from(gameAccess)
+      .leftJoin(users, eq(gameAccess.userId, users.id))
+      .where(isNull(users.id));
+    
+    for (const access of orphanedByUser) {
+      this.addIssue({
+        severity: 'error',
+        table: 'gameAccess',
+        type: 'orphaned',
+        description: `Game access record for game ${access.gameId} references non-existent user ${access.userId}`,
+        recordId: `${access.gameId}-${access.userId}`,
+        fixAction: 'DELETE FROM game_access WHERE game_id = ? AND user_id = ?'
+      });
+    }
+  }
+
+  async checkOrphanedUserFavoriteClubs(): Promise<void> {
+    // Check user favorite clubs with invalid user references
+    const orphanedByUser = await db
+      .select({ userId: userFavoriteClubs.userId, clubId: userFavoriteClubs.clubId })
+      .from(userFavoriteClubs)
+      .leftJoin(users, eq(userFavoriteClubs.userId, users.id))
+      .where(isNull(users.id));
+    
+    for (const favorite of orphanedByUser) {
+      this.addIssue({
+        severity: 'error',
+        table: 'userFavoriteClubs',
+        type: 'orphaned',
+        description: `User favorite club record references non-existent user ${favorite.userId}`,
+        recordId: `${favorite.userId}-${favorite.clubId}`,
+        fixAction: 'DELETE FROM user_favorite_clubs WHERE user_id = ? AND club_id = ?'
+      });
+    }
+    
+    // Check user favorite clubs with invalid club references
+    const orphanedByClub = await db
+      .select({ userId: userFavoriteClubs.userId, clubId: userFavoriteClubs.clubId })
+      .from(userFavoriteClubs)
+      .leftJoin(clubs, eq(userFavoriteClubs.clubId, clubs.id))
+      .where(isNull(clubs.id));
+    
+    for (const favorite of orphanedByClub) {
+      this.addIssue({
+        severity: 'error',
+        table: 'userFavoriteClubs',
+        type: 'orphaned',
+        description: `User favorite club record references non-existent club ${favorite.clubId}`,
+        recordId: `${favorite.userId}-${favorite.clubId}`,
+        fixAction: 'DELETE FROM user_favorite_clubs WHERE user_id = ? AND club_id = ?'
       });
     }
   }
