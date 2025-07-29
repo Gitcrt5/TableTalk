@@ -1,4 +1,4 @@
-import { eq, like, or } from "drizzle-orm";
+import { eq, like, or, and } from "drizzle-orm";
 import { games, hands, userBidding, comments, users, clubs, partners, gamePlayers, partnershipBidding, gameParticipants, gameAccess, userFavoriteClubs, type Game, type Hand, type UserBidding, type Comment, type User, type Club, type Partner, type GamePlayer, type PartnershipBidding, type GameParticipant, type GameAccess, type UserFavoriteClub, type InsertGame, type InsertHand, type InsertUserBidding, type InsertComment, type InsertClub, type InsertGamePlayer, type InsertPartnershipBidding, type InsertGameParticipant, type InsertPartner, type InsertGameAccess, type InsertUserFavoriteClub, type UpsertUser } from "@shared/schema";
 
 export interface IStorage {
@@ -208,7 +208,7 @@ export class DatabaseStorage implements IStorage {
         createdAt: users.createdAt,
         updatedAt: users.updatedAt,
         isActive: users.isActive,
-        deactivationReason: users.deactivationReason,
+
       })
       .from(gamePlayers)
       .innerJoin(users, eq(gamePlayers.userId, users.id))
@@ -357,13 +357,7 @@ export class DatabaseStorage implements IStorage {
     return result as User[];
   }
 
-  async getUserPartners(userId: string): Promise<User[]> {
-    return [];
-  }
 
-  async addPartner(userId: string, partnerId: string): Promise<void> {}
-
-  async removePartner(userId: string, partnerId: string): Promise<void> {}
 
   async deactivateUser(userId: string, reason?: string): Promise<boolean> {
     const result = await this.db.update(users)
@@ -381,6 +375,58 @@ export class DatabaseStorage implements IStorage {
 
   async getAdminStats(): Promise<any> {
     return {};
+  }
+
+  // User search and partner management
+  async searchUsers(query: string): Promise<User[]> {
+    const result = await this.db.select().from(users)
+      .where(or(
+        like(users.email, `%${query}%`),
+        like(users.firstName, `%${query}%`),
+        like(users.lastName, `%${query}%`),
+        like(users.displayName, `%${query}%`)
+      ))
+      .where(eq(users.isActive, true))
+      .limit(10);
+    return result as User[];
+  }
+
+  async getUserPartners(userId: string): Promise<User[]> {
+    const result = await this.db.select({
+      id: users.id,
+      email: users.email,
+      firstName: users.firstName,
+      lastName: users.lastName,
+      displayName: users.displayName,
+      profileImageUrl: users.profileImageUrl,
+      password: users.password,
+      authType: users.authType,
+      userType: users.userType,
+      emailVerified: users.emailVerified,
+      featureFlags: users.featureFlags,
+      createdAt: users.createdAt,
+      updatedAt: users.updatedAt,
+      isActive: users.isActive,
+    })
+    .from(partners)
+    .innerJoin(users, eq(partners.partnerId, users.id))
+    .where(eq(partners.userId, userId));
+    return result as User[];
+  }
+
+  async addPartner(userId: string, partnerId: string): Promise<void> {
+    // Add bidirectional partnership
+    await this.db.insert(partners).values({ userId, partnerId });
+    await this.db.insert(partners).values({ userId: partnerId, partnerId: userId });
+  }
+
+  async removePartner(userId: string, partnerId: string): Promise<void> {
+    // Remove bidirectional partnership
+    await this.db.delete(partners)
+      .where(or(
+        and(eq(partners.userId, userId), eq(partners.partnerId, partnerId)),
+        and(eq(partners.userId, partnerId), eq(partners.partnerId, userId))
+      ));
   }
 
   async createGameParticipant(participant: InsertGameParticipant): Promise<GameParticipant> {
