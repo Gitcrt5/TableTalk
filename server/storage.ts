@@ -245,12 +245,37 @@ export class DatabaseStorage implements IStorage {
     return result as Hand[];
   }
 
-  // Placeholder implementations for remaining methods
-  async createGame(game: InsertGame): Promise<Game> { throw new Error("Not implemented"); }
-  async getGame(id: number): Promise<Game | undefined> { return undefined; }
-  async updateGame(id: number, updates: Partial<Game>): Promise<Game | undefined> { return undefined; }
-  async getAllGames(): Promise<Game[]> { return []; }
-  async searchGames(query: string): Promise<Game[]> { return []; }
+  async createGame(game: InsertGame): Promise<Game> {
+    const result = await this.db.insert(games).values(game).returning();
+    return result[0] as Game;
+  }
+
+  async getGame(id: number): Promise<Game | undefined> {
+    const result = await this.db.select().from(games).where(eq(games.id, id)).limit(1);
+    return result[0] as Game | undefined;
+  }
+
+  async updateGame(id: number, updates: Partial<Game>): Promise<Game | undefined> {
+    const result = await this.db.update(games).set({ ...updates, updatedAt: new Date() }).where(eq(games.id, id)).returning();
+    return result[0] as Game | undefined;
+  }
+
+  async getAllGames(): Promise<Game[]> {
+    const result = await this.db.select().from(games).orderBy(games.createdAt);
+    return result as Game[];
+  }
+
+  async searchGames(query: string): Promise<Game[]> {
+    const result = await this.db.select().from(games)
+      .where(or(
+        like(games.title, `%${query}%`),
+        like(games.filename, `%${query}%`),
+        like(games.location, `%${query}%`),
+        like(games.event, `%${query}%`)
+      ))
+      .orderBy(games.createdAt);
+    return result as Game[];
+  }
   async findDuplicateByFirstHand(firstHand: any): Promise<Game | undefined> { return undefined; }
   async addGamePlayer(gamePlayer: InsertGamePlayer): Promise<GamePlayer> { throw new Error("Not implemented"); }
   async getGamePlayers(gameId: number): Promise<User[]> { return []; }
@@ -304,4 +329,6 @@ export class DatabaseStorage implements IStorage {
 
 // Use database storage for production
 import { db } from "./db";
+import { games, hands, comments, users } from "@shared/schema";
+import { eq, like, or } from "drizzle-orm";
 export const storage: IStorage = new DatabaseStorage(db);
