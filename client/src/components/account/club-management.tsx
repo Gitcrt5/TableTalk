@@ -176,14 +176,24 @@ export default function ClubManagement() {
           {homeClub && (
             <div className="p-4 border rounded-lg bg-muted/50">
               <div className="flex items-start justify-between">
-                <div>
+                <div className="flex-1">
                   <h4 className="font-medium">{homeClub.name}</h4>
                   <p className="text-sm text-muted-foreground flex items-center gap-1">
                     <MapPin className="w-3 h-3" />
                     {formatClubLocation(homeClub)}
                   </p>
                 </div>
-                <Badge variant="secondary">Home Club</Badge>
+                <div className="flex items-center gap-2">
+                  <Badge variant="secondary">Home Club</Badge>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setHomeClubMutation.mutate(null)}
+                    disabled={setHomeClubMutation.isPending}
+                  >
+                    Clear
+                  </Button>
+                </div>
               </div>
             </div>
           )}
@@ -268,15 +278,6 @@ export default function ClubManagement() {
             >
               {setHomeClubMutation.isPending ? "Setting..." : "Set as Home Club"}
             </Button>
-            {homeClub && (
-              <Button 
-                variant="outline" 
-                onClick={() => setHomeClubMutation.mutate(null)}
-                disabled={setHomeClubMutation.isPending}
-              >
-                Clear Home Club
-              </Button>
-            )}
           </div>
         </CardContent>
       </Card>
