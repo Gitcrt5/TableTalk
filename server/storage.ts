@@ -302,5 +302,6 @@ export class DatabaseStorage implements IStorage {
   async attachPbnToRegularGame(gameId: number, pbnContent: string, filename: string): Promise<any> { return {}; }
 }
 
-// Currently use the existing storage from routes (will be updated)
-export const storage: IStorage = new MemStorage();
+// Use database storage for production
+import { db } from "./db";
+export const storage: IStorage = new DatabaseStorage(db);
