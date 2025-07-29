@@ -5,7 +5,7 @@ import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 import { storage } from "./storage";
 import { parsePBN } from "./services/pbn-parser";
-import { insertGameSchema, insertHandSchema, insertUserBiddingSchema, insertCommentSchema, insertPartnershipBiddingSchema, insertGamePlayerSchema, insertPartnerSchema, insertGameParticipantSchema, User } from "@shared/schema";
+import { insertGameSchema, insertHandSchema, insertUserBiddingSchema, insertCommentSchema, insertPartnershipBiddingSchema, insertGamePlayerSchema, insertPartnerSchema, insertGameParticipantSchema, insertClubSchema, User } from "@shared/schema";
 import { setupAuth as setupReplitAuth, isAuthenticated as isReplitAuthenticated } from "./replitAuth";
 import { setupLocalAuth, bootstrapAdmin } from "./auth";
 
@@ -1022,6 +1022,109 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating feature flags:", error);
       res.status(500).json({ error: "Failed to update feature flags" });
+    }
+  });
+
+  // Club management routes
+  app.get("/api/admin/clubs", isAuthenticated, async (req: any, res) => {
+    try {
+      const user = req.user;
+      if (user.userType !== "admin") {
+        return res.status(403).json({ error: "Admin access required" });
+      }
+
+      const clubs = await storage.getAllClubs();
+      res.json(clubs);
+    } catch (error) {
+      console.error("Error fetching clubs:", error);
+      res.status(500).json({ error: "Failed to fetch clubs" });
+    }
+  });
+
+  app.post("/api/admin/clubs", isAuthenticated, async (req: any, res) => {
+    try {
+      const user = req.user;
+      if (user.userType !== "admin") {
+        return res.status(403).json({ error: "Admin access required" });
+      }
+
+      const { name, location, state, country, website, email } = req.body;
+      
+      if (!name || !name.trim()) {
+        return res.status(400).json({ error: "Club name is required" });
+      }
+
+      const clubData = {
+        name: name.trim(),
+        location: location?.trim() || null,
+        state: state?.trim() || null,
+        country: country?.trim() || null,
+        website: website?.trim() || null,
+        email: email?.trim() || null,
+        isActive: true,
+      };
+
+      const club = await storage.createClub(clubData);
+      res.json(club);
+    } catch (error) {
+      console.error("Error creating club:", error);
+      res.status(500).json({ error: "Failed to create club" });
+    }
+  });
+
+  app.put("/api/admin/clubs/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const user = req.user;
+      if (user.userType !== "admin") {
+        return res.status(403).json({ error: "Admin access required" });
+      }
+
+      const clubId = parseInt(req.params.id);
+      const { name, location, state, country, website, email } = req.body;
+      
+      if (!name || !name.trim()) {
+        return res.status(400).json({ error: "Club name is required" });
+      }
+
+      const updates = {
+        name: name.trim(),
+        location: location?.trim() || null,
+        state: state?.trim() || null,
+        country: country?.trim() || null,
+        website: website?.trim() || null,
+        email: email?.trim() || null,
+      };
+
+      const club = await storage.updateClub(clubId, updates);
+      if (club) {
+        res.json(club);
+      } else {
+        res.status(404).json({ error: "Club not found" });
+      }
+    } catch (error) {
+      console.error("Error updating club:", error);
+      res.status(500).json({ error: "Failed to update club" });
+    }
+  });
+
+  app.post("/api/admin/clubs/:id/deactivate", isAuthenticated, async (req: any, res) => {
+    try {
+      const user = req.user;
+      if (user.userType !== "admin") {
+        return res.status(403).json({ error: "Admin access required" });
+      }
+
+      const clubId = parseInt(req.params.id);
+      const success = await storage.deactivateClub(clubId);
+      
+      if (success) {
+        res.json({ message: "Club deactivated successfully" });
+      } else {
+        res.status(404).json({ error: "Club not found" });
+      }
+    } catch (error) {
+      console.error("Error deactivating club:", error);
+      res.status(500).json({ error: "Failed to deactivate club" });
     }
   });
 

@@ -4,11 +4,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Settings, Users, Database, Shield, BarChart3, Flag } from "lucide-react";
+import { Settings, Users, Database, Shield, BarChart3, Flag, Building2 } from "lucide-react";
 import { Link } from "wouter";
 import UserManagement from "@/components/admin/user-management";
 import DatabaseIntegrity from "@/components/admin/database-integrity";
 import FeatureFlags from "@/components/admin/feature-flags";
+// import ClubManagement from "@/components/admin/club-management";
 
 export default function AdminPage() {
   const { user } = useAuth();
@@ -61,7 +62,7 @@ export default function AdminPage() {
       </div>
 
       <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4">
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-5">
           <TabsTrigger value="overview" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-1 sm:px-3">
             <BarChart3 className="h-3 w-3 sm:h-4 sm:w-4" />
             <span className="hidden sm:inline">Overview</span>
@@ -71,6 +72,11 @@ export default function AdminPage() {
             <Users className="h-3 w-3 sm:h-4 sm:w-4" />
             <span className="hidden sm:inline">User Management</span>
             <span className="sm:hidden">Users</span>
+          </TabsTrigger>
+          <TabsTrigger value="clubs" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-1 sm:px-3">
+            <Building2 className="h-3 w-3 sm:h-4 sm:w-4" />
+            <span className="hidden sm:inline">Club Management</span>
+            <span className="sm:hidden">Clubs</span>
           </TabsTrigger>
           <TabsTrigger value="database" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-1 sm:px-3">
             <Database className="h-3 w-3 sm:h-4 sm:w-4" />
@@ -135,6 +141,12 @@ export default function AdminPage() {
 
         <TabsContent value="users" className="space-y-6">
           <UserManagement />
+        </TabsContent>
+
+        <TabsContent value="clubs" className="space-y-6">
+          <div className="text-center py-8">
+            <p className="text-muted-foreground">Club management functionality is being implemented.</p>
+          </div>
         </TabsContent>
 
         <TabsContent value="database" className="space-y-6">
