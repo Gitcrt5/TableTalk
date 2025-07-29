@@ -57,14 +57,17 @@ export default function ClubManagement() {
     queryKey: ["/api/admin/clubs"],
     queryFn: async () => {
       const response = await apiRequest("/api/admin/clubs");
-      console.log("Clubs API response:", response);
-      return Array.isArray(response) ? response : [];
+      const data = await response.json();
+      console.log("Loaded", data.length, "clubs");
+      return Array.isArray(data) ? data : [];
     }
   });
 
   const createClubMutation = useMutation({
-    mutationFn: (clubData: ClubFormData) => 
-      apiRequest("/api/admin/clubs", { method: "POST", body: JSON.stringify(clubData), headers: API_HEADERS }),
+    mutationFn: async (clubData: ClubFormData) => {
+      const response = await apiRequest("/api/admin/clubs", { method: "POST", body: JSON.stringify(clubData), headers: API_HEADERS });
+      return await response.json();
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/clubs"] });
       setIsAddDialogOpen(false);
@@ -77,8 +80,10 @@ export default function ClubManagement() {
   });
 
   const updateClubMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: ClubFormData }) => 
-      apiRequest(`/api/admin/clubs/${id}`, { method: "PUT", body: JSON.stringify(data), headers: API_HEADERS }),
+    mutationFn: async ({ id, data }: { id: number; data: ClubFormData }) => {
+      const response = await apiRequest(`/api/admin/clubs/${id}`, { method: "PUT", body: JSON.stringify(data), headers: API_HEADERS });
+      return await response.json();
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/clubs"] });
       setEditingClub(null);
@@ -91,8 +96,10 @@ export default function ClubManagement() {
   });
 
   const deactivateClubMutation = useMutation({
-    mutationFn: (clubId: number) => 
-      apiRequest(`/api/admin/clubs/${clubId}/deactivate`, { method: "POST" }),
+    mutationFn: async (clubId: number) => {
+      const response = await apiRequest(`/api/admin/clubs/${clubId}/deactivate`, { method: "POST" });
+      return await response.json();
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/clubs"] });
       toast({ title: "Club deactivated successfully" });
@@ -151,9 +158,10 @@ export default function ClubManagement() {
     return matches;
   }) : [];
 
-  console.log("Search query:", searchQuery);
-  console.log("Total clubs:", clubs.length);
-  console.log("Filtered clubs:", filteredClubs.length);
+  // Debug logging for search functionality
+  if (searchQuery) {
+    console.log(`Search: "${searchQuery}" found ${filteredClubs.length} of ${clubs.length} clubs`);
+  }
 
   if (isLoading) {
     return <div className="text-center py-8">Loading clubs...</div>;
