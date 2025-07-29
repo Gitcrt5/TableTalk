@@ -133,12 +133,34 @@ export default function ClubManagement() {
     }
   };
 
-  const filteredClubs = Array.isArray(clubs) ? clubs.filter((club: Club) =>
-    club.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    club.location?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    club.state?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    club.country?.toLowerCase().includes(searchQuery.toLowerCase())
-  ) : [];
+  const filteredClubs = Array.isArray(clubs) ? clubs.filter((club: Club) => {
+    if (!searchQuery.trim()) return true;
+    
+    const query = searchQuery.toLowerCase().trim();
+    const name = club.name?.toLowerCase() || '';
+    const location = club.location?.toLowerCase() || '';
+    const state = club.state?.toLowerCase() || '';
+    const country = club.country?.toLowerCase() || '';
+    
+    const matches = name.includes(query) || 
+                   location.includes(query) || 
+                   state.includes(query) || 
+                   country.includes(query);
+    
+    // Debug logging - remove after testing
+    if (searchQuery === "new") {
+      console.log(`Searching for "${query}" in club:`, {
+        id: club.id,
+        name,
+        location,
+        state,
+        country,
+        matches
+      });
+    }
+    
+    return matches;
+  }) : [];
 
   if (isLoading) {
     return <div className="text-center py-8">Loading clubs...</div>;
