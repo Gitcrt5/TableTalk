@@ -57,6 +57,7 @@ export default function ClubManagement() {
     queryKey: ["/api/admin/clubs"],
     queryFn: async () => {
       const response = await apiRequest("/api/admin/clubs");
+      console.log("Clubs API response:", response);
       return Array.isArray(response) ? response : [];
     }
   });
@@ -147,20 +148,12 @@ export default function ClubManagement() {
                    state.includes(query) || 
                    country.includes(query);
     
-    // Debug logging - remove after testing
-    if (searchQuery === "new") {
-      console.log(`Searching for "${query}" in club:`, {
-        id: club.id,
-        name,
-        location,
-        state,
-        country,
-        matches
-      });
-    }
-    
     return matches;
   }) : [];
+
+  console.log("Search query:", searchQuery);
+  console.log("Total clubs:", clubs.length);
+  console.log("Filtered clubs:", filteredClubs.length);
 
   if (isLoading) {
     return <div className="text-center py-8">Loading clubs...</div>;
