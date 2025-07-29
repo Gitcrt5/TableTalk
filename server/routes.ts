@@ -1061,7 +1061,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         country: country?.trim() || null,
         website: website?.trim() || null,
         email: email?.trim() || null,
-        isActive: true,
+        createdBy: getUserId(req)
       };
 
       const club = await storage.createClub(clubData);

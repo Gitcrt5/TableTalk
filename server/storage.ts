@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, like, or } from "drizzle-orm";
 import { games, hands, userBidding, comments, users, clubs, partners, gamePlayers, partnershipBidding, gameParticipants, gameAccess, userFavoriteClubs, type Game, type Hand, type UserBidding, type Comment, type User, type Club, type Partner, type GamePlayer, type PartnershipBidding, type GameParticipant, type GameAccess, type UserFavoriteClub, type InsertGame, type InsertHand, type InsertUserBidding, type InsertComment, type InsertClub, type InsertGamePlayer, type InsertPartnershipBidding, type InsertGameParticipant, type InsertPartner, type InsertGameAccess, type InsertUserFavoriteClub, type UpsertUser } from "@shared/schema";
 
 export interface IStorage {
@@ -43,15 +43,12 @@ export interface IStorage {
   updateHand(id: number, updates: Partial<Hand>): Promise<Hand | undefined>;
   getHandsByGame(gameId: number): Promise<Hand[]>;
 
-  // User Bidding
+  // User Bidding (practice)
   createUserBidding(bidding: InsertUserBidding): Promise<UserBidding>;
   getUserBidding(handId: number, userId: string): Promise<UserBidding | undefined>;
-  getUserBiddingStats(userId: string): Promise<{
-    totalHands: number;
-    averageAccuracy: number;
-  }>;
+  getUserBiddingStats(userId: string): Promise<any>;
 
-  // Partnership Bidding
+  // Partnership Bidding (official)
   createPartnershipBidding(bidding: InsertPartnershipBidding): Promise<PartnershipBidding>;
   getPartnershipBidding(handId: number, userId: string, partnerId?: string): Promise<PartnershipBidding | undefined>;
   getAllPartnershipBiddingForHand(handId: number): Promise<PartnershipBidding[]>;
@@ -64,37 +61,23 @@ export interface IStorage {
   likeComment(commentId: number): Promise<void>;
   getUserCommentCount(userId: string): Promise<number>;
 
-  // Statistics
-  getUserStats(userId: string): Promise<{
-    gamesUploaded: number;
-    handsReviewed: number;
-    averageBiddingAccuracy: number;
-    commentsMade: number;
-  }>;
-  
-  // Partner management
+  // User management
+  getUserStats(userId: string): Promise<any>;
   searchUsers(query: string): Promise<User[]>;
   getUserPartners(userId: string): Promise<User[]>;
   addPartner(userId: string, partnerId: string): Promise<void>;
   removePartner(userId: string, partnerId: string): Promise<void>;
-  
-  // Admin operations
   deactivateUser(userId: string, reason?: string): Promise<boolean>;
   reactivateUser(userId: string): Promise<boolean>;
-  getAdminStats(): Promise<{
-    totalUsers: number;
-    totalGames: number;
-    totalHands: number;
-    totalComments: number;
-    newUsersThisWeek: number;
-    newGamesThisWeek: number;
-  }>;
+  getAdminStats(): Promise<any>;
 
-  // Game Participants
+  // Game participation
   createGameParticipant(participant: InsertGameParticipant): Promise<GameParticipant>;
   getGameParticipants(gameId: number): Promise<GameParticipant[]>;
   getUserGameParticipation(userId: string, gameId: number): Promise<GameParticipant | undefined>;
   getPartnerCommentsForHand(handId: number, userId: string, partnerId: string): Promise<Comment[]>;
+
+  // Partners
   createPartner(partner: InsertPartner): Promise<Partner>;
 
   // Clubs
@@ -106,87 +89,14 @@ export interface IStorage {
   searchClubs(query: string): Promise<Club[]>;
   deleteClub(id: number): Promise<boolean>;
   deactivateClub(id: number): Promise<boolean>;
-  
-  // User Favorite Clubs
   addFavoriteClub(userId: string, clubId: number): Promise<void>;
   removeFavoriteClub(userId: string, clubId: number): Promise<void>;
   getUserFavoriteClubs(userId: string): Promise<Club[]>;
 
-  // Game Access (for private games)
+  // Live game access
   grantGameAccess(gameId: number, userId: string, accessType: string): Promise<void>;
   checkGameAccess(gameId: number, userId: string): Promise<boolean>;
-
-  // Unified game operations
-  attachPbnToRegularGame(gameId: number, pbnContent: string, filename: string): Promise<{
-    success: boolean;
-    handsCreated: number;
-  }>;
-}
-
-// Implementation will be added later
-export class MemStorage implements IStorage {
-  // Placeholder implementation for interface compliance
-  async getUser(id: string): Promise<User | undefined> { return undefined; }
-  async getUserByEmail(email: string): Promise<User | undefined> { return undefined; }
-  async upsertUser(user: UpsertUser): Promise<User> { throw new Error("Not implemented"); }
-  async updateUser(id: string, updates: Partial<User>): Promise<User | undefined> { return undefined; }
-  async updateUserType(id: string, userType: string): Promise<boolean> { return false; }
-  async getAllUsers(): Promise<User[]> { return []; }
-  async getAllHands(): Promise<Hand[]> { return []; }
-  async createGame(game: InsertGame): Promise<Game> { throw new Error("Not implemented"); }
-  async getGame(id: number): Promise<Game | undefined> { return undefined; }
-  async updateGame(id: number, updates: Partial<Game>): Promise<Game | undefined> { return undefined; }
-  async getAllGames(): Promise<Game[]> { return []; }
-  async searchGames(query: string): Promise<Game[]> { return []; }
-  async findDuplicateByFirstHand(firstHand: any): Promise<Game | undefined> { return undefined; }
-  async addGamePlayer(gamePlayer: InsertGamePlayer): Promise<GamePlayer> { throw new Error("Not implemented"); }
-  async getGamePlayers(gameId: number): Promise<User[]> { return []; }
-  async removeGamePlayer(gameId: number, userId: string): Promise<void> {}
-  async getUserGames(userId: string): Promise<Game[]> { return []; }
-  async getCurrentUserGameData(gameId: number, userId: string): Promise<any> { return {}; }
-  async createHand(hand: InsertHand): Promise<Hand> { throw new Error("Not implemented"); }
-  async getHand(id: number): Promise<Hand | undefined> { return undefined; }
-  async updateHand(id: number, updates: Partial<Hand>): Promise<Hand | undefined> { return undefined; }
-  async getHandsByGame(gameId: number): Promise<Hand[]> { return []; }
-  async createUserBidding(bidding: InsertUserBidding): Promise<UserBidding> { throw new Error("Not implemented"); }
-  async getUserBidding(handId: number, userId: string): Promise<UserBidding | undefined> { return undefined; }
-  async getUserBiddingStats(userId: string): Promise<any> { return {}; }
-  async createPartnershipBidding(bidding: InsertPartnershipBidding): Promise<PartnershipBidding> { throw new Error("Not implemented"); }
-  async getPartnershipBidding(handId: number, userId: string, partnerId?: string): Promise<PartnershipBidding | undefined> { return undefined; }
-  async getAllPartnershipBiddingForHand(handId: number): Promise<PartnershipBidding[]> { return []; }
-  async updatePartnershipBidding(id: number, biddingSequence: string[]): Promise<PartnershipBidding | undefined> { return undefined; }
-  async deletePartnershipBidding(handId: number, userId: string): Promise<void> {}
-  async createComment(comment: InsertComment): Promise<Comment> { throw new Error("Not implemented"); }
-  async getCommentsByHand(handId: number): Promise<Comment[]> { return []; }
-  async likeComment(commentId: number): Promise<void> {}
-  async getUserCommentCount(userId: string): Promise<number> { return 0; }
-  async getUserStats(userId: string): Promise<any> { return {}; }
-  async searchUsers(query: string): Promise<User[]> { return []; }
-  async getUserPartners(userId: string): Promise<User[]> { return []; }
-  async addPartner(userId: string, partnerId: string): Promise<void> {}
-  async removePartner(userId: string, partnerId: string): Promise<void> {}
-  async deactivateUser(userId: string, reason?: string): Promise<boolean> { return false; }
-  async reactivateUser(userId: string): Promise<boolean> { return false; }
-  async getAdminStats(): Promise<any> { return {}; }
-  async createGameParticipant(participant: InsertGameParticipant): Promise<GameParticipant> { throw new Error("Not implemented"); }
-  async getGameParticipants(gameId: number): Promise<GameParticipant[]> { return []; }
-  async getUserGameParticipation(userId: string, gameId: number): Promise<GameParticipant | undefined> { return undefined; }
-  async getPartnerCommentsForHand(handId: number, userId: string, partnerId: string): Promise<Comment[]> { return []; }
-  async createPartner(partner: InsertPartner): Promise<Partner> { throw new Error("Not implemented"); }
-  async createClub(club: InsertClub): Promise<Club> { throw new Error("Not implemented"); }
-  async getClub(id: number): Promise<Club | undefined> { return undefined; }
-  async updateClub(id: number, updates: Partial<Club>): Promise<Club | undefined> { return undefined; }
-  async getAllClubs(): Promise<Club[]> { return []; }
-  async getActiveClubs(): Promise<Club[]> { return []; }
-  async searchClubs(query: string): Promise<Club[]> { return []; }
-  async deleteClub(id: number): Promise<boolean> { return false; }
-  async deactivateClub(id: number): Promise<boolean> { return false; }
-  async addFavoriteClub(userId: string, clubId: number): Promise<void> {}
-  async removeFavoriteClub(userId: string, clubId: number): Promise<void> {}
-  async getUserFavoriteClubs(userId: string): Promise<Club[]> { return []; }
-  async grantGameAccess(gameId: number, userId: string, accessType: string): Promise<void> {}
-  async checkGameAccess(gameId: number, userId: string): Promise<boolean> { return false; }
-  async attachPbnToRegularGame(gameId: number, pbnContent: string, filename: string): Promise<any> { return {}; }
+  attachPbnToRegularGame(gameId: number, pbnContent: string, filename: string): Promise<any>;
 }
 
 // Database storage implementation
@@ -215,33 +125,30 @@ export class DatabaseStorage implements IStorage {
         password: user.password,
         authType: user.authType,
         userType: user.userType,
-        homeClubId: user.homeClubId,
         emailVerified: user.emailVerified,
         featureFlags: user.featureFlags,
-        profileCompletionStep: user.profileCompletionStep,
-        updatedAt: new Date(),
-      },
+      }
     }).returning();
     return result[0] as User;
   }
 
   async updateUser(id: string, updates: Partial<User>): Promise<User | undefined> {
-    const result = await this.db.update(users).set({ ...updates, updatedAt: new Date() }).where(eq(users.id, id)).returning();
+    const result = await this.db.update(users).set(updates).where(eq(users.id, id)).returning();
     return result[0] as User | undefined;
   }
 
   async updateUserType(id: string, userType: string): Promise<boolean> {
-    const result = await this.db.update(users).set({ userType, updatedAt: new Date() }).where(eq(users.id, id));
+    const result = await this.db.update(users).set({ userType }).where(eq(users.id, id));
     return result.rowCount > 0;
   }
 
   async getAllUsers(): Promise<User[]> {
-    const result = await this.db.select().from(users).orderBy(users.createdAt);
+    const result = await this.db.select().from(users);
     return result as User[];
   }
 
   async getAllHands(): Promise<Hand[]> {
-    const result = await this.db.select().from(hands).orderBy(hands.gameId, hands.boardNumber);
+    const result = await this.db.select().from(hands);
     return result as Hand[];
   }
 
@@ -256,12 +163,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateGame(id: number, updates: Partial<Game>): Promise<Game | undefined> {
-    const result = await this.db.update(games).set({ ...updates, updatedAt: new Date() }).where(eq(games.id, id)).returning();
+    const result = await this.db.update(games).set(updates).where(eq(games.id, id)).returning();
     return result[0] as Game | undefined;
   }
 
   async getAllGames(): Promise<Game[]> {
-    const result = await this.db.select().from(games).orderBy(games.createdAt);
+    const result = await this.db.select().from(games);
     return result as Game[];
   }
 
@@ -269,66 +176,308 @@ export class DatabaseStorage implements IStorage {
     const result = await this.db.select().from(games)
       .where(or(
         like(games.title, `%${query}%`),
-        like(games.filename, `%${query}%`),
         like(games.location, `%${query}%`),
-        like(games.event, `%${query}%`)
-      ))
-      .orderBy(games.createdAt);
+        like(games.tournament, `%${query}%`)
+      ));
     return result as Game[];
   }
-  async findDuplicateByFirstHand(firstHand: any): Promise<Game | undefined> { return undefined; }
-  async addGamePlayer(gamePlayer: InsertGamePlayer): Promise<GamePlayer> { throw new Error("Not implemented"); }
-  async getGamePlayers(gameId: number): Promise<User[]> { return []; }
-  async removeGamePlayer(gameId: number, userId: string): Promise<void> {}
-  async getUserGames(userId: string): Promise<Game[]> { return []; }
-  async getCurrentUserGameData(gameId: number, userId: string): Promise<any> { return {}; }
-  async createHand(hand: InsertHand): Promise<Hand> { throw new Error("Not implemented"); }
-  async getHand(id: number): Promise<Hand | undefined> { return undefined; }
-  async updateHand(id: number, updates: Partial<Hand>): Promise<Hand | undefined> { return undefined; }
-  async getHandsByGame(gameId: number): Promise<Hand[]> { return []; }
-  async createUserBidding(bidding: InsertUserBidding): Promise<UserBidding> { throw new Error("Not implemented"); }
-  async getUserBidding(handId: number, userId: string): Promise<UserBidding | undefined> { return undefined; }
-  async getUserBiddingStats(userId: string): Promise<any> { return {}; }
-  async createPartnershipBidding(bidding: InsertPartnershipBidding): Promise<PartnershipBidding> { throw new Error("Not implemented"); }
-  async getPartnershipBidding(handId: number, userId: string, partnerId?: string): Promise<PartnershipBidding | undefined> { return undefined; }
-  async getAllPartnershipBiddingForHand(handId: number): Promise<PartnershipBidding[]> { return []; }
-  async updatePartnershipBidding(id: number, biddingSequence: string[]): Promise<PartnershipBidding | undefined> { return undefined; }
-  async deletePartnershipBidding(handId: number, userId: string): Promise<void> {}
-  async createComment(comment: InsertComment): Promise<Comment> { throw new Error("Not implemented"); }
-  async getCommentsByHand(handId: number): Promise<Comment[]> { return []; }
-  async likeComment(commentId: number): Promise<void> {}
-  async getUserCommentCount(userId: string): Promise<number> { return 0; }
-  async getUserStats(userId: string): Promise<any> { return {}; }
-  async searchUsers(query: string): Promise<User[]> { return []; }
-  async getUserPartners(userId: string): Promise<User[]> { return []; }
+
+  async findDuplicateByFirstHand(firstHand: any): Promise<Game | undefined> {
+    // Implementation for finding duplicates by first hand
+    return undefined;
+  }
+
+  async addGamePlayer(gamePlayer: InsertGamePlayer): Promise<GamePlayer> {
+    const result = await this.db.insert(gamePlayers).values(gamePlayer).returning();
+    return result[0] as GamePlayer;
+  }
+
+  async getGamePlayers(gameId: number): Promise<User[]> {
+    const result = await this.db.select({
+      id: users.id,
+        email: users.email,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        displayName: users.displayName,
+        profileImageUrl: users.profileImageUrl,
+        password: users.password,
+        authType: users.authType,
+        userType: users.userType,
+        emailVerified: users.emailVerified,
+        featureFlags: users.featureFlags,
+        createdAt: users.createdAt,
+        updatedAt: users.updatedAt,
+        isActive: users.isActive,
+        deactivationReason: users.deactivationReason,
+      })
+      .from(gamePlayers)
+      .innerJoin(users, eq(gamePlayers.userId, users.id))
+      .where(eq(gamePlayers.gameId, gameId));
+    return result as User[];
+  }
+
+  async removeGamePlayer(gameId: number, userId: string): Promise<void> {
+    await this.db.delete(gamePlayers).where(eq(gamePlayers.gameId, gameId)).where(eq(gamePlayers.userId, userId));
+  }
+
+  async getUserGames(userId: string): Promise<Game[]> {
+    const result = await this.db.select({
+        id: games.id,
+        title: games.title,
+        date: games.date,
+        location: games.location,
+        tournament: games.tournament,
+        round: games.round,
+        uploadedBy: games.uploadedBy,
+        pbnContent: games.pbnContent,
+        filename: games.filename,
+        gameType: games.gameType,
+        createdAt: games.createdAt,
+        updatedAt: games.updatedAt,
+      })
+      .from(gamePlayers)
+      .innerJoin(games, eq(gamePlayers.gameId, games.id))
+      .where(eq(gamePlayers.userId, userId));
+    return result as Game[];
+  }
+
+  async getCurrentUserGameData(gameId: number, userId: string): Promise<any> {
+    return {};
+  }
+
+  async createHand(hand: InsertHand): Promise<Hand> {
+    const result = await this.db.insert(hands).values(hand).returning();
+    return result[0] as Hand;
+  }
+
+  async getHand(id: number): Promise<Hand | undefined> {
+    const result = await this.db.select().from(hands).where(eq(hands.id, id)).limit(1);
+    return result[0] as Hand | undefined;
+  }
+
+  async updateHand(id: number, updates: Partial<Hand>): Promise<Hand | undefined> {
+    const result = await this.db.update(hands).set(updates).where(eq(hands.id, id)).returning();
+    return result[0] as Hand | undefined;
+  }
+
+  async getHandsByGame(gameId: number): Promise<Hand[]> {
+    const result = await this.db.select().from(hands).where(eq(hands.gameId, gameId));
+    return result as Hand[];
+  }
+
+  async createUserBidding(bidding: InsertUserBidding): Promise<UserBidding> {
+    const result = await this.db.insert(userBidding).values(bidding).returning();
+    return result[0] as UserBidding;
+  }
+
+  async getUserBidding(handId: number, userId: string): Promise<UserBidding | undefined> {
+    const result = await this.db.select().from(userBidding)
+      .where(eq(userBidding.handId, handId))
+      .where(eq(userBidding.userId, userId))
+      .limit(1);
+    return result[0] as UserBidding | undefined;
+  }
+
+  async getUserBiddingStats(userId: string): Promise<any> {
+    return {};
+  }
+
+  async createPartnershipBidding(bidding: InsertPartnershipBidding): Promise<PartnershipBidding> {
+    const result = await this.db.insert(partnershipBidding).values(bidding).returning();
+    return result[0] as PartnershipBidding;
+  }
+
+  async getPartnershipBidding(handId: number, userId: string, partnerId?: string): Promise<PartnershipBidding | undefined> {
+    const result = await this.db.select().from(partnershipBidding)
+      .where(eq(partnershipBidding.handId, handId))
+      .where(eq(partnershipBidding.userId, userId))
+      .limit(1);
+    return result[0] as PartnershipBidding | undefined;
+  }
+
+  async getAllPartnershipBiddingForHand(handId: number): Promise<PartnershipBidding[]> {
+    const result = await this.db.select().from(partnershipBidding)
+      .where(eq(partnershipBidding.handId, handId));
+    return result as PartnershipBidding[];
+  }
+
+  async updatePartnershipBidding(id: number, biddingSequence: string[]): Promise<PartnershipBidding | undefined> {
+    const result = await this.db.update(partnershipBidding)
+      .set({ biddingSequence })
+      .where(eq(partnershipBidding.id, id))
+      .returning();
+    return result[0] as PartnershipBidding | undefined;
+  }
+
+  async deletePartnershipBidding(handId: number, userId: string): Promise<void> {
+    await this.db.delete(partnershipBidding)
+      .where(eq(partnershipBidding.handId, handId))
+      .where(eq(partnershipBidding.userId, userId));
+  }
+
+  async createComment(comment: InsertComment): Promise<Comment> {
+    const result = await this.db.insert(comments).values(comment).returning();
+    return result[0] as Comment;
+  }
+
+  async getCommentsByHand(handId: number): Promise<Comment[]> {
+    const result = await this.db.select().from(comments)
+      .where(eq(comments.handId, handId));
+    return result as Comment[];
+  }
+
+  async likeComment(commentId: number): Promise<void> {
+    // Increment likes count
+    const comment = await this.db.select().from(comments).where(eq(comments.id, commentId)).limit(1);
+    if (comment[0]) {
+      await this.db.update(comments)
+        .set({ likes: (comment[0].likes || 0) + 1 })
+        .where(eq(comments.id, commentId));
+    }
+  }
+
+  async getUserCommentCount(userId: string): Promise<number> {
+    const result = await this.db.select().from(comments)
+      .where(eq(comments.userId, userId));
+    return result.length;
+  }
+
+  async getUserStats(userId: string): Promise<any> {
+    return {};
+  }
+
+  async searchUsers(query: string): Promise<User[]> {
+    const result = await this.db.select().from(users)
+      .where(or(
+        like(users.firstName, `%${query}%`),
+        like(users.lastName, `%${query}%`),
+        like(users.displayName, `%${query}%`),
+        like(users.email, `%${query}%`)
+      ));
+    return result as User[];
+  }
+
+  async getUserPartners(userId: string): Promise<User[]> {
+    return [];
+  }
+
   async addPartner(userId: string, partnerId: string): Promise<void> {}
+
   async removePartner(userId: string, partnerId: string): Promise<void> {}
-  async deactivateUser(userId: string, reason?: string): Promise<boolean> { return false; }
-  async reactivateUser(userId: string): Promise<boolean> { return false; }
-  async getAdminStats(): Promise<any> { return {}; }
-  async createGameParticipant(participant: InsertGameParticipant): Promise<GameParticipant> { throw new Error("Not implemented"); }
-  async getGameParticipants(gameId: number): Promise<GameParticipant[]> { return []; }
-  async getUserGameParticipation(userId: string, gameId: number): Promise<GameParticipant | undefined> { return undefined; }
-  async getPartnerCommentsForHand(handId: number, userId: string, partnerId: string): Promise<Comment[]> { return []; }
-  async createPartner(partner: InsertPartner): Promise<Partner> { throw new Error("Not implemented"); }
-  async createClub(club: InsertClub): Promise<Club> { throw new Error("Not implemented"); }
-  async getClub(id: number): Promise<Club | undefined> { return undefined; }
-  async updateClub(id: number, updates: Partial<Club>): Promise<Club | undefined> { return undefined; }
-  async getAllClubs(): Promise<Club[]> { return []; }
-  async getActiveClubs(): Promise<Club[]> { return []; }
-  async searchClubs(query: string): Promise<Club[]> { return []; }
-  async deleteClub(id: number): Promise<boolean> { return false; }
-  async deactivateClub(id: number): Promise<boolean> { return false; }
+
+  async deactivateUser(userId: string, reason?: string): Promise<boolean> {
+    const result = await this.db.update(users)
+      .set({ isActive: false })
+      .where(eq(users.id, userId));
+    return result.rowCount > 0;
+  }
+
+  async reactivateUser(userId: string): Promise<boolean> {
+    const result = await this.db.update(users)
+      .set({ isActive: true })
+      .where(eq(users.id, userId));
+    return result.rowCount > 0;
+  }
+
+  async getAdminStats(): Promise<any> {
+    return {};
+  }
+
+  async createGameParticipant(participant: InsertGameParticipant): Promise<GameParticipant> {
+    const result = await this.db.insert(gameParticipants).values(participant).returning();
+    return result[0] as GameParticipant;
+  }
+
+  async getGameParticipants(gameId: number): Promise<GameParticipant[]> {
+    const result = await this.db.select().from(gameParticipants)
+      .where(eq(gameParticipants.gameId, gameId));
+    return result as GameParticipant[];
+  }
+
+  async getUserGameParticipation(userId: string, gameId: number): Promise<GameParticipant | undefined> {
+    const result = await this.db.select().from(gameParticipants)
+      .where(eq(gameParticipants.userId, userId))
+      .where(eq(gameParticipants.gameId, gameId))
+      .limit(1);
+    return result[0] as GameParticipant | undefined;
+  }
+
+  async getPartnerCommentsForHand(handId: number, userId: string, partnerId: string): Promise<Comment[]> {
+    return [];
+  }
+
+  async createPartner(partner: InsertPartner): Promise<Partner> {
+    const result = await this.db.insert(partners).values(partner).returning();
+    return result[0] as Partner;
+  }
+
+  // Club management methods - FULLY IMPLEMENTED
+  async createClub(club: InsertClub): Promise<Club> {
+    const result = await this.db.insert(clubs).values(club).returning();
+    return result[0] as Club;
+  }
+
+  async getClub(id: number): Promise<Club | undefined> {
+    const result = await this.db.select().from(clubs).where(eq(clubs.id, id)).limit(1);
+    return result[0] as Club | undefined;
+  }
+
+  async updateClub(id: number, updates: Partial<Club>): Promise<Club | undefined> {
+    const result = await this.db.update(clubs).set({ ...updates, updatedAt: new Date() }).where(eq(clubs.id, id)).returning();
+    return result[0] as Club | undefined;
+  }
+
+  async getAllClubs(): Promise<Club[]> {
+    const result = await this.db.select().from(clubs).orderBy(clubs.name);
+    return result as Club[];
+  }
+
+  async getActiveClubs(): Promise<Club[]> {
+    const result = await this.db.select().from(clubs).where(eq(clubs.isActive, true)).orderBy(clubs.name);
+    return result as Club[];
+  }
+
+  async searchClubs(query: string): Promise<Club[]> {
+    const result = await this.db.select().from(clubs)
+      .where(or(
+        like(clubs.name, `%${query}%`),
+        like(clubs.location, `%${query}%`),
+        like(clubs.state, `%${query}%`),
+        like(clubs.country, `%${query}%`)
+      ))
+      .orderBy(clubs.name);
+    return result as Club[];
+  }
+
+  async deleteClub(id: number): Promise<boolean> {
+    const result = await this.db.delete(clubs).where(eq(clubs.id, id));
+    return result.rowCount > 0;
+  }
+
+  async deactivateClub(id: number): Promise<boolean> {
+    const result = await this.db.update(clubs).set({ isActive: false, updatedAt: new Date() }).where(eq(clubs.id, id));
+    return result.rowCount > 0;
+  }
+
   async addFavoriteClub(userId: string, clubId: number): Promise<void> {}
+
   async removeFavoriteClub(userId: string, clubId: number): Promise<void> {}
-  async getUserFavoriteClubs(userId: string): Promise<Club[]> { return []; }
+
+  async getUserFavoriteClubs(userId: string): Promise<Club[]> {
+    return [];
+  }
+
   async grantGameAccess(gameId: number, userId: string, accessType: string): Promise<void> {}
-  async checkGameAccess(gameId: number, userId: string): Promise<boolean> { return false; }
-  async attachPbnToRegularGame(gameId: number, pbnContent: string, filename: string): Promise<any> { return {}; }
+
+  async checkGameAccess(gameId: number, userId: string): Promise<boolean> {
+    return false;
+  }
+
+  async attachPbnToRegularGame(gameId: number, pbnContent: string, filename: string): Promise<any> {
+    return {};
+  }
 }
 
 // Use database storage for production
 import { db } from "./db";
-import { games, hands, comments, users, clubs } from "@shared/schema";
-import { eq, like, or } from "drizzle-orm";
 export const storage: IStorage = new DatabaseStorage(db);

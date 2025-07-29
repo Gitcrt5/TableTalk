@@ -17,6 +17,7 @@ export const sessions = pgTable(
 export const clubs = pgTable("clubs", {
   id: serial("id").primaryKey(),
   name: varchar("name").notNull(),
+  location: varchar("location"), // City/location field
   state: varchar("state"),
   country: varchar("country"), 
   website: varchar("website"),

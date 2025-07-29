@@ -9,7 +9,7 @@ import { Link } from "wouter";
 import UserManagement from "@/components/admin/user-management";
 import DatabaseIntegrity from "@/components/admin/database-integrity";
 import FeatureFlags from "@/components/admin/feature-flags";
-// import ClubManagement from "@/components/admin/club-management";
+import ClubManagement from "@/components/admin/club-management";
 
 export default function AdminPage() {
   const { user } = useAuth();
@@ -144,9 +144,7 @@ export default function AdminPage() {
         </TabsContent>
 
         <TabsContent value="clubs" className="space-y-6">
-          <div className="text-center py-8">
-            <p className="text-muted-foreground">Club management functionality is being implemented.</p>
-          </div>
+          <ClubManagement />
         </TabsContent>
 
         <TabsContent value="database" className="space-y-6">
