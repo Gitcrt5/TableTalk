@@ -1,5 +1,8 @@
 import { eq, like, or, and } from "drizzle-orm";
 import { games, hands, userBidding, comments, users, clubs, partners, gamePlayers, partnershipBidding, gameParticipants, gameAccess, userFavoriteClubs, type Game, type Hand, type UserBidding, type Comment, type User, type Club, type Partner, type GamePlayer, type PartnershipBidding, type GameParticipant, type GameAccess, type UserFavoriteClub, type InsertGame, type InsertHand, type InsertUserBidding, type InsertComment, type InsertClub, type InsertGamePlayer, type InsertPartnershipBidding, type InsertGameParticipant, type InsertPartner, type InsertGameAccess, type InsertUserFavoriteClub, type UpsertUser } from "@shared/schema";
+import { db } from "./db";
+import { users, games, hands, userBidding, comments, gamePlayers, partnershipBidding, clubs, userFavoriteClubs, partners, gameParticipants, gameAccess, type User, type Game, type Hand, type UserBidding, type Comment, type GamePlayer, type PartnershipBidding, type Club, type UserFavoriteClub, type Partner, type GameParticipant, type GameAccess } from "@shared/schema";
+import { eq, desc, and, or, like, inArray, isNull, asc, sql } from "drizzle-orm";
 
 export interface IStorage {
   // Users (required for Replit Auth)
@@ -92,6 +95,9 @@ export interface IStorage {
   addFavoriteClub(userId: string, clubId: number): Promise<void>;
   removeFavoriteClub(userId: string, clubId: number): Promise<void>;
   getUserFavoriteClubs(userId: string): Promise<Club[]>;
+  getUserHomeClub(userId: string): Promise<Club | null>;
+  setUserHomeClub(userId: string, clubId: number | null): Promise<void>;
+  searchActiveClubs(query: string): Promise<Club[]>;
 
   // Live game access
   grantGameAccess(gameId: number, userId: string, accessType: string): Promise<void>;
@@ -505,12 +511,114 @@ export class DatabaseStorage implements IStorage {
     return result.rowCount > 0;
   }
 
-  async addFavoriteClub(userId: string, clubId: number): Promise<void> {}
-
-  async removeFavoriteClub(userId: string, clubId: number): Promise<void> {}
-
+  // User favorite clubs (max 5)
   async getUserFavoriteClubs(userId: string): Promise<Club[]> {
-    return [];
+    const favoriteClubIds = await db
+      .select({ clubId: userFavoriteClubs.clubId })
+      .from(userFavoriteClubs)
+      .where(eq(userFavoriteClubs.userId, userId));
+
+    if (favoriteClubIds.length === 0) {
+      return [];
+    }
+
+    const clubIds = favoriteClubIds.map(fc => fc.clubId);
+    return await db
+      .select()
+      .from(clubs)
+      .where(inArray(clubs.id, clubIds))
+      .orderBy(clubs.name);
+  }
+
+  async addFavoriteClub(userId: string, clubId: number): Promise<void> {
+    // Check if user already has 5 favorite clubs
+    const currentFavorites = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(userFavoriteClubs)
+      .where(eq(userFavoriteClubs.userId, userId));
+
+    if (currentFavorites[0]?.count >= 5) {
+      throw new Error("Maximum of 5 favorite clubs allowed");
+    }
+
+    // Check if club exists and is active
+    const club = await db
+      .select()
+      .from(clubs)
+      .where(and(eq(clubs.id, clubId), eq(clubs.isActive, true)))
+      .limit(1);
+
+    if (club.length === 0) {
+      throw new Error("Club not found or inactive");
+    }
+
+    // Add to favorites (ignore if already exists)
+    await db
+      .insert(userFavoriteClubs)
+      .values({ userId, clubId })
+      .onConflictDoNothing();
+  }
+
+  async removeFavoriteClub(userId: string, clubId: number): Promise<void> {
+    await db
+      .delete(userFavoriteClubs)
+      .where(and(
+        eq(userFavoriteClubs.userId, userId),
+        eq(userFavoriteClubs.clubId, clubId)
+      ));
+  }
+
+  async getUserHomeClub(userId: string): Promise<Club | null> {
+    const user = await this.getUser(userId);
+    if (!user?.homeClubId) {
+      return null;
+    }
+
+    const homeClub = await db
+      .select()
+      .from(clubs)
+      .where(eq(clubs.id, user.homeClubId))
+      .limit(1);
+
+    return homeClub[0] || null;
+  }
+
+  async setUserHomeClub(userId: string, clubId: number | null): Promise<void> {
+    if (clubId !== null) {
+      // Verify club exists and is active
+      const club = await db
+        .select()
+        .from(clubs)
+        .where(and(eq(clubs.id, clubId), eq(clubs.isActive, true)))
+        .limit(1);
+
+      if (club.length === 0) {
+        throw new Error("Club not found or inactive");
+      }
+    }
+
+    await db
+      .update(users)
+      .set({ homeClubId: clubId })
+      .where(eq(users.id, userId));
+  }
+
+  async searchActiveClubs(query: string): Promise<Club[]> {
+    const searchTerm = `%${query.toLowerCase()}%`;
+    return await db
+      .select()
+      .from(clubs)
+      .where(and(
+        eq(clubs.isActive, true),
+        or(
+          sql`lower(${clubs.name}) like ${searchTerm}`,
+          sql`lower(${clubs.location}) like ${searchTerm}`,
+          sql`lower(${clubs.state}) like ${searchTerm}`,
+          sql`lower(${clubs.country}) like ${searchTerm}`
+        )
+      ))
+      .orderBy(clubs.name)
+      .limit(20);
   }
 
   async grantGameAccess(gameId: number, userId: string, accessType: string): Promise<void> {}

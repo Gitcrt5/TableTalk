@@ -1460,6 +1460,98 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // User club management routes
+  app.get("/api/user/clubs/favorites", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = getUserId(req);
+      const favoriteClubs = await storage.getUserFavoriteClubs(userId);
+      res.json(favoriteClubs);
+    } catch (error) {
+      console.error("Error fetching favorite clubs:", error);
+      res.status(500).json({ error: "Failed to fetch favorite clubs" });
+    }
+  });
+
+  app.post("/api/user/clubs/favorites", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = getUserId(req);
+      const { clubId } = req.body;
+      
+      if (!clubId) {
+        return res.status(400).json({ error: "Club ID is required" });
+      }
+      
+      await storage.addFavoriteClub(userId, clubId);
+      res.json({ message: "Club added to favorites successfully" });
+    } catch (error) {
+      console.error("Error adding favorite club:", error);
+      if (error instanceof Error && error.message.includes("Maximum of 5")) {
+        res.status(400).json({ error: error.message });
+      } else if (error instanceof Error && error.message.includes("not found")) {
+        res.status(404).json({ error: error.message });
+      } else {
+        res.status(500).json({ error: "Failed to add favorite club" });
+      }
+    }
+  });
+
+  app.delete("/api/user/clubs/favorites/:clubId", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = getUserId(req);
+      const clubId = parseInt(req.params.clubId);
+      
+      await storage.removeFavoriteClub(userId, clubId);
+      res.json({ message: "Club removed from favorites successfully" });
+    } catch (error) {
+      console.error("Error removing favorite club:", error);
+      res.status(500).json({ error: "Failed to remove favorite club" });
+    }
+  });
+
+  app.get("/api/user/clubs/home", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = getUserId(req);
+      const homeClub = await storage.getUserHomeClub(userId);
+      res.json(homeClub);
+    } catch (error) {
+      console.error("Error fetching home club:", error);
+      res.status(500).json({ error: "Failed to fetch home club" });
+    }
+  });
+
+  app.put("/api/user/clubs/home", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = getUserId(req);
+      const { clubId } = req.body;
+      
+      await storage.setUserHomeClub(userId, clubId || null);
+      res.json({ message: "Home club updated successfully" });
+    } catch (error) {
+      console.error("Error setting home club:", error);
+      if (error instanceof Error && error.message.includes("not found")) {
+        res.status(404).json({ error: error.message });
+      } else {
+        res.status(500).json({ error: "Failed to set home club" });
+      }
+    }
+  });
+
+  app.get("/api/clubs/search", isAuthenticated, async (req: any, res) => {
+    try {
+      const { query } = req.query;
+      
+      if (!query || typeof query !== 'string') {
+        return res.status(400).json({ error: "Search query is required" });
+      }
+      
+      const clubs = await storage.searchActiveClubs(query);
+      res.json(clubs);
+    } catch (error) {
+      console.error("Error searching clubs:", error);
+      res.status(500).json({ error: "Failed to search clubs" });
+    }
+  });
+
   // Game participation routes
   app.post("/api/games/:gameId/participation", isAuthenticated, async (req: any, res) => {
     try {
