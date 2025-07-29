@@ -13,8 +13,23 @@ export const sessions = pgTable(
   (table) => [index("IDX_session_expire").on(table.expire)],
 );
 
+// Bridge clubs/locations table
+export const clubs = pgTable("clubs", {
+  id: serial("id").primaryKey(),
+  name: varchar("name").notNull(),
+  state: varchar("state"),
+  country: varchar("country"), 
+  website: varchar("website"),
+  email: varchar("email"),
+  // Club status for admin management
+  isActive: boolean("is_active").default(true), // false = inactive (hidden from lists)
+  // Metadata
+  createdBy: varchar("created_by").notNull(), // User who added this club
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Users table for authentication
-// Supports both Replit OAuth and email/password authentication
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().notNull(),
   email: varchar("email").unique(),
@@ -42,48 +57,51 @@ export const users = pgTable("users", {
   deactivatedAt: timestamp("deactivated_at"),
   // Feature flags for gradual rollout
   featureFlags: jsonb("feature_flags").default({}),
+  // Profile completion tracking for multi-step registration
+  profileCompletionStep: integer("profile_completion_step").default(0), // 0-4, tracks registration progress
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// Bridge clubs/locations table
-export const clubs = pgTable("clubs", {
-  id: serial("id").primaryKey(),
-  name: varchar("name").notNull(),
-  location: text("location"), // City, state/province, country
-  address: text("address"),
-  website: varchar("website"),
-  phone: varchar("phone"),
-  email: varchar("email"),
-  // Verification status
-  isVerified: boolean("is_verified").default(false),
-  verifiedBy: varchar("verified_by"), // Admin user ID who verified
-  verifiedAt: timestamp("verified_at"),
-  // Club management
-  managedBy: varchar("managed_by"), // User ID of club manager/account
-  // Metadata
-  createdBy: varchar("created_by").notNull(), // User who added this club
+// User favorite clubs (max 5)
+export const userFavoriteClubs = pgTable("user_favorite_clubs", {
+  userId: varchar("user_id").notNull(),
+  clubId: integer("club_id").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Unified games table supporting both regular PBN games and live games
 export const games = pgTable("games", {
   id: serial("id").primaryKey(),
-  title: text("title").notNull(), // User-entered title (user.title)
+  title: text("title").notNull(), // User-entered title
   tournament: text("tournament"),
   round: text("round"),
-  date: text("date"), // User-entered date (user.date)
-  location: text("location"), // User-entered location (user.location)
-  clubId: integer("club_id"), // Reference to clubs table if location matches a club
+  date: text("date"), // User-entered date (for both regular and live games)
+  location: text("location"), // User-entered location
+  clubId: integer("club_id"), // Reference to clubs table
   event: text("event"), // Type of event (e.g., "Club Championship", "Pairs Game")
-  // PBN-extracted fields
-  pbnEvent: text("pbn_event"), // Event from PBN file (pbn.event)
-  pbnSite: text("pbn_site"), // Site from PBN file (pbn.site)  
-  pbnDate: text("pbn_date"), // Date from PBN file (pbn.date)
-  filename: text("filename"), // Original filename
-  uploadedBy: text("uploaded_by").notNull(),
+  
+  // Game type and status
+  gameType: varchar("game_type").notNull().default("regular"), // "regular" or "live"
+  status: varchar("status").default("completed"), // "active", "completed" (active only for live games)
+  
+  // Creator and partnership information
+  uploadedBy: text("uploaded_by").notNull(), // Game creator/uploader
+  partnerId: varchar("partner_id"), // Partner for live games
+  visibility: varchar("visibility").default("public"), // public, private
+  
+  // PBN-related fields (for both regular uploads and live game attachments)
+  pbnEvent: text("pbn_event"), // Event from PBN file
+  pbnSite: text("pbn_site"), // Site from PBN file  
+  pbnDate: text("pbn_date"), // Date from PBN file
+  filename: text("filename"), // Original PBN filename
+  pbnContent: text("pbn_content"), // PBN file content (required for regular, optional for live)
+  pbnUploadedAt: timestamp("pbn_uploaded_at"), // When PBN was attached
+  
+  // Timestamps
   uploadedAt: timestamp("uploaded_at").notNull().defaultNow(),
-  pbnContent: text("pbn_content").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 // Game players table to track who played in each game
@@ -97,6 +115,7 @@ export const gamePlayers = pgTable("game_players", {
   addedAt: timestamp("added_at").notNull().defaultNow(),
 });
 
+// Unified hands table supporting both regular PBN hands and live game hands
 export const hands = pgTable("hands", {
   id: serial("id").primaryKey(),
   gameId: integer("game_id").notNull(),
@@ -107,9 +126,20 @@ export const hands = pgTable("hands", {
   southHand: text("south_hand").notNull(),
   eastHand: text("east_hand").notNull(),
   westHand: text("west_hand").notNull(),
-  // Removed actualBidding - now handled by partnershipBidding table
-  // Removed finalContract and declarer - now calculated from partnershipBidding
+  
+  // Live game specific fields (optional for regular games)
+  biddingSequence: jsonb("bidding_sequence").$type<string[]>(), // Live bidding entry
+  openingLead: varchar("opening_lead"), // e.g., "SK"
+  tricksTaken: integer("tricks_taken"),
+  scoreMp: varchar("score_mp"), // Matchpoint score
+  scoreImp: varchar("score_imp"), // IMP score
+  notes: text("notes"),
+  
+  // Result information
   result: text("result"), // Made, Down 1, etc.
+  
+  // Timestamps
+  lastModified: timestamp("last_modified").defaultNow(),
 });
 
 // Partnership-specific bidding table
@@ -144,10 +174,39 @@ export const comments = pgTable("comments", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
-// Insert schemas
+// Partners table for user relationships
+export const partners = pgTable("partners", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull(), // User who added the partner
+  partnerId: varchar("partner_id").notNull(), // User being added as partner
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Game participants table to track who played in each game
+export const gameParticipants = pgTable("game_participants", {
+  id: serial("id").primaryKey(),
+  gameId: integer("game_id").notNull(),
+  userId: varchar("user_id").notNull(), // User who played
+  partnerId: varchar("partner_id"), // Optional - their partner in this game
+  position: varchar("position"), // Optional - North, South, East, West
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Game access control (for private games)
+export const gameAccess = pgTable("game_access", {
+  gameId: integer("game_id").notNull(),
+  userId: varchar("user_id").notNull(),
+  accessType: varchar("access_type").default("view"), // view, edit
+  grantedAt: timestamp("granted_at").defaultNow(),
+});
+
+// Insert schemas for unified system
 export const insertGameSchema = createInsertSchema(games).omit({
   id: true,
   uploadedAt: true,
+  createdAt: true,
+  updatedAt: true,
+  pbnUploadedAt: true,
 });
 
 export const insertGamePlayerSchema = createInsertSchema(gamePlayers).omit({
@@ -157,6 +216,7 @@ export const insertGamePlayerSchema = createInsertSchema(gamePlayers).omit({
 
 export const insertHandSchema = createInsertSchema(hands).omit({
   id: true,
+  lastModified: true,
 });
 
 export const insertPartnershipBiddingSchema = createInsertSchema(partnershipBidding).omit({
@@ -178,11 +238,41 @@ export const insertCommentSchema = createInsertSchema(comments).omit({
   createdAt: true,
 });
 
-// Types
+export const insertClubSchema = createInsertSchema(clubs).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertGameAccessSchema = createInsertSchema(gameAccess).omit({
+  grantedAt: true,
+});
+
+export const insertUserFavoriteClubSchema = createInsertSchema(userFavoriteClubs).omit({
+  createdAt: true,
+});
+
+export const insertPartnerSchema = createInsertSchema(partners).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertGameParticipantSchema = createInsertSchema(gameParticipants).omit({
+  id: true,
+  createdAt: true,
+});
+
+// Types for unified system
 export type Game = typeof games.$inferSelect & {
   uploaderName?: string;
   players?: User[];
+  // Computed fields for game list display
+  isActive?: boolean;
+  hasPbn?: boolean;
+  commentCount?: number;
+  hasBidding?: boolean;
 };
+
 export type GamePlayer = typeof gamePlayers.$inferSelect;
 export type Hand = typeof hands.$inferSelect & {
   commentCount?: number;
@@ -195,45 +285,24 @@ export type Hand = typeof hands.$inferSelect & {
 export type UserBidding = typeof userBidding.$inferSelect;
 export type PartnershipBidding = typeof partnershipBidding.$inferSelect;
 export type Comment = typeof comments.$inferSelect;
+export type Club = typeof clubs.$inferSelect;
+export type GameAccess = typeof gameAccess.$inferSelect;
+export type UserFavoriteClub = typeof userFavoriteClubs.$inferSelect;
+export type Partner = typeof partners.$inferSelect;
+export type GameParticipant = typeof gameParticipants.$inferSelect;
 
+// Insert types
 export type InsertGame = z.infer<typeof insertGameSchema>;
 export type InsertGamePlayer = z.infer<typeof insertGamePlayerSchema>;
 export type InsertHand = z.infer<typeof insertHandSchema>;
 export type InsertUserBidding = z.infer<typeof insertUserBiddingSchema>;
 export type InsertPartnershipBidding = z.infer<typeof insertPartnershipBiddingSchema>;
 export type InsertComment = z.infer<typeof insertCommentSchema>;
-
-// Partners table for user relationships
-export const partners = pgTable("partners", {
-  id: serial("id").primaryKey(),
-  userId: varchar("user_id").notNull(), // User who added the partner
-  partnerId: varchar("partner_id").notNull(), // User being added as partner
-  createdAt: timestamp("created_at").defaultNow(),
-});
-
-// Game participants table to track who played in each game
-export const gameParticipants = pgTable("game_participants", {
-  id: serial("id").primaryKey(),
-  gameId: integer("game_id").notNull(),
-  userId: varchar("user_id").notNull(), // User who played
-  partnerId: varchar("partner_id"), // Optional - their partner in this game
-  position: varchar("position"), // Optional - North, South, East, West
-  createdAt: timestamp("created_at").defaultNow(),
-});
-
-export const insertPartnerSchema = createInsertSchema(partners).omit({
-  id: true,
-  createdAt: true,
-});
+export type InsertClub = z.infer<typeof insertClubSchema>;
+export type InsertGameAccess = z.infer<typeof insertGameAccessSchema>;
+export type InsertUserFavoriteClub = z.infer<typeof insertUserFavoriteClubSchema>;
 export type InsertPartner = z.infer<typeof insertPartnerSchema>;
-export type Partner = typeof partners.$inferSelect;
-
-export const insertGameParticipantSchema = createInsertSchema(gameParticipants).omit({
-  id: true,
-  createdAt: true,
-});
 export type InsertGameParticipant = z.infer<typeof insertGameParticipantSchema>;
-export type GameParticipant = typeof gameParticipants.$inferSelect;
 
 // User types for authentication
 export type UpsertUser = typeof users.$inferInsert;
@@ -243,80 +312,3 @@ export type User = typeof users.$inferSelect & {
     [key: string]: any;
   };
 };
-
-// Live games tables (only visible to users with feature flag)
-export const liveGames = pgTable("live_games", {
-  id: serial("id").primaryKey(),
-  title: varchar("title").notNull(),
-  clubId: integer("club_id"),
-  gameDate: timestamp("game_date").notNull(),
-  createdBy: varchar("created_by").notNull(),
-  partnerId: varchar("partner_id"),
-  status: varchar("status").default("in_progress"), // in_progress, completed, linked
-  linkedGameId: integer("linked_game_id"), // Links to games table when PBN found
-  visibility: varchar("visibility").default("private"),
-  pbnContent: text("pbn_content"), // Attached PBN file content
-  pbnFilename: varchar("pbn_filename"), // Original PBN filename
-  pbnUploadedAt: timestamp("pbn_uploaded_at"), // When PBN was attached
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-});
-
-export const liveHands = pgTable("live_hands", {
-  id: serial("id").primaryKey(),
-  liveGameId: integer("live_game_id").notNull(),
-  boardNumber: integer("board_number").notNull(),
-  dealer: varchar("dealer", { length: 10 }), // N, S, E, W
-  vulnerability: varchar("vulnerability", { length: 20 }), // None, NS, EW, Both
-  northHand: varchar("north_hand", { length: 50 }),
-  southHand: varchar("south_hand", { length: 50 }),
-  eastHand: varchar("east_hand", { length: 50 }),
-  westHand: varchar("west_hand", { length: 50 }),
-  biddingSequence: jsonb("bidding_sequence").$type<string[]>(),
-  openingLead: varchar("opening_lead"), // e.g., "SK"
-  tricksTaken: integer("tricks_taken"),
-  scoreMp: varchar("score_mp"), // Matchpoint score
-  scoreImp: varchar("score_imp"), // IMP score
-  notes: text("notes"),
-  lastModified: timestamp("last_modified").defaultNow(),
-});
-
-export const liveGameAccess = pgTable("live_game_access", {
-  liveGameId: integer("live_game_id").notNull(),
-  userId: varchar("user_id").notNull(),
-  accessType: varchar("access_type").default("view"), // view, edit
-  grantedAt: timestamp("granted_at").defaultNow(),
-});
-
-export const userFavoriteClubs = pgTable("user_favorite_clubs", {
-  userId: varchar("user_id").notNull(),
-  clubId: integer("club_id").notNull(),
-  createdAt: timestamp("created_at").defaultNow(),
-});
-
-// Insert schemas for live games
-export const insertLiveGameSchema = createInsertSchema(liveGames).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-export const insertLiveHandSchema = createInsertSchema(liveHands).omit({
-  id: true,
-  lastModified: true,
-});
-
-export const insertClubSchema = createInsertSchema(clubs).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-  verifiedAt: true,
-});
-
-// Types for live games
-export type LiveGame = typeof liveGames.$inferSelect;
-export type LiveHand = typeof liveHands.$inferSelect;
-export type InsertLiveGame = z.infer<typeof insertLiveGameSchema>;
-export type InsertLiveHand = z.infer<typeof insertLiveHandSchema>;
-export type InsertClub = z.infer<typeof insertClubSchema>;
-export type Club = typeof clubs.$inferSelect;

@@ -3,42 +3,66 @@
     {
       "name": "Newcastle Bridge Club",
       "location": "Newcastle, NSW, Australia",
-      "website": "https://newcastlebridge.com.au"
+      "state": "NSW",
+      "country": "Australia",
+      "website": "https://newcastlebridge.com.au",
+      "isActive": true
     },
     {
       "name": "Belmont Bridge Club",
-      "location": "Adelaide, SA, Australia", 
-      "website": "https://belmontbridge.com.au"
+      "location": "Adelaide, SA, Australia",
+      "state": "SA", 
+      "country": "Australia",
+      "website": "https://belmontbridge.com.au",
+      "isActive": true
     },
     {
       "name": "Charlestown Bridge Club",
       "location": "Melbourne, VIC, Australia",
-      "website": "https://c-townbridge.com.au"
+      "state": "VIC",
+      "country": "Australia",
+      "website": "https://c-townbridge.com.au",
+      "isActive": true
     },
     {
       "name": "Sydney Bridge Centre",
       "location": "Sydney, NSW, Australia",
-      "website": "https://sydneybridgecentre.com"
+      "state": "NSW",
+      "country": "Australia",
+      "website": "https://sydneybridgecentre.com",
+      "isActive": true
     },
     {
       "name": "Endor Bridge Center",
       "location": "Endor Forest, Outer Rim",
-      "website": null
+      "state": "Outer Rim",
+      "country": "Galaxy Far Far Away",
+      "website": null,
+      "isActive": true
     },
     {
       "name": "Tatooine Bridge Club",
       "location": "Mos Eisley, Tatooine",
-      "website": null
+      "state": "Outer Rim",
+      "country": "Galaxy Far Far Away",
+      "website": null,
+      "isActive": true
     },
     {
       "name": "Caladan Bridge Club", 
       "location": "Caladan Palace, Caladan",
-      "website": null
+      "state": "Imperium",
+      "country": "Known Universe",
+      "website": null,
+      "isActive": true
     },
     {
       "name": "Arrakis Bridge Club",
       "location": "Arrakeen, Arrakis",
-      "website": null
+      "state": "Imperium",
+      "country": "Known Universe",
+      "website": null,
+      "isActive": true
     }
   ],
   "users": [
@@ -50,7 +74,8 @@
       "displayName": "Alice J",
       "userType": "test",
       "homeClub": "Newcastle Bridge Club",
-      "favoriteClubs": ["Newcastle Bridge Club", "Sydney Bridge Centre", "Melbourne Bridge Club"],
+      "favoriteClubs": ["Newcastle Bridge Club", "Sydney Bridge Centre", "Charlestown Bridge Club"],
+      "profileCompletionStep": 4,
       "featureFlags": {
         "liveGames": true
       }
@@ -62,8 +87,9 @@
       "lastName": "Smith",
       "displayName": "Bob S",
       "userType": "test",
-      "homeClub": "Adelaide Bridge Club",
-      "favoriteClubs": ["Adelaide Bridge Club"],
+      "homeClub": "Belmont Bridge Club",
+      "favoriteClubs": ["Belmont Bridge Club"],
+      "profileCompletionStep": 4,
       "featureFlags": {
         "liveGames": true
       }
@@ -75,8 +101,9 @@
       "lastName": "Williams",
       "displayName": "Carol W",
       "userType": "test",
-      "homeClub": "Melbourne Bridge Club",
-      "favoriteClubs": ["Melbourne Bridge Club"],
+      "homeClub": "Charlestown Bridge Club",
+      "favoriteClubs": ["Charlestown Bridge Club"],
+      "profileCompletionStep": 4,
       "featureFlags": {
         "liveGames": false
       }
@@ -90,6 +117,7 @@
       "userType": "test",
       "homeClub": "Sydney Bridge Centre",
       "favoriteClubs": ["Sydney Bridge Centre"],
+      "profileCompletionStep": 4,
       "featureFlags": {
         "liveGames": true
       }
@@ -101,8 +129,9 @@
       "lastName": "Davis",
       "displayName": "Eve D",
       "userType": "test",
-      "homeClub": "Brisbane Bridge Club",
-      "favoriteClubs": ["Brisbane Bridge Club"],
+      "homeClub": "Charlestown Bridge Club",
+      "favoriteClubs": ["Charlestown Bridge Club"],
+      "profileCompletionStep": 4,
       "featureFlags": {
         "liveGames": false
       }
@@ -116,6 +145,7 @@
       "userType": "test",
       "homeClub": "Endor Bridge Center",
       "favoriteClubs": ["Endor Bridge Center"],
+      "profileCompletionStep": 4,
       "featureFlags": {
         "liveGames": true
       }

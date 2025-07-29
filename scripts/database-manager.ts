@@ -2,7 +2,7 @@ import { db } from "../server/db";
 import { 
   users, games, hands, comments, userBidding, partnershipBidding, 
   partners, gameParticipants, gamePlayers, sessions, clubs,
-  liveGames, liveHands, liveGameAccess, userFavoriteClubs
+  gameAccess, userFavoriteClubs
 } from "../shared/schema";
 import { hashPassword } from "../server/auth";
 import { v4 as uuidv4 } from "uuid";
@@ -26,11 +26,9 @@ export async function clearAllTables() {
   await db.delete(hands);
   await db.delete(gamePlayers);
   await db.delete(gameParticipants);
+  await db.delete(gameAccess);
   await db.delete(games);
   await db.delete(partners);
-  await db.delete(liveGameAccess);
-  await db.delete(liveHands);
-  await db.delete(liveGames);
   await db.delete(userFavoriteClubs);
   await db.delete(clubs);
   await db.delete(sessions);
@@ -147,30 +145,16 @@ export async function deleteTestUsersAndData(): Promise<{
     }
   }
 
-  // Delete games uploaded by test users
+  // Delete games uploaded by test users (includes both regular and live games in unified system)
   for (const gameId of testGameIds) {
     await db.delete(games).where(eq(games.id, gameId));
     deletedGames++;
   }
 
-  // Delete live games created by test users
-  const testLiveGames = await db.select({ id: liveGames.id, createdBy: liveGames.createdBy }).from(liveGames);
-  const testLiveGameIds = testLiveGames.filter(lg => testUserIds.includes(lg.createdBy)).map(lg => lg.id);
-  
-  if (testLiveGameIds.length > 0) {
-    // Delete live game access
-    for (const liveGameId of testLiveGameIds) {
-      await db.delete(liveGameAccess).where(eq(liveGameAccess.liveGameId, liveGameId));
-    }
-    
-    // Delete live hands
-    for (const liveGameId of testLiveGameIds) {
-      await db.delete(liveHands).where(eq(liveHands.liveGameId, liveGameId));
-    }
-    
-    // Delete live games
-    for (const liveGameId of testLiveGameIds) {
-      await db.delete(liveGames).where(eq(liveGames.id, liveGameId));
+  // Delete game access records for test games
+  if (testGameIds.length > 0) {
+    for (const gameId of testGameIds) {
+      await db.delete(gameAccess).where(eq(gameAccess.gameId, gameId));
     }
   }
   
