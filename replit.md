@@ -428,6 +428,15 @@ IMPORTANT: Always verify implementation requests before making changes to code -
 - No feature blocking - all features available after steps 1-2
 - Progress tracking: profileCompletionStep field, ongoing top banner until complete
 
+**Club Management System**:
+- User interface: Bridge Clubs tab in profile with autocomplete + search modal
+- Club data: name, state, country, website, email (from user-supplied spreadsheet)
+- Favorites limited to 5 clubs maximum
+- Admin interface: Simple tab in existing admin panel
+- Club administration: Individual add/edit or file upload with error handling
+- Deletion logic: Delete if no users have as home club, otherwise mark inactive
+- Inactive clubs removed from all selection lists but preserve user relationships
+
 **Database Schema Management**:
 IMPORTANT: Whenever database schema is modified, always verify:
 - Sample data (sample-data.json) includes data for all required fields
