@@ -36,7 +36,7 @@ export default function GameDetail() {
   const location = useLocation();
 
   // Check URL parameters to determine if we should auto-edit
-  const searchParams = new URLSearchParams(location.split('?')[1] || '');
+  const searchParams = new URLSearchParams(location().split('?')[1] || '');
   const shouldAutoEdit = searchParams.get('edit') === 'true';
   const isNewGame = searchParams.get('new') === 'true';
 
@@ -217,15 +217,15 @@ export default function GameDetail() {
             <div className="flex items-center space-x-2">
               {user && user.id === game.uploadedBy && (
                 <GameEditForm 
-                  game={game} 
-                  open={editDialogOpen}
-                  onOpenChange={(open) => {
-                    setEditDialogOpen(open);
-                    if (!open && isNewGame) {
-                      // Clear URL parameters when closing after new game creation
-                      location(`/games/${game.id}`);
-                    }
-                  }}
+                    game={game} 
+                    open={editDialogOpen}
+                    onOpenChange={(open) => {
+                      setEditDialogOpen(open);
+                      if (!open && isNewGame) {
+                        // Clear URL parameters when closing after new game creation
+                        window.history.replaceState({}, '', `/games/${game.id}`);
+                      }
+                    }}
                   onSuccess={() => {
                     // Keep dialog open after successful updates to allow further editing
                     // Only close if explicitly requested by user
