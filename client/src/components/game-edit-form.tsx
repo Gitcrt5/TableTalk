@@ -30,6 +30,12 @@ import ClubLocationSelector from "./club-location-selector";
 import type { Game } from "@shared/schema";
 import { Edit } from "lucide-react";
 
+interface ClubLocationValue {
+  clubId?: number;
+  location?: string;
+  displayName?: string;
+}
+
 const gameEditSchema = z.object({
   title: z.string().min(1, "Title is required"),
   date: z.string().min(1, "Date is required"),
@@ -38,12 +44,6 @@ const gameEditSchema = z.object({
 });
 
 type GameEditFormData = z.infer<typeof gameEditSchema>;
-
-interface ClubLocationValue {
-  clubId?: number;
-  location?: string;
-  displayName?: string;
-}
 
 interface GameEditFormProps {
   game: Game;
@@ -64,7 +64,7 @@ export default function GameEditForm({ game, open: externalOpen, onOpenChange, o
 
   // Use external open state if provided, otherwise use internal state
   const isOpen = externalOpen !== undefined ? externalOpen : internalOpen;
-  
+
   // Create stable setOpen function that prevents unwanted closures
   const setOpen = (open: boolean) => {
     // Only allow closing via explicit user actions (form submission or cancel)

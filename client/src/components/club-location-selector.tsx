@@ -35,7 +35,7 @@ export default function ClubLocationSelector({
   const [showSearch, setShowSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [inputValue, setInputValue] = useState(value?.displayName || value?.location || "");
-  const [selectedMode, setSelectedMode<'club' | 'freetext'>(
+  const [selectedMode, setSelectedMode] = useState<'club' | 'freetext'>(
     value.clubId ? 'club' : 'freetext'
   );
 
@@ -77,7 +77,10 @@ export default function ClubLocationSelector({
     }
   }, [homeClub, homeClubDefault, value, onChange]);
 
-  const handleClubSelect = (club: Club) => {
+  const handleClubSelect = (club: Club, event?: React.MouseEvent) => {
+    // Prevent event bubbling that might close parent dialogs
+    event?.stopPropagation();
+    
     // Update the form state immediately
     onChange({
       clubId: club.id,
@@ -253,7 +256,7 @@ export default function ClubLocationSelector({
                 <Building2 className="w-3 h-3" />
                 Home Club
               </div>
-              <Card className="cursor-pointer hover:bg-muted/50" onClick={() => handleClubSelect(homeClub)}>
+              <Card className="cursor-pointer hover:bg-muted/50" onClick={(e) => handleClubSelect(homeClub, e)}>
                 <CardContent className="p-3">
                   <div className="flex items-center justify-between">
                     <div>
@@ -281,7 +284,7 @@ export default function ClubLocationSelector({
                   <Card 
                     key={club.id} 
                     className="cursor-pointer hover:bg-muted/50"
-                    onClick={() => handleClubSelect(club)}
+                    onClick={(e) => handleClubSelect(club, e)}
                   >
                     <CardContent className="p-3">
                       <div className="flex items-center justify-between">
@@ -312,7 +315,7 @@ export default function ClubLocationSelector({
                     <Card 
                       key={club.id} 
                       className="cursor-pointer hover:bg-muted/50"
-                      onClick={() => handleClubSelect(club)}
+                      onClick={(e) => handleClubSelect(club, e)}
                     >
                       <CardContent className="p-3">
                         <div className="font-medium">{club.name}</div>
