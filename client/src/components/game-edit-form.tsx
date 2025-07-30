@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/form";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import ClubLocationSelector from "./club-location-selector";
 import type { Game } from "@shared/schema";
 import { Edit } from "lucide-react";
 
@@ -33,6 +34,7 @@ const gameEditSchema = z.object({
   title: z.string().min(1, "Title is required"),
   date: z.string().min(1, "Date is required"),
   location: z.string().optional(),
+  clubId: z.number().optional(),
 });
 
 type GameEditFormData = z.infer<typeof gameEditSchema>;
@@ -44,6 +46,10 @@ interface GameEditFormProps {
 
 export default function GameEditForm({ game, autoOpen = false }: GameEditFormProps) {
   const [open, setOpen] = useState(false);
+  const [locationValue, setLocationValue] = useState({
+    clubId: game.clubId || undefined,
+    location: game.location || undefined,
+  });
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -60,14 +66,20 @@ export default function GameEditForm({ game, autoOpen = false }: GameEditFormPro
       title: game.title,
       date: game.date || "",
       location: game.location || "",
+      clubId: game.clubId || undefined,
     },
   });
 
   const updateGameMutation = useMutation({
     mutationFn: async (data: GameEditFormData) => {
+      const requestData = {
+        ...data,
+        clubId: locationValue.clubId || null,
+        location: locationValue.location || null,
+      };
       const response = await apiRequest(`/api/games/${game.id}`, {
         method: "PUT",
-        body: JSON.stringify(data),
+        body: JSON.stringify(requestData),
       });
       return response.json();
     },
@@ -155,19 +167,16 @@ export default function GameEditForm({ game, autoOpen = false }: GameEditFormPro
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="location"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Location</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Where the game was played" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div>
+              <ClubLocationSelector
+                value={locationValue}
+                onChange={setLocationValue}
+                showFreeText={true}
+                homeClubDefault={false}
+                label="Location"
+                placeholder="Select club or enter location"
+              />
+            </div>
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setOpen(false)}>

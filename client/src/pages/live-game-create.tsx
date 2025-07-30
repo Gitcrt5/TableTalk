@@ -30,17 +30,18 @@ export default function LiveGameCreate() {
   const { user } = useAuth();
   const [_, setLocation] = useLocation();
   const { toast } = useToast();
-  
+
   const [formData, setFormData] = useState({
     title: "",
-    clubId: "",
     gameDate: format(new Date(), "yyyy-MM-dd"),
     partnerId: ""
   });
 
+  const [locationValue, setLocationValue] = useState({});
+
   // Check if user has live games feature
   const hasLiveGamesFeature = user?.featureFlags?.liveGames === true;
-  
+
   if (!hasLiveGamesFeature) {
     return (
       <div className="container mx-auto p-4">
@@ -82,7 +83,7 @@ export default function LiveGameCreate() {
         ...data,
         partnerId: data.partnerId === "none" ? null : data.partnerId
       };
-      
+
       const response = await fetch("/api/live-games", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -110,7 +111,22 @@ export default function LiveGameCreate() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    createGameMutation.mutate(formData);
+        if (!formData.title || !formData.gameDate || (!locationValue.clubId && !locationValue.location)) {
+      toast({
+        title: "Error",
+        description: "Please fill in all required fields including location",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    createGameMutation.mutate({
+      title: formData.title,
+      gameDate: formData.gameDate,
+      clubId: locationValue.clubId || undefined,
+      location: locationValue.location || undefined,
+      partnerId: formData.partnerId === "none" ? null : formData.partnerId || undefined,
+    });
   };
 
   return (
@@ -130,38 +146,13 @@ export default function LiveGameCreate() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <Label htmlFor="club">Club</Label>
-              <Select
-                value={formData.clubId}
-                onValueChange={(value) => setFormData({ ...formData, clubId: value })}
-              >
-                <SelectTrigger id="club">
-                  <SelectValue placeholder="Select a club" />
-                </SelectTrigger>
-                <SelectContent>
-                  {favoriteClubs.length > 0 && (
-                    <>
-                      <div className="px-2 py-1 text-xs text-muted-foreground flex items-center">
-                        <Star className="w-3 h-3 mr-1" />
-                        Favorites
-                      </div>
-                      {favoriteClubs.map((club) => (
-                        <SelectItem key={club.id} value={club.id.toString()}>
-                          {club.name}
-                        </SelectItem>
-                      ))}
-                      <div className="border-t my-1" />
-                    </>
-                  )}
-                  <div className="px-2 py-1 text-xs text-muted-foreground">All Clubs</div>
-                  {allClubs.map((club) => (
-                    <SelectItem key={club.id} value={club.id.toString()}>
-                      {club.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+             <div>
+              <Label>Location</Label>
+              <ClubLocationSelector
+                setLocationValue={setLocationValue}
+                favoriteClubs={favoriteClubs}
+                allClubs={allClubs}
+              />
             </div>
 
             <div>

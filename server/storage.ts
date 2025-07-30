@@ -172,8 +172,21 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAllGames(): Promise<Game[]> {
-    const result = await this.db.select().from(games);
-    return result as Game[];
+    const result = await this.db
+      .select({
+        games: games,
+        club: clubs,
+      })
+      .from(games)
+      .leftJoin(clubs, eq(games.clubId, clubs.id))
+      .orderBy(desc(games.uploadedAt));
+
+    return result.map(row => ({
+      ...row.games,
+      clubName: row.club?.name,
+      clubLocation: row.club?.location,
+      displayLocation: row.club?.name || row.games.location,
+    })) as Game[];
   }
 
   async searchGames(query: string): Promise<Game[]> {
@@ -266,7 +279,7 @@ export class DatabaseStorage implements IStorage {
     }
 
     const player = gamePlayer[0];
-    
+
     // If they have a partner, fetch partner details
     if (player.partnerId) {
       const partner = await this.getUser(player.partnerId);
@@ -329,11 +342,11 @@ export class DatabaseStorage implements IStorage {
         eq(partnershipBidding.userId, userId)
       ))
       .limit(1);
-    
+
     if (result.length > 0) {
       return result[0] as PartnershipBidding;
     }
-    
+
     // If no bidding found by current user, look for bidding where current user is the partner
     result = await this.db.select().from(partnershipBidding)
       .where(and(
@@ -341,7 +354,7 @@ export class DatabaseStorage implements IStorage {
         eq(partnershipBidding.partnerId, userId)
       ))
       .limit(1);
-    
+
     return result[0] as PartnershipBidding | undefined;
   }
 

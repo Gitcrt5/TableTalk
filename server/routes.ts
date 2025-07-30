@@ -190,6 +190,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         title: req.body.title,
         date: req.body.date,
         location: req.body.location,
+        clubId: req.body.clubId,
         event: req.body.event,
         tournament: req.body.tournament,
         round: req.body.round,

@@ -272,6 +272,10 @@ export type Game = typeof games.$inferSelect & {
   hasPbn?: boolean;
   commentCount?: number;
   hasBidding?: boolean;
+  // Club display fields
+  clubName?: string;
+  clubLocation?: string;
+  displayLocation?: string;
 };
 
 export type GamePlayer = typeof gamePlayers.$inferSelect;
