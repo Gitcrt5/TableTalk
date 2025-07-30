@@ -41,11 +41,13 @@ type GameEditFormData = z.infer<typeof gameEditSchema>;
 
 interface GameEditFormProps {
   game: Game;
-  autoOpen?: boolean;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  onSuccess?: () => void;
 }
 
-export default function GameEditForm({ game, autoOpen = false }: GameEditFormProps) {
-  const [open, setOpen] = useState(false);
+export default function GameEditForm({ game, open: externalOpen, onOpenChange, onSuccess }: GameEditFormProps) {
+  const [internalOpen, setInternalOpen] = useState(false);
   const [locationValue, setLocationValue] = useState({
     clubId: game.clubId || undefined,
     location: game.location || undefined,
@@ -53,12 +55,9 @@ export default function GameEditForm({ game, autoOpen = false }: GameEditFormPro
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Auto-open if requested (e.g., after upload)
-  useEffect(() => {
-    if (autoOpen) {
-      setOpen(true);
-    }
-  }, [autoOpen]);
+  // Use external open state if provided, otherwise use internal state
+  const isOpen = externalOpen !== undefined ? externalOpen : internalOpen;
+  const setOpen = onOpenChange || setInternalOpen;
 
   const form = useForm<GameEditFormData>({
     resolver: zodResolver(gameEditSchema),
@@ -99,6 +98,7 @@ export default function GameEditForm({ game, autoOpen = false }: GameEditFormPro
         description: "Game details have been successfully updated.",
       });
       setOpen(false);
+      onSuccess?.();
     },
     onError: (error: Error) => {
       toast({
@@ -114,7 +114,7 @@ export default function GameEditForm({ game, autoOpen = false }: GameEditFormPro
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={isOpen} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="outline" size="sm">
           <Edit className="h-4 w-4 mr-2" />
