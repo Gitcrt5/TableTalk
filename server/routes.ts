@@ -362,7 +362,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ error: "You can only remove your own participation" });
       }
 
+      // Get current player data to find their partner
+      const currentPlayerData = await storage.getCurrentUserGameData(gameId, userIdToRemove);
+      
+      // Remove the current user's participation
       await storage.removeGamePlayer(gameId, userIdToRemove);
+      
+      // If they had a partner, update the partner's entry to remove the partnership
+      if (currentPlayerData.partner) {
+        const partnerId = currentPlayerData.partner.id;
+        
+        // Remove the partner's current entry
+        await storage.removeGamePlayer(gameId, partnerId);
+        
+        // Re-add the partner without a partner reference (they still played, just no partner now)
+        await storage.addGamePlayer({
+          gameId,
+          userId: partnerId,
+          partnerId: null, // No partner now
+          addedBy: partnerId, // Self-added since their partner removed themselves
+        });
+      }
+
       res.json({ message: "Participation removed successfully" });
     } catch (error) {
       console.error("Error removing game participation:", error);
