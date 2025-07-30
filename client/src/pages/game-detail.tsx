@@ -33,10 +33,10 @@ export default function GameDetail() {
   const [isParticipationDialogOpen, setIsParticipationDialogOpen] = useState(false);
   const [isPartnerDialogOpen, setIsPartnerDialogOpen] = useState(false);
   const [selectedPartner, setSelectedPartner] = useState<string | undefined>();
-  const location = useLocation();
+  const [location] = useLocation();
 
   // Check URL parameters to determine if we should auto-edit
-  const searchParams = new URLSearchParams(location().split('?')[1] || '');
+  const searchParams = new URLSearchParams(location.split('?')[1] || '');
   const shouldAutoEdit = searchParams.get('edit') === 'true';
   const isNewGame = searchParams.get('new') === 'true';
 
@@ -127,7 +127,7 @@ export default function GameDetail() {
   });
 
   const handleEditSuccess = () => {
-    setShowEditDialog(false);
+    setEditDialogOpen(false);
     queryClient.invalidateQueries({ queryKey: [`/api/games/${gameId}`] });
     // Clean up URL parameters
     const url = new URL(window.location.href);
@@ -137,7 +137,7 @@ export default function GameDetail() {
   };
 
   const handleEditCancel = () => {
-    setShowEditDialog(false);
+    setEditDialogOpen(false);
     // Clean up URL parameters
     const url = new URL(window.location.href);
     url.searchParams.delete('edit');
