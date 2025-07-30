@@ -83,7 +83,8 @@ export default function ClubLocationSelector({
       displayName: club.name
     });
     setSelectedMode('club');
-    setShowSearch(false);
+    // Don't immediately close the search - let the user see their selection
+    // setShowSearch(false);
     setSearchQuery("");
   };
 
@@ -174,7 +175,10 @@ export default function ClubLocationSelector({
           {showFreeText && (
             <Button
               variant={selectedMode === 'freetext' ? 'default' : 'outline'}
-              onClick={() => setSelectedMode('freetext')}
+              onClick={() => {
+                setSelectedMode('freetext');
+                setShowSearch(false);
+              }}
               className="flex-1"
             >
               <MapPin className="w-4 h-4 mr-2" />
@@ -182,6 +186,21 @@ export default function ClubLocationSelector({
             </Button>
           )}
         </div>
+      )}
+
+      {/* Change Club/Location button when something is selected */}
+      {(value.clubId || value.location) && (
+        <Button
+          variant="outline"
+          onClick={() => {
+            setSelectedMode('club');
+            setShowSearch(true);
+          }}
+          className="w-full"
+        >
+          <Building2 className="w-4 h-4 mr-2" />
+          Change Location
+        </Button>
       )}
 
       {/* Club Search Interface */}
@@ -204,7 +223,7 @@ export default function ClubLocationSelector({
                 setSearchQuery("");
               }}
             >
-              Cancel
+              Done
             </Button>
           </div>
 
