@@ -278,6 +278,7 @@ async function loadSampleData(): Promise<void> {
             authType: "local",
             userType: userData.userType || "player",
             homeClubId: homeClubId,
+            profileCompletionStep: userData.profileCompletionStep || 0,
             emailVerified: true,
             isActive: true,
             featureFlags: userData.featureFlags || {}
@@ -369,6 +370,26 @@ async function loadSampleData(): Promise<void> {
         continue;
       }
 
+      // Try to match location to existing club
+      let clubId = null;
+      let locationText = sampleGame.location || null;
+      
+      if (sampleGame.location) {
+        const matchingClub = await db
+          .select({ id: clubs.id })
+          .from(clubs)
+          .where(eq(clubs.name, sampleGame.location))
+          .limit(1);
+          
+        if (matchingClub.length > 0) {
+          clubId = matchingClub[0].id;
+          locationText = null; // Clear text since we have club reference
+          console.log(`   🏢 Linked location "${sampleGame.location}" to club ID ${clubId}`);
+        } else {
+          console.log(`   📍 Using free-text location: "${sampleGame.location}"`);
+        }
+      }
+
       // Create game
       const [game] = await db.insert(games).values({
         title: sampleGame.title || parsedPBN.title || sampleGame.file,
@@ -378,7 +399,8 @@ async function loadSampleData(): Promise<void> {
         pbnSite: parsedPBN.site,
         pbnDate: parsedPBN.date,
         date: sampleGame.date || null,
-        location: sampleGame.location || null,
+        location: locationText, // Use free-text only if no club match
+        clubId: clubId, // Set club reference if found
         event: parsedPBN.event,
         filename: sampleGame.file,
         uploadedBy: uploader.id,
