@@ -223,7 +223,10 @@ export class DatabaseStorage implements IStorage {
   }
 
   async removeGamePlayer(gameId: number, userId: string): Promise<void> {
-    await this.db.delete(gamePlayers).where(eq(gamePlayers.gameId, gameId)).where(eq(gamePlayers.userId, userId));
+    await this.db.delete(gamePlayers).where(and(
+      eq(gamePlayers.gameId, gameId),
+      eq(gamePlayers.userId, userId)
+    ));
   }
 
   async getUserGames(userId: string): Promise<Game[]> {
@@ -247,8 +250,35 @@ export class DatabaseStorage implements IStorage {
     return result as Game[];
   }
 
-  async getCurrentUserGameData(gameId: number, userId: string): Promise<any> {
-    return {};
+  async getCurrentUserGameData(gameId: number, userId: string): Promise<{
+    isPlaying: boolean;
+    partner?: User;
+  }> {
+    // Check if user is marked as playing this game
+    const gamePlayer = await this.db.select()
+      .from(gamePlayers)
+      .where(and(
+        eq(gamePlayers.gameId, gameId),
+        eq(gamePlayers.userId, userId)
+      ))
+      .limit(1);
+
+    if (gamePlayer.length === 0) {
+      return { isPlaying: false };
+    }
+
+    const player = gamePlayer[0];
+    
+    // If they have a partner, fetch partner details
+    if (player.partnerId) {
+      const partner = await this.getUser(player.partnerId);
+      return {
+        isPlaying: true,
+        partner: partner
+      };
+    }
+
+    return { isPlaying: true };
   }
 
   async createHand(hand: InsertHand): Promise<Hand> {
