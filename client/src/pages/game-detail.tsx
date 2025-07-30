@@ -16,6 +16,15 @@ import { formatContract } from "@/lib/bridge-utils";
 import { apiRequest } from "@/lib/queryClient";
 import type { Game, Hand, User as UserType } from "@shared/schema";
 
+interface User {
+  id: string;
+  email: string;
+  firstName?: string;
+  lastName?: string;
+  displayName?: string;
+  partnerId?: string; // For game players with partnership info
+}
+
 export default function GameDetail() {
   const { id } = useParams<{ id: string }>();
   const gameId = parseInt(id!);
@@ -24,11 +33,11 @@ export default function GameDetail() {
   const [isParticipationDialogOpen, setIsParticipationDialogOpen] = useState(false);
   const [isPartnerDialogOpen, setIsPartnerDialogOpen] = useState(false);
   const [selectedPartner, setSelectedPartner] = useState<string | undefined>();
-  
+
   // Check if we should auto-open the edit form (from upload redirect)
   const searchParams = new URLSearchParams(window.location.search);
   const shouldAutoEdit = searchParams.get('edit') === 'true';
-  
+
   const { data: game, isLoading: gameLoading } = useQuery<Game & { canAttachPbn?: boolean; originatedFromLiveGame?: boolean }>({
     queryKey: [`/api/games/${gameId}`],
     enabled: !!gameId,
@@ -45,19 +54,23 @@ export default function GameDetail() {
     enabled: !!gameId,
   });
 
-  // Fetch current user's participation data
+  // Fetch user's partners
+  const { data: partners = [] } = useQuery<User[]>({
+    queryKey: ["/api/user/partners"],
+  });
+
+  // Fetch game players to check for existing partnerships
+  const { data: gamePlayersForPartnership = [] } = useQuery<User[]>({
+    queryKey: [`/api/games/${gameId}/players`],
+  });
+
+  // Fetch user's participation data
   const { data: participationData } = useQuery<{
     isPlaying: boolean;
     partner?: UserType;
   }>({
     queryKey: [`/api/games/${gameId}/my-participation`],
     enabled: !!gameId && !!user,
-  });
-
-  // Fetch user's partners
-  const { data: partners = [] } = useQuery<UserType[]>({
-    queryKey: ["/api/user/partners"],
-    enabled: !!user,
   });
 
   const isCurrentUserPlaying = participationData?.isPlaying || false;
@@ -171,7 +184,7 @@ export default function GameDetail() {
             </Button>
           </Link>
         </div>
-        
+
         <div>
           <div className="flex items-center justify-between mb-2">
             <h1 className="text-3xl font-bold text-text-primary">
@@ -198,27 +211,27 @@ export default function GameDetail() {
                 <span>{game.date}</span>
               </div>
             )}
-            
+
             {game.location && (
               <div className="flex items-center space-x-1">
                 <span>📍</span>
                 <span className="min-w-[120px]">{game.location}</span>
               </div>
             )}
-            
+
             {game.tournament && (
               <div className="flex items-center space-x-1">
                 <span>🏆 {game.tournament}</span>
               </div>
             )}
-            
+
             {game.round && <Badge variant="outline">{game.round}</Badge>}
-            
+
             <div className="flex items-center space-x-1">
               <User className="h-4 w-4" />
               <span>Uploaded by {game.uploaderName || game.uploadedBy}</span>
             </div>
-            
+
             <div className="flex items-center space-x-1 text-xs">
               <span>Uploaded {new Date(game.uploadedAt).toLocaleDateString()}</span>
             </div>
@@ -234,7 +247,7 @@ export default function GameDetail() {
               <div className="flex items-center space-x-4">
                 <Users className="h-4 w-4 text-gray-600" />
                 <span className="text-sm font-medium">Played this game</span>
-                
+
                 <Switch
                   checked={isCurrentUserPlaying}
                   onCheckedChange={(checked) => {
@@ -247,13 +260,13 @@ export default function GameDetail() {
                   disabled={addParticipationMutation.isPending || removeParticipationMutation.isPending}
                   className={`${isCurrentUserPlaying ? 'data-[state=checked]:bg-green-600' : 'bg-gray-300'}`}
                 />
-                
+
                 {isCurrentUserPlaying && currentUserPartner && (
                   <span className="text-sm text-gray-600">
                     Partner: {currentUserPartner.displayName || `${currentUserPartner.firstName} ${currentUserPartner.lastName}`}
                   </span>
                 )}
-                
+
                 {isCurrentUserPlaying && !currentUserPartner && (
                   <Button 
                     variant="outline" 
@@ -281,7 +294,7 @@ export default function GameDetail() {
             <p className="text-sm text-text-secondary">
               Mark yourself as having played in this game. Optionally select your partner.
             </p>
-            
+
             <div>
               <label className="text-sm font-medium mb-2 block">
                 Partner (optional)
@@ -292,15 +305,31 @@ export default function GameDetail() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">No partner / Unknown</SelectItem>
-                  {partners.map(partner => (
-                    <SelectItem key={partner.id} value={partner.id}>
-                      {partner.displayName || `${partner.firstName} ${partner.lastName}`}
-                    </SelectItem>
-                  ))}
+                  {partners.map(partner => {
+                    // Check if this partner is already playing with someone else
+                    const existingPlayer = gamePlayersForPartnership.find(player => player.id === partner.id);
+                    const isUnavailable = existingPlayer && existingPlayer.partnerId && participationData?.partner?.id !== partner.id;
+
+                    return (
+                      <SelectItem 
+                        key={partner.id} 
+                        value={partner.id}
+                        disabled={isUnavailable}
+                        className={isUnavailable ? "opacity-50 cursor-not-allowed" : ""}
+                      >
+                        <div className="flex items-center justify-between w-full">
+                          <span>{partner.displayName || `${partner.firstName} ${partner.lastName}`}</span>
+                          {isUnavailable && (
+                            <span className="text-xs text-muted-foreground ml-2">(Already paired)</span>
+                          )}
+                        </div>
+                      </SelectItem>
+                    );
+                  })}
                 </SelectContent>
               </Select>
             </div>
-            
+
             <div className="flex justify-end space-x-2">
               <Button 
                 variant="outline" 
@@ -329,7 +358,7 @@ export default function GameDetail() {
             <p className="text-sm text-text-secondary">
               Select the partner you played with in this game.
             </p>
-            
+
             <div>
               <label className="text-sm font-medium mb-2 block">
                 Partner
@@ -339,15 +368,31 @@ export default function GameDetail() {
                   <SelectValue placeholder="Select partner" />
                 </SelectTrigger>
                 <SelectContent>
-                  {partners.map(partner => (
-                    <SelectItem key={partner.id} value={partner.id}>
-                      {partner.displayName || `${partner.firstName} ${partner.lastName}`}
-                    </SelectItem>
-                  ))}
+                  {partners.map(partner => {
+                    // Check if this partner is already playing with someone else
+                    const existingPlayer = gamePlayersForPartnership.find(player => player.id === partner.id);
+                    const isUnavailable = existingPlayer && existingPlayer.partnerId && participationData?.partner?.id !== partner.id;
+
+                    return (
+                      <SelectItem 
+                        key={partner.id} 
+                        value={partner.id}
+                        disabled={isUnavailable}
+                        className={isUnavailable ? "opacity-50 cursor-not-allowed" : ""}
+                      >
+                        <div className="flex items-center justify-between w-full">
+                          <span>{partner.displayName || `${partner.firstName} ${partner.lastName}`}</span>
+                          {isUnavailable && (
+                            <span className="text-xs text-muted-foreground ml-2">(Already paired)</span>
+                          )}
+                        </div>
+                      </SelectItem>
+                    );
+                  })}
                 </SelectContent>
               </Select>
             </div>
-            
+
             <div className="flex justify-end space-x-2">
               <Button 
                 variant="outline" 
@@ -405,13 +450,13 @@ export default function GameDetail() {
                       )}
                     </div>
                   </div>
-                  
+
                   <div className="space-y-2 text-sm">
                     {/* Show "Has Bidding" badge for all users */}
                     {hand.hasBidding && (
                       <Badge variant="secondary" className="text-xs">Has Bidding</Badge>
                     )}
-                    
+
                     {/* Only show contract details to players who played this game */}
                     {isCurrentUserPlaying && hand.finalContract && (
                       <div className="flex justify-between">
@@ -432,10 +477,10 @@ export default function GameDetail() {
                         </span>
                       </div>
                     )}
-                    
+
 
                   </div>
-                  
+
 
                 </CardContent>
               </Card>

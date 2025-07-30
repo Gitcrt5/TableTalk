@@ -214,7 +214,7 @@ export class DatabaseStorage implements IStorage {
         createdAt: users.createdAt,
         updatedAt: users.updatedAt,
         isActive: users.isActive,
-
+        partnerId: gamePlayers.partnerId,
       })
       .from(gamePlayers)
       .innerJoin(users, eq(gamePlayers.userId, users.id))
