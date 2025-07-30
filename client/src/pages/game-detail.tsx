@@ -34,10 +34,10 @@ export default function GameDetail() {
   const [isPartnerDialogOpen, setIsPartnerDialogOpen] = useState(false);
   const [selectedPartner, setSelectedPartner] = useState<string | undefined>();
 
-  // Check if we should auto-open the edit form (from upload redirect)
-  const searchParams = new URLSearchParams(window.location.search);
-  const shouldAutoEdit = searchParams.get('edit') === 'true';
-  const isNewUpload = searchParams.get('new') === 'true';
+  // Check if we should auto-open edit dialog from URL params
+  const urlParams = new URLSearchParams(window.location.search);
+  const shouldAutoEdit = urlParams.get('edit') === 'true' && urlParams.get('new') === 'true';
+  const [showEditDialog, setShowEditDialog] = useState(shouldAutoEdit);
 
   const { data: game, isLoading: gameLoading } = useQuery<Game & { canAttachPbn?: boolean; originatedFromLiveGame?: boolean }>({
     queryKey: [`/api/games/${gameId}`],
@@ -122,6 +122,25 @@ export default function GameDetail() {
     },
   });
 
+  const handleEditSuccess = () => {
+    setShowEditDialog(false);
+    queryClient.invalidateQueries({ queryKey: [`/api/games/${gameId}`] });
+    // Clean up URL parameters
+    const url = new URL(window.location.href);
+    url.searchParams.delete('edit');
+    url.searchParams.delete('new');
+    window.history.replaceState({}, '', url.toString());
+  };
+
+  const handleEditCancel = () => {
+    setShowEditDialog(false);
+    // Clean up URL parameters
+    const url = new URL(window.location.href);
+    url.searchParams.delete('edit');
+    url.searchParams.delete('new');
+    window.history.replaceState({}, '', url.toString());
+  };
+
   // Clean up URL parameter after it's been used, but wait for game data to load AND auto-edit to be processed
   useEffect(() => {
     if (shouldAutoEdit && game && user && user.id === game.uploadedBy) {
@@ -193,7 +212,18 @@ export default function GameDetail() {
             </h1>
             <div className="flex items-center space-x-2">
               {user && user.id === game.uploadedBy && (
-                <GameEditForm game={game} autoOpen={shouldAutoEdit} />
+                <GameEditForm 
+                  open={showEditDialog}
+                  onOpenChange={(open) => {
+                    if (!open) {
+                      handleEditCancel();
+                    } else {
+                      setShowEditDialog(open);
+                    }
+                  }}
+                  game={game}
+                  onSuccess={handleEditSuccess}
+                />
               )}
               {user && user.id === game.uploadedBy && game.canAttachPbn && (
                 <RegularGamePbnAttachment gameId={gameId}>
@@ -205,7 +235,7 @@ export default function GameDetail() {
               )}
             </div>
           </div>
-          {isNewUpload && shouldAutoEdit && (
+          {shouldAutoEdit && (
             <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
               <p className="text-sm text-blue-800">
                 <strong>Welcome!</strong> Your PBN file has been uploaded successfully.
