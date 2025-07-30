@@ -452,11 +452,6 @@ export default function GameDetail() {
                   </div>
 
                   <div className="space-y-2 text-sm">
-                    {/* Show "Has Bidding" badge for all users */}
-                    {hand.hasBidding && (
-                      <Badge variant="secondary" className="text-xs">Has Bidding</Badge>
-                    )}
-
                     {/* Only show contract details to players who played this game */}
                     {isCurrentUserPlaying && hand.finalContract && (
                       <div className="flex justify-between">
