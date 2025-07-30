@@ -113,6 +113,12 @@ export default function GameEditForm({ game, open: externalOpen, onOpenChange, o
     updateGameMutation.mutate(data);
   };
 
+  // Prevent dialog from closing due to form changes
+  const handleLocationChange = (newLocationValue: { clubId?: number; location?: string; displayName?: string }) => {
+    setLocationValue(newLocationValue);
+    // Don't close dialog just because location changed
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -170,7 +176,7 @@ export default function GameEditForm({ game, open: externalOpen, onOpenChange, o
             <div>
               <ClubLocationSelector
                 value={locationValue}
-                onChange={setLocationValue}
+                onChange={handleLocationChange}
                 showFreeText={true}
                 homeClubDefault={false}
                 label="Location"

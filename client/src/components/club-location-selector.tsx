@@ -83,9 +83,11 @@ export default function ClubLocationSelector({
       displayName: club.name
     });
     setSelectedMode('club');
-    // Don't immediately close the search - let the user see their selection
-    // setShowSearch(false);
+    // Keep search open briefly to show selection, then close
     setSearchQuery("");
+    setTimeout(() => {
+      setShowSearch(false);
+    }, 100);
   };
 
   const handleFreeTextChange = (location: string) => {
