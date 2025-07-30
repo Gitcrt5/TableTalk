@@ -597,7 +597,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           enhancedHand.commentCount = comments.length;
           
           if (userIsPlaying && req.user) {
-            // Get partnership bidding for this user
+            // Get partnership bidding for this specific hand and user
             const userId = getUserId(req);
             const partnershipBid = await storage.getPartnershipBidding(
               hand.id, 
@@ -605,14 +605,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
               userPartner?.id
             );
             
-            if (partnershipBid && partnershipBid.biddingSequence.length > 0) {
-              // Calculate contract from bidding sequence
+            if (partnershipBid && partnershipBid.biddingSequence && partnershipBid.biddingSequence.length > 0) {
+              // Calculate contract from bidding sequence for this specific hand
               const contract = calculateContractFromBidding(partnershipBid.biddingSequence);
-              enhancedHand = {
-                ...enhancedHand,
-                finalContract: contract.finalContract,
-                declarer: contract.declarer,
-              };
+              if (contract.finalContract) {
+                enhancedHand = {
+                  ...enhancedHand,
+                  finalContract: contract.finalContract,
+                  declarer: contract.declarer,
+                };
+              }
             }
           }
           

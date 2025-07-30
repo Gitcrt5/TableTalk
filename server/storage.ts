@@ -325,8 +325,10 @@ export class DatabaseStorage implements IStorage {
 
   async getPartnershipBidding(handId: number, userId: string, partnerId?: string): Promise<PartnershipBidding | undefined> {
     const result = await this.db.select().from(partnershipBidding)
-      .where(eq(partnershipBidding.handId, handId))
-      .where(eq(partnershipBidding.userId, userId))
+      .where(and(
+        eq(partnershipBidding.handId, handId),
+        eq(partnershipBidding.userId, userId)
+      ))
       .limit(1);
     return result[0] as PartnershipBidding | undefined;
   }
