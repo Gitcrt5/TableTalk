@@ -37,6 +37,7 @@ export default function GameDetail() {
   // Check if we should auto-open the edit form (from upload redirect)
   const searchParams = new URLSearchParams(window.location.search);
   const shouldAutoEdit = searchParams.get('edit') === 'true';
+  const isNewUpload = searchParams.get('new') === 'true';
 
   const { data: game, isLoading: gameLoading } = useQuery<Game & { canAttachPbn?: boolean; originatedFromLiveGame?: boolean }>({
     queryKey: [`/api/games/${gameId}`],
@@ -204,6 +205,14 @@ export default function GameDetail() {
               )}
             </div>
           </div>
+          {isNewUpload && shouldAutoEdit && (
+            <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
+              <p className="text-sm text-blue-800">
+                <strong>Welcome!</strong> Your PBN file has been uploaded successfully.
+                Please update the game details below to complete the setup.
+              </p>
+            </div>
+          )}
           <div className="flex flex-wrap items-center gap-4 text-text-secondary">
             {game.date && (
               <div className="flex items-center space-x-1">

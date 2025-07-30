@@ -74,14 +74,14 @@ export default function GameEditForm({ game, autoOpen = false }: GameEditFormPro
     onSuccess: (updatedGame) => {
       // Update the cache with the new data immediately
       queryClient.setQueryData([`/api/games/${game.id}`], updatedGame);
-      
+
       // Invalidate all games queries to refresh dashboard
       queryClient.invalidateQueries({ queryKey: ["/api/games"] });
       queryClient.invalidateQueries({ queryKey: [`/api/games/${game.id}/hands`] });
-      
+
       // Force refetch of games list to ensure fresh data
       queryClient.refetchQueries({ queryKey: ["/api/games"] });
-      
+
       toast({
         title: "Game Updated",
         description: "Game details have been successfully updated.",
@@ -130,13 +130,13 @@ export default function GameEditForm({ game, autoOpen = false }: GameEditFormPro
                 <FormItem>
                   <FormLabel>Title</FormLabel>
                   <FormControl>
-                    <Input placeholder="Game title" {...field} />
+                    <Input placeholder="Game title" {...field} className="focus:ring-2 focus:ring-blue-500"/>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            
+
             <FormField
               control={form.control}
               name="date"
@@ -154,7 +154,7 @@ export default function GameEditForm({ game, autoOpen = false }: GameEditFormPro
                 </FormItem>
               )}
             />
-            
+
             <FormField
               control={form.control}
               name="location"
@@ -168,7 +168,7 @@ export default function GameEditForm({ game, autoOpen = false }: GameEditFormPro
                 </FormItem>
               )}
             />
-            
+
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setOpen(false)}>
                 Cancel
