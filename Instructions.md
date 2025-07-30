@@ -168,52 +168,6 @@ Streamline the API to handle unified location data:
    - Prevent redundant data entry
    - Generate displayName automatically
 
-### Migration Strategy for Existing Data
-
-#### Automated Migration Steps
-
-1. **Data Analysis**:
-   ```sql
-   -- Find games with location text that matches club names
-   SELECT g.id, g.location, c.id as club_id, c.name
-   FROM games g
-   LEFT JOIN clubs c ON LOWER(g.location) = LOWER(c.name)
-   WHERE g.location IS NOT NULL AND g.club_id IS NULL;
-   ```
-
-2. **Automatic Matching**:
-   - Match common location patterns to clubs
-   - "Newcastle Bridge Club" → clubId for Newcastle Bridge Club
-   - Handle variations: "Newcastle BC", "Newcastle", etc.
-
-3. **Manual Review**:
-   - Provide admin interface for unmatched locations
-   - Allow admin to create new clubs or confirm free-text
-
-4. **Safe Fallback**:
-   - Keep original location text as backup
-   - Display migration status in admin panel
-
-## Benefits of This Approach
-
-### For Users
-1. **Single, consistent interface** for all location selection
-2. **Smart defaults** using their home club
-3. **Flexibility** for unusual venues while encouraging structure
-4. **Better search and filtering** across all games
-
-### For Older Bridge Players
-1. **Obvious and easy**: One way to specify location
-2. **Familiar pattern**: Dropdown selection like other bridge software
-3. **Helpful defaults**: System suggests their home club
-4. **No confusion**: Clear distinction between club and free-text
-
-### For Data Quality
-1. **Structured data** improves search and reporting
-2. **Consistency** across all games and interfaces
-3. **Better analytics** on club usage and popularity
-4. **Future-proof** for features like club statistics
-
 ## Implementation Timeline
 
 ### Week 1: Planning and Preparation
@@ -239,29 +193,6 @@ Streamline the API to handle unified location data:
 - [ ] User acceptance testing
 - [ ] Deploy with rollback plan
 
-## Risk Assessment and Mitigation
-
-### Potential Risks
-
-1. **Data Loss During Migration**
-   - **Risk**: Automated matching fails, loses location data
-   - **Mitigation**: Keep original location field as backup, manual review step
-
-2. **User Resistance to Change**
-   - **Risk**: Users prefer current free-text approach
-   - **Mitigation**: Maintain free-text option, gradual migration, user education
-
-3. **Club Database Incompleteness**
-   - **Risk**: Many venues not in clubs database
-   - **Mitigation**: Easy admin interface to add clubs, robust free-text fallback
-
-### Success Metrics
-
-1. **Data Quality**: >90% of games use clubId instead of free-text
-2. **User Experience**: Reduced support requests about location entry
-3. **Consistency**: All interfaces use same location selection method
-4. **Performance**: Faster search and filtering across games
-
 ## Technical Implementation Notes
 
 ### Files Requiring Changes
@@ -281,28 +212,6 @@ Streamline the API to handle unified location data:
 
 **Admin Interface**:
 - `client/src/components/admin/data-migration.tsx` - New migration interface
-
-### API Changes Required
-
-```typescript
-// Updated game creation/update endpoints
-POST /api/games
-PUT /api/games/:id
-{
-  title: string;
-  date: string;
-  location?: {
-    type: 'club' | 'freetext';
-    clubId?: number;
-    location?: string;
-  };
-  // ... other fields
-}
-
-// New unified search endpoint
-GET /api/games/search?location=query
-// Searches both club names and location text
-```
 
 ## Conclusion
 
