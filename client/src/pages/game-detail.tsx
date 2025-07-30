@@ -314,7 +314,7 @@ export default function GameDetail() {
                       <SelectItem 
                         key={partner.id} 
                         value={partner.id}
-                        disabled={isUnavailable}
+                        disabled={!!isUnavailable}
                         className={isUnavailable ? "opacity-50 cursor-not-allowed" : ""}
                       >
                         <div className="flex items-center justify-between w-full">
@@ -377,7 +377,7 @@ export default function GameDetail() {
                       <SelectItem 
                         key={partner.id} 
                         value={partner.id}
-                        disabled={isUnavailable}
+                        disabled={!!isUnavailable}
                         className={isUnavailable ? "opacity-50 cursor-not-allowed" : ""}
                       >
                         <div className="flex items-center justify-between w-full">

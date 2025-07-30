@@ -587,7 +587,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         userPartner = gameData.partner;
       }
       
-      // Enhance hands with partnership-specific contract info and comment counts
+      // Enhance hands with partnership-specific contract info, comment counts, and bidding flags
       const enhancedHands = await Promise.all(
         hands.map(async (hand) => {
           let enhancedHand = { ...hand };
@@ -595,6 +595,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Add comment count for all users
           const comments = await storage.getCommentsByHand(hand.id);
           enhancedHand.commentCount = comments.length;
+          
+          // Check if hand has bidding (either from PBN file or user-entered partnership bidding)
+          let hasBidding = false;
+          
+          // Check if hand has bidding from PBN file
+          if (hand.actualBidding && hand.actualBidding.length > 0) {
+            hasBidding = true;
+          }
+          
+          // Check if hand has any partnership bidding entries
+          if (!hasBidding) {
+            const allPartnershipBids = await storage.getAllPartnershipBiddingForHand(hand.id);
+            hasBidding = allPartnershipBids.some(bid => 
+              bid.biddingSequence && bid.biddingSequence.length > 0
+            );
+          }
+          
+          enhancedHand.hasBidding = hasBidding;
           
           if (userIsPlaying && req.user) {
             // Get partnership bidding for this specific hand and user
