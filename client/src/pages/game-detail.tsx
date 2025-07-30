@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { ArrowLeft, Calendar, User, Users, Plus, UserPlus, FileText } from "lucide-react";
-import { Link, useParams } from "wouter";
+import { Link, useParams, useLocation } from "wouter";
 import GameEditForm from "@/components/game-edit-form";
 import RegularGamePbnAttachment from "@/components/RegularGamePbnAttachment";
 import { useAuth } from "@/hooks/useAuth";
@@ -33,11 +33,15 @@ export default function GameDetail() {
   const [isParticipationDialogOpen, setIsParticipationDialogOpen] = useState(false);
   const [isPartnerDialogOpen, setIsPartnerDialogOpen] = useState(false);
   const [selectedPartner, setSelectedPartner] = useState<string | undefined>();
+  const location = useLocation();
 
-  // Check if we should auto-open edit dialog from URL params
-  const urlParams = new URLSearchParams(window.location.search);
-  const shouldAutoEdit = urlParams.get('edit') === 'true' && urlParams.get('new') === 'true';
-  const [showEditDialog, setShowEditDialog] = useState(shouldAutoEdit);
+  // Check URL parameters to determine if we should auto-edit
+  const searchParams = new URLSearchParams(location.split('?')[1] || '');
+  const shouldAutoEdit = searchParams.get('edit') === 'true';
+  const isNewGame = searchParams.get('new') === 'true';
+
+  // Track edit dialog state explicitly for better control
+  const [editDialogOpen, setEditDialogOpen] = useState(shouldAutoEdit);
 
   const { data: game, isLoading: gameLoading } = useQuery<Game & { canAttachPbn?: boolean; originatedFromLiveGame?: boolean }>({
     queryKey: [`/api/games/${gameId}`],
@@ -213,16 +217,19 @@ export default function GameDetail() {
             <div className="flex items-center space-x-2">
               {user && user.id === game.uploadedBy && (
                 <GameEditForm 
-                  open={showEditDialog}
+                  game={game} 
+                  open={editDialogOpen}
                   onOpenChange={(open) => {
-                    if (!open) {
-                      handleEditCancel();
-                    } else {
-                      setShowEditDialog(open);
+                    setEditDialogOpen(open);
+                    if (!open && isNewGame) {
+                      // Clear URL parameters when closing after new game creation
+                      location(`/games/${game.id}`);
                     }
                   }}
-                  game={game}
-                  onSuccess={handleEditSuccess}
+                  onSuccess={() => {
+                    // Keep dialog open after successful updates to allow further editing
+                    // Only close if explicitly requested by user
+                  }}
                 />
               )}
               {user && user.id === game.uploadedBy && game.canAttachPbn && (

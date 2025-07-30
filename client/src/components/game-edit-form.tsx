@@ -39,6 +39,12 @@ const gameEditSchema = z.object({
 
 type GameEditFormData = z.infer<typeof gameEditSchema>;
 
+interface ClubLocationValue {
+  clubId?: number;
+  location?: string;
+  displayName?: string;
+}
+
 interface GameEditFormProps {
   game: Game;
   open?: boolean;
@@ -48,16 +54,26 @@ interface GameEditFormProps {
 
 export default function GameEditForm({ game, open: externalOpen, onOpenChange, onSuccess }: GameEditFormProps) {
   const [internalOpen, setInternalOpen] = useState(false);
-  const [locationValue, setLocationValue] = useState({
+  const [locationValue, setLocationValue] = useState<ClubLocationValue>({
     clubId: game.clubId || undefined,
     location: game.location || undefined,
+    displayName: game.location || undefined,
   });
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   // Use external open state if provided, otherwise use internal state
   const isOpen = externalOpen !== undefined ? externalOpen : internalOpen;
-  const setOpen = onOpenChange || setInternalOpen;
+  
+  // Create stable setOpen function that prevents unwanted closures
+  const setOpen = (open: boolean) => {
+    // Only allow closing via explicit user actions (form submission or cancel)
+    if (onOpenChange) {
+      onOpenChange(open);
+    } else {
+      setInternalOpen(open);
+    }
+  };
 
   const form = useForm<GameEditFormData>({
     resolver: zodResolver(gameEditSchema),
@@ -114,9 +130,16 @@ export default function GameEditForm({ game, open: externalOpen, onOpenChange, o
   };
 
   // Prevent dialog from closing due to form changes
-  const handleLocationChange = (newLocationValue: { clubId?: number; location?: string; displayName?: string }) => {
+  const handleLocationChange = (newLocationValue: ClubLocationValue) => {
     setLocationValue(newLocationValue);
-    // Don't close dialog just because location changed
+    // Update form fields if needed
+    if (newLocationValue.clubId) {
+      form.setValue('clubId', newLocationValue.clubId);
+    }
+    if (newLocationValue.location) {
+      form.setValue('location', newLocationValue.location);
+    }
+    // Explicitly prevent dialog closure during location selection
   };
 
   return (

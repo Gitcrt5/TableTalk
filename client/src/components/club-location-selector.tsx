@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -33,9 +32,10 @@ export default function ClubLocationSelector({
   label = "Location",
   placeholder = "Search for a club or enter location"
 }: ClubLocationSelectorProps) {
-  const [searchQuery, setSearchQuery] = useState("");
   const [showSearch, setShowSearch] = useState(false);
-  const [selectedMode, setSelectedMode] = useState<'club' | 'freetext'>(
+  const [searchQuery, setSearchQuery] = useState("");
+  const [inputValue, setInputValue] = useState(value?.displayName || value?.location || "");
+  const [selectedMode, setSelectedMode<'club' | 'freetext'>(
     value.clubId ? 'club' : 'freetext'
   );
 
@@ -78,16 +78,20 @@ export default function ClubLocationSelector({
   }, [homeClub, homeClubDefault, value, onChange]);
 
   const handleClubSelect = (club: Club) => {
+    // Update the form state immediately
     onChange({
       clubId: club.id,
+      location: club.location,
       displayName: club.name
     });
     setSelectedMode('club');
-    // Keep search open briefly to show selection, then close
+
+    // Clear search and close search interface smoothly
     setSearchQuery("");
-    setTimeout(() => {
-      setShowSearch(false);
-    }, 100);
+    setShowSearch(false);
+
+    // Ensure the input field shows the selected club name
+    setInputValue(club.name);
   };
 
   const handleFreeTextChange = (location: string) => {
@@ -114,10 +118,23 @@ export default function ClubLocationSelector({
     [...favoriteClubs, ...(homeClub ? [homeClub] : []), ...searchResults]
       .find(club => club.id === value.clubId) : null;
 
+    useEffect(() => {
+    if (value?.clubId) {
+      setSelectedMode('club');
+      setInputValue(value.displayName || value.location || "");
+    } else if (value?.location) {
+      setSelectedMode('freetext');
+      setInputValue(value.location);
+    } else {
+      setSelectedMode('none');
+      setInputValue("");
+    }
+  }, [value]);
+
   return (
     <div className="space-y-3">
       <Label>{label}</Label>
-      
+
       {/* Current Selection Display */}
       {(value.clubId || value.location) && (
         <Card>
