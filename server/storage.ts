@@ -1,8 +1,6 @@
-import { eq, like, or, and } from "drizzle-orm";
+import { eq, desc, and, or, like, inArray, isNull, asc, sql } from "drizzle-orm";
 import { games, hands, userBidding, comments, users, clubs, partners, gamePlayers, partnershipBidding, gameParticipants, gameAccess, userFavoriteClubs, type Game, type Hand, type UserBidding, type Comment, type User, type Club, type Partner, type GamePlayer, type PartnershipBidding, type GameParticipant, type GameAccess, type UserFavoriteClub, type InsertGame, type InsertHand, type InsertUserBidding, type InsertComment, type InsertClub, type InsertGamePlayer, type InsertPartnershipBidding, type InsertGameParticipant, type InsertPartner, type InsertGameAccess, type InsertUserFavoriteClub, type UpsertUser } from "@shared/schema";
 import { db } from "./db";
-import { users, games, hands, userBidding, comments, gamePlayers, partnershipBidding, clubs, userFavoriteClubs, partners, gameParticipants, gameAccess, type User, type Game, type Hand, type UserBidding, type Comment, type GamePlayer, type PartnershipBidding, type Club, type UserFavoriteClub, type Partner, type GameParticipant, type GameAccess } from "@shared/schema";
-import { eq, desc, and, or, like, inArray, isNull, asc, sql } from "drizzle-orm";
 
 export interface IStorage {
   // Users (required for Replit Auth)
@@ -324,12 +322,26 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getPartnershipBidding(handId: number, userId: string, partnerId?: string): Promise<PartnershipBidding | undefined> {
-    const result = await this.db.select().from(partnershipBidding)
+    // First try to find bidding entered by the current user
+    let result = await this.db.select().from(partnershipBidding)
       .where(and(
         eq(partnershipBidding.handId, handId),
         eq(partnershipBidding.userId, userId)
       ))
       .limit(1);
+    
+    if (result.length > 0) {
+      return result[0] as PartnershipBidding;
+    }
+    
+    // If no bidding found by current user, look for bidding where current user is the partner
+    result = await this.db.select().from(partnershipBidding)
+      .where(and(
+        eq(partnershipBidding.handId, handId),
+        eq(partnershipBidding.partnerId, userId)
+      ))
+      .limit(1);
+    
     return result[0] as PartnershipBidding | undefined;
   }
 
@@ -415,19 +427,7 @@ export class DatabaseStorage implements IStorage {
     return {};
   }
 
-  // User search and partner management
-  async searchUsers(query: string): Promise<User[]> {
-    const result = await this.db.select().from(users)
-      .where(or(
-        like(users.email, `%${query}%`),
-        like(users.firstName, `%${query}%`),
-        like(users.lastName, `%${query}%`),
-        like(users.displayName, `%${query}%`)
-      ))
-      .where(eq(users.isActive, true))
-      .limit(10);
-    return result as User[];
-  }
+  // Partner management
 
   async getUserPartners(userId: string): Promise<User[]> {
     const result = await this.db.select({
@@ -665,5 +665,4 @@ export class DatabaseStorage implements IStorage {
 }
 
 // Use database storage for production
-import { db } from "./db";
 export const storage: IStorage = new DatabaseStorage(db);
