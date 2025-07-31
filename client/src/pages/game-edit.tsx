@@ -50,6 +50,7 @@ export default function GameEdit() {
   const isNewGame = urlParams.get('new') === 'true';
 
   const [locationValue, setLocationValue] = useState<ClubLocationValue>({});
+  const [isSelectingClub, setIsSelectingClub] = useState(false);
 
   // Fetch game data
   const { data: game, isLoading: gameLoading } = useQuery<Game>({
@@ -126,8 +127,8 @@ export default function GameEdit() {
         description: "Game details have been successfully updated.",
       });
 
-      // Redirect back to game detail page
-      setLocation(`/games/${gameId}`);
+      // Stay on edit page - let user choose when to return
+      console.log("Game updated successfully - staying on edit page");
     },
     onError: (error: Error) => {
       toast({
@@ -139,16 +140,26 @@ export default function GameEdit() {
   });
 
   const onSubmit = (data: GameEditFormData) => {
+    // Prevent submission during club selection
+    if (isSelectingClub) {
+      console.log("Form submission blocked during club selection");
+      return;
+    }
+    console.log("Form submission allowed - user clicked Save");
     updateGameMutation.mutate(data);
   };
 
   const handleLocationChange = (newLocationValue: ClubLocationValue) => {
+    // Set selection protection flag
+    setIsSelectingClub(true);
+    
     // Add comprehensive debugging to track location changes
     console.log('=== LOCATION CHANGE START ===');
     console.log('New location value:', newLocationValue);
     console.log('Current form state:', form.getValues());
     console.log('Current page location:', window.location.href);
     console.log('Form errors:', form.formState.errors);
+    console.log('Selection protection activated');
     
     setLocationValue(newLocationValue);
     // Update form fields if needed
@@ -158,6 +169,12 @@ export default function GameEdit() {
     if (newLocationValue.location) {
       form.setValue('location', newLocationValue.location);
     }
+    
+    // Clear selection flag after a short delay
+    setTimeout(() => {
+      setIsSelectingClub(false);
+      console.log('Selection protection deactivated');
+    }, 100);
     
     console.log('=== LOCATION CHANGE COMPLETE ===');
   };
@@ -229,6 +246,14 @@ export default function GameEdit() {
             </p>
           </div>
         )}
+        {updateGameMutation.isSuccess && (
+          <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-md">
+            <p className="text-sm text-green-800">
+              <strong>Success!</strong> Game details have been saved successfully.
+              Click "Back to Game" when you're ready to return.
+            </p>
+          </div>
+        )}
       </div>
 
       <Card>
@@ -294,7 +319,10 @@ export default function GameEdit() {
               </div>
 
               <div className="flex gap-2 pt-4">
-                <Button type="submit" disabled={updateGameMutation.isPending}>
+                <Button 
+                  type="submit" 
+                  disabled={updateGameMutation.isPending || isSelectingClub}
+                >
                   <Save className="mr-2 h-4 w-4" />
                   {updateGameMutation.isPending ? "Saving..." : "Save Changes"}
                 </Button>
@@ -304,7 +332,7 @@ export default function GameEdit() {
                   onClick={handleCancel}
                   disabled={updateGameMutation.isPending}
                 >
-                  Cancel
+                  Back to Game
                 </Button>
               </div>
             </form>

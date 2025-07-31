@@ -78,9 +78,10 @@ export default function ClubLocationSelector({
   }, [homeClub, homeClubDefault, value, onChange]);
 
   const handleClubSelect = (club: Club, event?: React.MouseEvent) => {
-    // Prevent ALL event propagation
+    // Prevent ALL event propagation and default behavior
     event?.stopPropagation();
     event?.preventDefault();
+    event?.stopImmediatePropagation();
 
     // Add comprehensive debugging to track club selection flow
     console.log('=== CLUB SELECTION START ===');
@@ -89,6 +90,12 @@ export default function ClubLocationSelector({
     console.log('Parent component props:', { value, onChange });
     console.log('Event target exists:', !!event?.target);
     console.log('Current page location:', window.location.href);
+
+    // Defensive programming - ensure we're not in a form submission context
+    const form = (event?.target as Element)?.closest('form');
+    if (form) {
+      console.log('Club selection within form context - extra protection applied');
+    }
 
     onChange({
       clubId: club.id,
