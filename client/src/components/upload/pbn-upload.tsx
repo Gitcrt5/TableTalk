@@ -73,7 +73,11 @@ export default function PBNUpload({ open, onOpenChange }: PBNUploadProps) {
         title: "Upload Successful",
         description: `Successfully uploaded ${data.hands.length} hands from ${data.game.title}`,
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/games"] });
+      // Use targeted cache updates instead of broad invalidation
+      queryClient.setQueryData(["/api/games"], (oldData: any) => 
+        oldData ? [data.game, ...oldData.filter((g: any) => g.id !== data.game.id)] : [data.game]
+      );
+      queryClient.setQueryData([`/api/games/${data.game.id}`], data.game);
       handleClose();
       // Redirect to the game page and force edit mode
       setLocation(`/games/${data.game.id}?edit=true&new=true`);
@@ -120,7 +124,11 @@ export default function PBNUpload({ open, onOpenChange }: PBNUploadProps) {
         title: "Upload Successful",
         description: `Successfully uploaded ${data.hands.length} hands from ${data.game.title}`,
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/games"] });
+      // Use targeted cache updates instead of broad invalidation
+      queryClient.setQueryData(["/api/games"], (oldData: any) => 
+        oldData ? [data.game, ...oldData.filter((g: any) => g.id !== data.game.id)] : [data.game]
+      );
+      queryClient.setQueryData([`/api/games/${data.game.id}`], data.game);
       handleClose();
       setLocation(`/games/${data.game.id}?edit=true&new=true`);
     },

@@ -78,23 +78,23 @@ export default function ClubLocationSelector({
   }, [homeClub, homeClubDefault, value, onChange]);
 
   const handleClubSelect = (club: Club, event?: React.MouseEvent) => {
-    // Prevent event bubbling that might close parent dialogs
+    // Prevent ALL event propagation
     event?.stopPropagation();
-    
-    // Update the form state immediately
+    event?.preventDefault();
+
+    // Add debugging to track dialog state
+    console.log('Club selected:', club.name, 'Dialog should remain open');
+
     onChange({
       clubId: club.id,
-      location: club.location,
+      location: club.location || undefined,
       displayName: club.name
     });
+
+    // Auto-switch to club mode when a club is selected
     setSelectedMode('club');
-
-    // Clear search and close search interface smoothly
     setSearchQuery("");
-    setShowSearch(false);
-
-    // Ensure the input field shows the selected club name
-    setInputValue(club.name);
+    setInputValue("");
   };
 
   const handleFreeTextChange = (location: string) => {

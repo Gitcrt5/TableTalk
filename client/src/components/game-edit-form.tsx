@@ -64,7 +64,7 @@ export default function GameEditForm({ game, open: externalOpen, onOpenChange, o
 
   // Use external open state if provided, otherwise use internal state
   const isOpen = externalOpen !== undefined ? externalOpen : internalOpen;
-  
+
   // Debug logging for dialog state
   console.log('GameEditForm render:', {
     gameId: game.id,
@@ -140,6 +140,8 @@ export default function GameEditForm({ game, open: externalOpen, onOpenChange, o
 
   // Prevent dialog from closing due to form changes
   const handleLocationChange = (newLocationValue: ClubLocationValue) => {
+    // Add debugging to track location changes
+    console.log('Location changed:', newLocationValue, 'Dialog should remain stable');
     setLocationValue(newLocationValue);
     // Update form fields if needed
     if (newLocationValue.clubId) {
