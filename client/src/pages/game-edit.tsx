@@ -85,7 +85,7 @@ export default function GameEdit() {
     resolver: zodResolver(gameEditSchema),
     defaultValues: {
       title: "",
-      date: "",
+      date: new Date().toISOString().split('T')[0], // Current date in YYYY-MM-DD format
       location: "",
       clubId: undefined,
     },
@@ -97,7 +97,7 @@ export default function GameEdit() {
       console.log('Resetting form with game data (not during selection)');
       form.reset({
         title: game.title,
-        date: game.date || "",
+        date: game.date || new Date().toISOString().split('T')[0], // Default to current date if no date set
         location: game.location || "",
         clubId: game.clubId || undefined,
       });
