@@ -143,6 +143,13 @@ export default function GameEdit() {
   };
 
   const handleLocationChange = (newLocationValue: ClubLocationValue) => {
+    // Add comprehensive debugging to track location changes
+    console.log('=== LOCATION CHANGE START ===');
+    console.log('New location value:', newLocationValue);
+    console.log('Current form state:', form.getValues());
+    console.log('Current page location:', window.location.href);
+    console.log('Form errors:', form.formState.errors);
+    
     setLocationValue(newLocationValue);
     // Update form fields if needed
     if (newLocationValue.clubId) {
@@ -151,6 +158,8 @@ export default function GameEdit() {
     if (newLocationValue.location) {
       form.setValue('location', newLocationValue.location);
     }
+    
+    console.log('=== LOCATION CHANGE COMPLETE ===');
   };
 
   const handleCancel = () => {
@@ -273,7 +282,7 @@ export default function GameEdit() {
                 )}
               />
 
-              <div>
+              <div data-club-selector>
                 <ClubLocationSelector
                   value={locationValue}
                   onChange={handleLocationChange}

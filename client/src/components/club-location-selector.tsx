@@ -88,6 +88,7 @@ export default function ClubLocationSelector({
     console.log('Current component state:', { showSearch, selectedMode });
     console.log('Parent component props:', { value, onChange });
     console.log('Event target exists:', !!event?.target);
+    console.log('Current page location:', window.location.href);
 
     onChange({
       clubId: club.id,
@@ -101,12 +102,16 @@ export default function ClubLocationSelector({
     setSelectedMode('club');
     setSearchQuery("");
     setInputValue("");
+    
+    // Hide search interface after selection
+    setShowSearch(false);
 
     // Check component stability after selection
     setTimeout(() => {
       console.log('=== CLUB SELECTION 100ms LATER ===');
       console.log('Component still mounted:', document.contains(event?.target as Node));
       console.log('Search state:', { showSearch, selectedMode });
+      console.log('Page location stable:', window.location.href);
     }, 100);
   };
 

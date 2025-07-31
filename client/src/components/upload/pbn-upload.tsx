@@ -41,7 +41,7 @@ export default function PBNUpload({ open, onOpenChange }: PBNUploadProps) {
 
       // Simulate progress
       setUploadProgress(25);
-      
+
       const response = await fetch('/api/games/upload', {
         method: 'POST',
         body: formData,
@@ -68,7 +68,7 @@ export default function PBNUpload({ open, onOpenChange }: PBNUploadProps) {
     },
     onSuccess: (data) => {
       if (!data) return; // Skip success handling for duplicates
-      
+
       toast({
         title: "Upload Successful",
         description: `Successfully uploaded ${data.hands.length} hands from ${data.game.title}`,
@@ -78,12 +78,12 @@ export default function PBNUpload({ open, onOpenChange }: PBNUploadProps) {
         oldData ? [data.game, ...oldData.filter((g: any) => g.id !== data.game.id)] : [data.game]
       );
       queryClient.setQueryData([`/api/games/${data.game.id}`], data.game);
-      
+
       // Add a small delay to ensure cache is stable before navigation
       setTimeout(() => {
         handleClose();
         // Redirect to the edit page for new games
-        setLocation(`/games/${data.game.id}?edit=true&new=true`);
+        setLocation(`/games/${data.game.id}/edit?new=true`);
       }, 100);
     },
     onError: (error: Error) => {
@@ -107,7 +107,7 @@ export default function PBNUpload({ open, onOpenChange }: PBNUploadProps) {
       }
 
       setUploadProgress(25);
-      
+
       const response = await fetch('/api/games/upload', {
         method: 'POST',
         body: formData,
@@ -133,11 +133,11 @@ export default function PBNUpload({ open, onOpenChange }: PBNUploadProps) {
         oldData ? [data.game, ...oldData.filter((g: any) => g.id !== data.game.id)] : [data.game]
       );
       queryClient.setQueryData([`/api/games/${data.game.id}`], data.game);
-      
+
       // Add a small delay to ensure cache is stable before navigation
       setTimeout(() => {
         handleClose();
-        setLocation(`/games/${data.game.id}?edit=true&new=true`);
+        setLocation(`/games/${data.game.id}/edit?new=true`);
       }, 100);
     },
     onError: (error: Error) => {
@@ -176,7 +176,7 @@ export default function PBNUpload({ open, onOpenChange }: PBNUploadProps) {
     const fileName = file.name.toLowerCase();
     const isValidExtension = fileName.endsWith('.pbn') || fileName.endsWith('.txt');
     const isValidType = file.type === 'text/plain' || file.type === '' || file.type === 'application/octet-stream';
-    
+
     // More flexible validation for mobile devices (iPad)
     if (!isValidExtension && !isValidType) {
       toast({
@@ -370,7 +370,7 @@ export default function PBNUpload({ open, onOpenChange }: PBNUploadProps) {
               <span>Duplicate Game Detected</span>
             </DialogTitle>
           </DialogHeader>
-          
+
           <div className="space-y-4">
             <Alert>
               <AlertTriangle className="h-4 w-4" />
@@ -379,7 +379,7 @@ export default function PBNUpload({ open, onOpenChange }: PBNUploadProps) {
                 This might be the same game uploaded with a different filename.
               </AlertDescription>
             </Alert>
-            
+
             <div className="bg-gray-50 p-4 rounded-lg">
               <h4 className="font-medium mb-2">Existing Game:</h4>
               <p className="text-sm"><strong>Title:</strong> {duplicateGame.title}</p>
@@ -394,7 +394,7 @@ export default function PBNUpload({ open, onOpenChange }: PBNUploadProps) {
               )}
             </div>
           </div>
-          
+
           <DialogFooter className="flex-col sm:flex-row gap-2">
             <Button 
               variant="outline" 

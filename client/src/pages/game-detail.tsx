@@ -43,17 +43,7 @@ export default function GameDetail() {
     enabled: !!gameId,
   });
   
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const shouldEdit = urlParams.get('edit') === 'true';
-    const isNew = urlParams.get('new') === 'true';
-    
-    if (shouldEdit && isNew && game && user && user.id === game.uploadedBy) {
-      setIsEditDialogOpen(true);
-      // Clean up URL parameters after opening dialog
-      window.history.replaceState({}, '', `/games/${gameId}`);
-    }
-  }, [game, user, gameId]);
+  // Note: Auto-edit dialog logic removed since we now use dedicated edit page after upload
 
   const { data: hands, isLoading: handsLoading } = useQuery<Hand[]>({
     queryKey: [`/api/games/${gameId}/hands`],
