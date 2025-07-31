@@ -162,6 +162,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Game not found" });
       }
       
+      // Ensure uploader name is included
+      if (game.uploadedBy && !game.uploaderName) {
+        const uploader = await storage.getUser(game.uploadedBy);
+        if (uploader) {
+          game.uploaderName = uploader.displayName || `${uploader.firstName} ${uploader.lastName}` || uploader.email;
+        }
+      }
+      
       res.json(game);
     } catch (error) {
       console.error("Error fetching game:", error);
