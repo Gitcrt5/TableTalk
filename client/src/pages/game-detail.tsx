@@ -10,7 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { ArrowLeft, Calendar, User, Users, Plus, UserPlus, FileText, Edit } from "lucide-react";
 import { Link, useParams, useLocation } from "wouter";
 import RegularGamePbnAttachment from "@/components/RegularGamePbnAttachment";
-import GameEditForm from "@/components/game-edit-form";
+
 import { useAuth } from "@/hooks/useAuth";
 import { formatContract } from "@/lib/bridge-utils";
 import { apiRequest } from "@/lib/queryClient";
@@ -35,8 +35,7 @@ export default function GameDetail() {
   const [selectedPartner, setSelectedPartner] = useState<string | undefined>();
   const [location, setLocation] = useLocation();
   
-  // Handle edit dialog for new games
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  
   
   const { data: game, isLoading: gameLoading } = useQuery<Game & { canAttachPbn?: boolean; originatedFromLiveGame?: boolean }>({
     queryKey: [`/api/games/${gameId}`],
@@ -185,15 +184,12 @@ export default function GameDetail() {
             </h1>
             <div className="flex items-center space-x-2">
               {user && user.id === game.uploadedBy && (
-                <GameEditForm 
-                  game={game}
-                  open={isEditDialogOpen}
-                  onOpenChange={setIsEditDialogOpen}
-                  onSuccess={() => {
-                    // Refresh game data after successful edit
-                    queryClient.invalidateQueries({ queryKey: [`/api/games/${gameId}`] });
-                  }}
-                />
+                <Link href={`/games/${gameId}/edit`}>
+                  <Button variant="outline" size="sm">
+                    <Edit className="h-4 w-4 mr-2" />
+                    Edit Details
+                  </Button>
+                </Link>
               )}
               {user && user.id === game.uploadedBy && game.canAttachPbn && (
                 <RegularGamePbnAttachment gameId={gameId}>
