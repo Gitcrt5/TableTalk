@@ -7,6 +7,7 @@ import Header from "@/components/layout/header";
 import Footer from "@/components/layout/footer";
 import Dashboard from "@/pages/dashboard";
 import GameDetail from "@/pages/game-detail";
+import GameEdit from "@/pages/game-edit";
 import HandDetail from "@/pages/hand-detail";
 import Landing from "@/pages/landing";
 import AuthPage from "@/pages/auth-page";
@@ -64,6 +65,7 @@ function Router() {
       <main className="flex-1">
         <Switch>
           <Route path="/" component={Dashboard} />
+          <Route path="/games/:id/edit" component={GameEdit} />
           <Route path="/games/:id" component={GameDetail} />
           <Route path="/hands/:id" component={HandDetail} />
           <Route path="/live-games" component={LiveGames} />

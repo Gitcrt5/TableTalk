@@ -7,9 +7,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { ArrowLeft, Calendar, User, Users, Plus, UserPlus, FileText } from "lucide-react";
+import { ArrowLeft, Calendar, User, Users, Plus, UserPlus, FileText, Edit } from "lucide-react";
 import { Link, useParams, useLocation } from "wouter";
-import GameEditForm from "@/components/game-edit-form";
 import RegularGamePbnAttachment from "@/components/RegularGamePbnAttachment";
 import { useAuth } from "@/hooks/useAuth";
 import { formatContract } from "@/lib/bridge-utils";
@@ -33,15 +32,7 @@ export default function GameDetail() {
   const [isParticipationDialogOpen, setIsParticipationDialogOpen] = useState(false);
   const [isPartnerDialogOpen, setIsPartnerDialogOpen] = useState(false);
   const [selectedPartner, setSelectedPartner] = useState<string | undefined>();
-  const [location] = useLocation();
-
-  // Check URL parameters to determine if we should auto-edit - use robust URL parsing
-  const urlParams = new URLSearchParams(window.location.search);
-  const shouldAutoEdit = urlParams.get('edit') === 'true';
-  const isNewGame = urlParams.get('new') === 'true';
-
-  // Track edit dialog state explicitly for better control
-  const [editDialogOpen, setEditDialogOpen] = useState(shouldAutoEdit);
+  const [location, setLocation] = useLocation();
 
   const { data: game, isLoading: gameLoading } = useQuery<Game & { canAttachPbn?: boolean; originatedFromLiveGame?: boolean }>({
     queryKey: [`/api/games/${gameId}`],
@@ -80,17 +71,6 @@ export default function GameDetail() {
 
   const isCurrentUserPlaying = participationData?.isPlaying || false;
   const currentUserPartner = participationData?.partner;
-
-  // Debug logging for auto-edit flow (after queries are declared)
-  console.log('Game Detail Page State:', {
-    gameId,
-    shouldAutoEdit,
-    isNewGame,
-    editDialogOpen,
-    gameLoaded: !!game,
-    userLoaded: !!user,
-    isUploader: user && game ? user.id === game.uploadedBy : 'unknown'
-  });
 
   // Add participation mutation
   const addParticipationMutation = useMutation({
@@ -137,27 +117,7 @@ export default function GameDetail() {
     },
   });
 
-  const handleEditSuccess = () => {
-    setEditDialogOpen(false);
-    queryClient.invalidateQueries({ queryKey: [`/api/games/${gameId}`] });
-    // Clean up URL parameters
-    const url = new URL(window.location.href);
-    url.searchParams.delete('edit');
-    url.searchParams.delete('new');
-    window.history.replaceState({}, '', url.toString());
-  };
 
-  const handleEditCancel = () => {
-    setEditDialogOpen(false);
-    // Clean up URL parameters
-    const url = new URL(window.location.href);
-    url.searchParams.delete('edit');
-    url.searchParams.delete('new');
-    window.history.replaceState({}, '', url.toString());
-  };
-
-  // Clean up URL parameters only when dialog is explicitly closed by user
-  // Removed automatic cleanup that was causing race conditions
 
   if (gameLoading || handsLoading) {
     return (
@@ -219,25 +179,14 @@ export default function GameDetail() {
             </h1>
             <div className="flex items-center space-x-2">
               {user && user.id === game.uploadedBy && (
-                <GameEditForm 
-                    game={game} 
-                    open={editDialogOpen}
-                    onOpenChange={(open) => {
-                      console.log('GameEditForm dialog state change:', open, 'isNewGame:', isNewGame);
-                      setEditDialogOpen(open);
-                      if (!open) {
-                        // Clean up URL parameters when dialog is explicitly closed
-                        const url = new URL(window.location.href);
-                        url.searchParams.delete('edit');
-                        url.searchParams.delete('new');
-                        window.history.replaceState({}, '', url.toString());
-                      }
-                    }}
-                  onSuccess={() => {
-                    // Keep dialog open after successful updates to allow further editing
-                    console.log('GameEditForm save successful - keeping dialog open');
-                  }}
-                />
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => setLocation(`/games/${gameId}/edit`)}
+                >
+                  <Edit className="h-4 w-4 mr-2" />
+                  Edit
+                </Button>
               )}
               {user && user.id === game.uploadedBy && game.canAttachPbn && (
                 <RegularGamePbnAttachment gameId={gameId}>
@@ -249,14 +198,6 @@ export default function GameDetail() {
               )}
             </div>
           </div>
-          {shouldAutoEdit && (
-            <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
-              <p className="text-sm text-blue-800">
-                <strong>Welcome!</strong> Your PBN file has been uploaded successfully.
-                Please update the game details below to complete the setup.
-              </p>
-            </div>
-          )}
           <div className="flex flex-wrap items-center gap-4 text-text-secondary">
             {game.date && (
               <div className="flex items-center space-x-1">
