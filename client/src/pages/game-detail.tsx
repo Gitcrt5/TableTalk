@@ -226,7 +226,7 @@ export default function GameDetail() {
 
             <div className="flex items-center space-x-1">
               <User className="h-4 w-4" />
-              <span>Uploaded by {game.uploaderName || game.uploadedBy}</span>
+              <span>Uploaded by {game.uploaderName || 'Unknown User'}</span>
             </div>
 
             <div className="flex items-center space-x-1 text-xs">
