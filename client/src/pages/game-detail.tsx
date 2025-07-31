@@ -35,10 +35,10 @@ export default function GameDetail() {
   const [selectedPartner, setSelectedPartner] = useState<string | undefined>();
   const [location] = useLocation();
 
-  // Check URL parameters to determine if we should auto-edit
-  const searchParams = new URLSearchParams(location.split('?')[1] || '');
-  const shouldAutoEdit = searchParams.get('edit') === 'true';
-  const isNewGame = searchParams.get('new') === 'true';
+  // Check URL parameters to determine if we should auto-edit - use robust URL parsing
+  const urlParams = new URLSearchParams(window.location.search);
+  const shouldAutoEdit = urlParams.get('edit') === 'true';
+  const isNewGame = urlParams.get('new') === 'true';
 
   // Track edit dialog state explicitly for better control
   const [editDialogOpen, setEditDialogOpen] = useState(shouldAutoEdit);
@@ -80,6 +80,17 @@ export default function GameDetail() {
 
   const isCurrentUserPlaying = participationData?.isPlaying || false;
   const currentUserPartner = participationData?.partner;
+
+  // Debug logging for auto-edit flow (after queries are declared)
+  console.log('Game Detail Page State:', {
+    gameId,
+    shouldAutoEdit,
+    isNewGame,
+    editDialogOpen,
+    gameLoaded: !!game,
+    userLoaded: !!user,
+    isUploader: user && game ? user.id === game.uploadedBy : 'unknown'
+  });
 
   // Add participation mutation
   const addParticipationMutation = useMutation({
@@ -145,16 +156,8 @@ export default function GameDetail() {
     window.history.replaceState({}, '', url.toString());
   };
 
-  // Clean up URL parameter after it's been used, but wait for game data to load AND auto-edit to be processed
-  useEffect(() => {
-    if (shouldAutoEdit && game && user && user.id === game.uploadedBy) {
-      // Wait a bit longer to ensure the GameEditForm component has time to process autoOpen
-      setTimeout(() => {
-        const newUrl = window.location.pathname;
-        window.history.replaceState(null, '', newUrl);
-      }, 500);
-    }
-  }, [shouldAutoEdit, game, user]);
+  // Clean up URL parameters only when dialog is explicitly closed by user
+  // Removed automatic cleanup that was causing race conditions
 
   if (gameLoading || handsLoading) {
     return (
@@ -220,15 +223,19 @@ export default function GameDetail() {
                     game={game} 
                     open={editDialogOpen}
                     onOpenChange={(open) => {
+                      console.log('GameEditForm dialog state change:', open, 'isNewGame:', isNewGame);
                       setEditDialogOpen(open);
-                      if (!open && isNewGame) {
-                        // Clear URL parameters when closing after new game creation
-                        window.history.replaceState({}, '', `/games/${game.id}`);
+                      if (!open) {
+                        // Clean up URL parameters when dialog is explicitly closed
+                        const url = new URL(window.location.href);
+                        url.searchParams.delete('edit');
+                        url.searchParams.delete('new');
+                        window.history.replaceState({}, '', url.toString());
                       }
                     }}
                   onSuccess={() => {
                     // Keep dialog open after successful updates to allow further editing
-                    // Only close if explicitly requested by user
+                    console.log('GameEditForm save successful - keeping dialog open');
                   }}
                 />
               )}

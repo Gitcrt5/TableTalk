@@ -64,6 +64,15 @@ export default function GameEditForm({ game, open: externalOpen, onOpenChange, o
 
   // Use external open state if provided, otherwise use internal state
   const isOpen = externalOpen !== undefined ? externalOpen : internalOpen;
+  
+  // Debug logging for dialog state
+  console.log('GameEditForm render:', {
+    gameId: game.id,
+    externalOpen,
+    internalOpen,
+    isOpen,
+    hasOnOpenChange: !!onOpenChange
+  });
 
   // Create stable setOpen function that prevents unwanted closures
   const setOpen = (open: boolean) => {
