@@ -38,6 +38,11 @@ export default function GameDetail() {
   // Handle edit dialog for new games
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   
+  const { data: game, isLoading: gameLoading } = useQuery<Game & { canAttachPbn?: boolean; originatedFromLiveGame?: boolean }>({
+    queryKey: [`/api/games/${gameId}`],
+    enabled: !!gameId,
+  });
+  
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const shouldEdit = urlParams.get('edit') === 'true';
@@ -49,11 +54,6 @@ export default function GameDetail() {
       window.history.replaceState({}, '', `/games/${gameId}`);
     }
   }, [game, user, gameId]);
-
-  const { data: game, isLoading: gameLoading } = useQuery<Game & { canAttachPbn?: boolean; originatedFromLiveGame?: boolean }>({
-    queryKey: [`/api/games/${gameId}`],
-    enabled: !!gameId,
-  });
 
   const { data: hands, isLoading: handsLoading } = useQuery<Hand[]>({
     queryKey: [`/api/games/${gameId}/hands`],
