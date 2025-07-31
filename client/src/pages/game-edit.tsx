@@ -91,9 +91,10 @@ export default function GameEdit() {
     },
   });
 
-  // Update form when game data loads
+  // Update form when game data loads (protected during club selection)
   useEffect(() => {
-    if (game) {
+    if (game && !isSelectingClub) {
+      console.log('Resetting form with game data (not during selection)');
       form.reset({
         title: game.title,
         date: game.date || "",
@@ -101,7 +102,7 @@ export default function GameEdit() {
         clubId: game.clubId || undefined,
       });
     }
-  }, [game, form]);
+  }, [game, form, isSelectingClub]);
 
   const updateGameMutation = useMutation({
     mutationFn: async (data: GameEditFormData) => {
@@ -162,21 +163,28 @@ export default function GameEdit() {
     console.log('Selection protection activated');
     
     setLocationValue(newLocationValue);
-    // Update form fields if needed
+    
+    // Update form fields without triggering submission
     if (newLocationValue.clubId) {
-      form.setValue('clubId', newLocationValue.clubId);
+      form.setValue('clubId', newLocationValue.clubId, { 
+        shouldValidate: false,
+        shouldDirty: false,
+        shouldTouch: false 
+      });
     }
     if (newLocationValue.location) {
-      form.setValue('location', newLocationValue.location);
+      form.setValue('location', newLocationValue.location, { 
+        shouldValidate: false,
+        shouldDirty: false,
+        shouldTouch: false 
+      });
     }
     
-    // Clear selection flag after a short delay
+    // Reset protection after selection is complete
     setTimeout(() => {
       setIsSelectingClub(false);
-      console.log('Selection protection deactivated');
+      console.log('=== LOCATION CHANGE COMPLETE - PROTECTION RELEASED ===');
     }, 100);
-    
-    console.log('=== LOCATION CHANGE COMPLETE ===');
   };
 
   const handleCancel = () => {
