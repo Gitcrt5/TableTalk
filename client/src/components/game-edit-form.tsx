@@ -140,8 +140,12 @@ export default function GameEditForm({ game, open: externalOpen, onOpenChange, o
 
   // Prevent dialog from closing due to form changes
   const handleLocationChange = (newLocationValue: ClubLocationValue) => {
-    // Add debugging to track location changes
-    console.log('Location changed:', newLocationValue, 'Dialog should remain stable');
+    // Add comprehensive debugging to track location changes
+    console.log('=== LOCATION CHANGE START ===');
+    console.log('New location value:', newLocationValue);
+    console.log('Current form state:', form.getValues());
+    console.log('Current dialog state:', isOpen);
+    console.log('Form errors:', form.formState.errors);
     
     // Capture current dialog state to prevent unwanted closure
     const currentDialogState = isOpen;

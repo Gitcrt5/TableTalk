@@ -10,6 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { ArrowLeft, Calendar, User, Users, Plus, UserPlus, FileText, Edit } from "lucide-react";
 import { Link, useParams, useLocation } from "wouter";
 import RegularGamePbnAttachment from "@/components/RegularGamePbnAttachment";
+import GameEditForm from "@/components/game-edit-form";
 import { useAuth } from "@/hooks/useAuth";
 import { formatContract } from "@/lib/bridge-utils";
 import { apiRequest } from "@/lib/queryClient";
@@ -33,6 +34,21 @@ export default function GameDetail() {
   const [isPartnerDialogOpen, setIsPartnerDialogOpen] = useState(false);
   const [selectedPartner, setSelectedPartner] = useState<string | undefined>();
   const [location, setLocation] = useLocation();
+  
+  // Handle edit dialog for new games
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const shouldEdit = urlParams.get('edit') === 'true';
+    const isNew = urlParams.get('new') === 'true';
+    
+    if (shouldEdit && isNew && game && user && user.id === game.uploadedBy) {
+      setIsEditDialogOpen(true);
+      // Clean up URL parameters after opening dialog
+      window.history.replaceState({}, '', `/games/${gameId}`);
+    }
+  }, [game, user, gameId]);
 
   const { data: game, isLoading: gameLoading } = useQuery<Game & { canAttachPbn?: boolean; originatedFromLiveGame?: boolean }>({
     queryKey: [`/api/games/${gameId}`],
@@ -179,14 +195,15 @@ export default function GameDetail() {
             </h1>
             <div className="flex items-center space-x-2">
               {user && user.id === game.uploadedBy && (
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => setLocation(`/games/${gameId}/edit`)}
-                >
-                  <Edit className="h-4 w-4 mr-2" />
-                  Edit
-                </Button>
+                <GameEditForm 
+                  game={game}
+                  open={isEditDialogOpen}
+                  onOpenChange={setIsEditDialogOpen}
+                  onSuccess={() => {
+                    // Refresh game data after successful edit
+                    queryClient.invalidateQueries({ queryKey: [`/api/games/${gameId}`] });
+                  }}
+                />
               )}
               {user && user.id === game.uploadedBy && game.canAttachPbn && (
                 <RegularGamePbnAttachment gameId={gameId}>

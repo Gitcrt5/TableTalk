@@ -83,7 +83,7 @@ export default function PBNUpload({ open, onOpenChange }: PBNUploadProps) {
       setTimeout(() => {
         handleClose();
         // Redirect to the edit page for new games
-        setLocation(`/games/${data.game.id}/edit?new=true`);
+        setLocation(`/games/${data.game.id}?edit=true&new=true`);
       }, 100);
     },
     onError: (error: Error) => {
@@ -137,7 +137,7 @@ export default function PBNUpload({ open, onOpenChange }: PBNUploadProps) {
       // Add a small delay to ensure cache is stable before navigation
       setTimeout(() => {
         handleClose();
-        setLocation(`/games/${data.game.id}/edit?new=true`);
+        setLocation(`/games/${data.game.id}?edit=true&new=true`);
       }, 100);
     },
     onError: (error: Error) => {

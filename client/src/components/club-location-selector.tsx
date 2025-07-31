@@ -82,8 +82,12 @@ export default function ClubLocationSelector({
     event?.stopPropagation();
     event?.preventDefault();
 
-    // Add debugging to track dialog state
-    console.log('Club selected:', club.name, 'Dialog should remain open');
+    // Add comprehensive debugging to track club selection flow
+    console.log('=== CLUB SELECTION START ===');
+    console.log('Selected club:', club.name, 'ID:', club.id);
+    console.log('Current component state:', { showSearch, selectedMode });
+    console.log('Parent component props:', { value, onChange });
+    console.log('Event target exists:', !!event?.target);
 
     onChange({
       clubId: club.id,
@@ -91,10 +95,19 @@ export default function ClubLocationSelector({
       displayName: club.name
     });
 
+    console.log('=== CLUB SELECTION onChange CALLED ===');
+
     // Auto-switch to club mode when a club is selected
     setSelectedMode('club');
     setSearchQuery("");
     setInputValue("");
+
+    // Check component stability after selection
+    setTimeout(() => {
+      console.log('=== CLUB SELECTION 100ms LATER ===');
+      console.log('Component still mounted:', document.contains(event?.target as Node));
+      console.log('Search state:', { showSearch, selectedMode });
+    }, 100);
   };
 
   const handleFreeTextChange = (location: string) => {
