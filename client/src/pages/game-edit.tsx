@@ -128,8 +128,8 @@ export default function GameEdit() {
         description: "Game details have been successfully updated.",
       });
 
-      // Stay on edit page - let user choose when to return
-      console.log("Game updated successfully - staying on edit page");
+      // Navigate back to game detail page after successful save
+      setLocation(`/games/${gameId}`);
     },
     onError: (error: Error) => {
       toast({
