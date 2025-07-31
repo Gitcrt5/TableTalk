@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/form";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import ClubLocationSelector from "@/components/club-location-selector";
+import SimpleClubSelector from "@/components/simple-club-selector";
 import { useAuth } from "@/hooks/useAuth";
 import type { Game } from "@shared/schema";
 import { ArrowLeft, Save } from "lucide-react";
@@ -316,13 +316,10 @@ export default function GameEdit() {
               />
 
               <div data-club-selector>
-                <ClubLocationSelector
+                <SimpleClubSelector
                   value={locationValue}
                   onChange={handleLocationChange}
-                  showFreeText={true}
-                  homeClubDefault={false}
                   label="Location"
-                  placeholder="Select club or enter location"
                 />
               </div>
 
