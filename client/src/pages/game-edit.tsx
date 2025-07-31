@@ -128,6 +128,9 @@ export default function GameEdit() {
         description: "Game details have been successfully updated.",
       });
 
+      // Invalidate game cache to ensure fresh data with uploader name
+      queryClient.invalidateQueries({ queryKey: [`/api/games/${gameId}`] });
+      
       // Navigate back to game detail page after successful save
       setLocation(`/games/${gameId}`);
     },
