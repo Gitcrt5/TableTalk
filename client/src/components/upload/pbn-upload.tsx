@@ -78,9 +78,13 @@ export default function PBNUpload({ open, onOpenChange }: PBNUploadProps) {
         oldData ? [data.game, ...oldData.filter((g: any) => g.id !== data.game.id)] : [data.game]
       );
       queryClient.setQueryData([`/api/games/${data.game.id}`], data.game);
-      handleClose();
-      // Redirect to the game page and force edit mode
-      setLocation(`/games/${data.game.id}?edit=true&new=true`);
+      
+      // Add a small delay to ensure cache is stable before navigation
+      setTimeout(() => {
+        handleClose();
+        // Redirect to the game page and force edit mode
+        setLocation(`/games/${data.game.id}?edit=true&new=true`);
+      }, 100);
     },
     onError: (error: Error) => {
       toast({
@@ -129,8 +133,12 @@ export default function PBNUpload({ open, onOpenChange }: PBNUploadProps) {
         oldData ? [data.game, ...oldData.filter((g: any) => g.id !== data.game.id)] : [data.game]
       );
       queryClient.setQueryData([`/api/games/${data.game.id}`], data.game);
-      handleClose();
-      setLocation(`/games/${data.game.id}?edit=true&new=true`);
+      
+      // Add a small delay to ensure cache is stable before navigation
+      setTimeout(() => {
+        handleClose();
+        setLocation(`/games/${data.game.id}?edit=true&new=true`);
+      }, 100);
     },
     onError: (error: Error) => {
       toast({

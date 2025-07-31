@@ -129,7 +129,7 @@ export default function ClubLocationSelector({
       setSelectedMode('freetext');
       setInputValue(value.location);
     } else {
-      setSelectedMode('none');
+      setSelectedMode('freetext');
       setInputValue("");
     }
   }, [value]);

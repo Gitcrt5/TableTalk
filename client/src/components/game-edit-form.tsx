@@ -142,6 +142,10 @@ export default function GameEditForm({ game, open: externalOpen, onOpenChange, o
   const handleLocationChange = (newLocationValue: ClubLocationValue) => {
     // Add debugging to track location changes
     console.log('Location changed:', newLocationValue, 'Dialog should remain stable');
+    
+    // Capture current dialog state to prevent unwanted closure
+    const currentDialogState = isOpen;
+    
     setLocationValue(newLocationValue);
     // Update form fields if needed
     if (newLocationValue.clubId) {
@@ -150,18 +154,40 @@ export default function GameEditForm({ game, open: externalOpen, onOpenChange, o
     if (newLocationValue.location) {
       form.setValue('location', newLocationValue.location);
     }
-    // Explicitly prevent dialog closure during location selection
+    
+    // Ensure dialog remains open after location change
+    if (currentDialogState && !isOpen) {
+      console.warn('Dialog closed unexpectedly during location change, attempting to stabilize...');
+      setTimeout(() => {
+        if (onOpenChange && !isOpen) {
+          onOpenChange(true);
+        }
+      }, 0);
+    }
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={setOpen}>
+    <Dialog 
+      open={isOpen} 
+      onOpenChange={setOpen}
+      modal={true}
+    >
       <DialogTrigger asChild>
         <Button variant="outline" size="sm">
           <Edit className="h-4 w-4 mr-2" />
           Edit Details
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent 
+        className="sm:max-w-[500px]"
+        onPointerDownOutside={(e) => {
+          // Allow clicks on the ClubLocationSelector search interface
+          const target = e.target as Element;
+          if (target.closest('[data-club-selector]') || target.closest('[data-radix-popper-content-wrapper]')) {
+            e.preventDefault();
+          }
+        }}
+      >
         <DialogHeader>
           <DialogTitle>Edit Game Details</DialogTitle>
           <DialogDescription>
@@ -207,7 +233,7 @@ export default function GameEditForm({ game, open: externalOpen, onOpenChange, o
               )}
             />
 
-            <div>
+            <div data-club-selector>
               <ClubLocationSelector
                 value={locationValue}
                 onChange={handleLocationChange}
