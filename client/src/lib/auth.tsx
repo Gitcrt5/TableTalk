@@ -53,8 +53,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       
       if (firebaseUser) {
         try {
+          console.log("Firebase user authenticated:", firebaseUser.uid);
           const idToken = await firebaseUser.getIdToken();
           setToken(idToken);
+          console.log("Got Firebase token, sending to backend...");
 
           // Fetch user data from our backend
           const response = await fetch("/api/auth/me", {
@@ -63,12 +65,18 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
             },
           });
 
+          console.log("Backend response status:", response.status);
+
           if (response.ok) {
             const userData = await response.json();
+            console.log("Successfully authenticated user:", userData);
             setUser(userData);
+          } else {
+            const errorData = await response.json();
+            console.error("Backend authentication failed:", response.status, errorData);
           }
         } catch (error) {
-          console.error("Error fetching user data:", error);
+          console.error("Error during authentication process:", error);
         }
       } else {
         setUser(null);
