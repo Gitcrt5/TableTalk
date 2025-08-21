@@ -39,23 +39,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   useEffect(() => {
     console.log("AuthProvider useEffect starting...");
-    // Handle redirect result on page load
-    console.log("Checking for redirect result...");
-    handleRedirectResult()
-      .then((result) => {
-        console.log("Redirect result:", result);
-        if (result?.user) {
-          console.log("Found user from redirect:", result.user.uid, result.user.email);
-          console.log("Setting Firebase user from redirect...");
-          setFirebaseUser(result.user);
-        } else {
-          console.log("No user found from redirect");
-        }
-      })
-      .catch((error) => {
-        console.error("CRITICAL: Error handling redirect result:", error);
-        console.error("Error details:", error.code, error.message);
-      });
+    // No need to handle redirect result for popup-based auth
+    console.log("Using popup-based authentication (no redirect handling needed)");
 
     // Set up auth state listener
     console.log("Setting up auth state listener...");

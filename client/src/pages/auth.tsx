@@ -16,13 +16,21 @@ export default function Auth() {
     }
   }, [user, loading, setLocation]);
 
-  const handleSignIn = () => {
+  const handleSignIn = async () => {
     console.log("Sign in button clicked");
     try {
-      signInWithGoogle();
-      console.log("signInWithGoogle() called successfully");
-    } catch (error) {
-      console.error("Error calling signInWithGoogle:", error);
+      console.log("Calling signInWithGoogle (popup mode)...");
+      const result = await signInWithGoogle();
+      console.log("Google sign-in successful:", result.user.uid);
+    } catch (error: any) {
+      console.error("Error during Google sign-in:", error);
+      if (error.code === 'auth/popup-closed-by-user') {
+        console.log("User closed the popup");
+      } else if (error.code === 'auth/cancelled-popup-request') {
+        console.log("Popup was cancelled");
+      } else {
+        console.error("Sign-in error:", error.code, error.message);
+      }
     }
   };
 
