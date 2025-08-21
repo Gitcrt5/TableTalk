@@ -35,12 +35,20 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [loading, setLoading] = useState(true);
   const [token, setToken] = useState<string | null>(null);
 
+  console.log("AuthProvider initialized");
+
   useEffect(() => {
+    console.log("AuthProvider useEffect starting...");
     // Handle redirect result on page load
+    console.log("Checking for redirect result...");
     handleRedirectResult()
       .then((result) => {
+        console.log("Redirect result:", result);
         if (result?.user) {
+          console.log("Found user from redirect:", result.user.uid);
           setFirebaseUser(result.user);
+        } else {
+          console.log("No user found from redirect");
         }
       })
       .catch((error) => {

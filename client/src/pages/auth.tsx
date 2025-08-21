@@ -17,7 +17,13 @@ export default function Auth() {
   }, [user, loading, setLocation]);
 
   const handleSignIn = () => {
-    signInWithGoogle();
+    console.log("Sign in button clicked");
+    try {
+      signInWithGoogle();
+      console.log("signInWithGoogle() called successfully");
+    } catch (error) {
+      console.error("Error calling signInWithGoogle:", error);
+    }
   };
 
   if (loading) {

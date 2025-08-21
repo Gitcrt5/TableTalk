@@ -9,12 +9,22 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
+console.log("Firebase config:", {
+  apiKey: firebaseConfig.apiKey ? "***PROVIDED***" : "MISSING",
+  authDomain: firebaseConfig.authDomain,
+  projectId: firebaseConfig.projectId,
+  storageBucket: firebaseConfig.storageBucket,
+  appId: firebaseConfig.appId ? "***PROVIDED***" : "MISSING"
+});
+
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
+console.log("Firebase app initialized successfully");
 
 const provider = new GoogleAuthProvider();
 
 export const signInWithGoogle = () => {
+  console.log("signInWithGoogle called - initiating redirect");
   return signInWithRedirect(auth, provider);
 };
 
