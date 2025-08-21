@@ -45,18 +45,22 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       .then((result) => {
         console.log("Redirect result:", result);
         if (result?.user) {
-          console.log("Found user from redirect:", result.user.uid);
+          console.log("Found user from redirect:", result.user.uid, result.user.email);
+          console.log("Setting Firebase user from redirect...");
           setFirebaseUser(result.user);
         } else {
           console.log("No user found from redirect");
         }
       })
       .catch((error) => {
-        console.error("Error handling redirect result:", error);
+        console.error("CRITICAL: Error handling redirect result:", error);
+        console.error("Error details:", error.code, error.message);
       });
 
     // Set up auth state listener
+    console.log("Setting up auth state listener...");
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      console.log("Auth state changed. Firebase user:", firebaseUser ? firebaseUser.uid : "null");
       setFirebaseUser(firebaseUser);
       
       if (firebaseUser) {
@@ -81,7 +85,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
             setUser(userData);
           } else {
             const errorData = await response.json();
-            console.error("Backend authentication failed:", response.status, errorData);
+            console.error("CRITICAL: Backend authentication failed:", response.status, errorData);
+            console.error("This means Firebase token verification failed on server");
           }
         } catch (error) {
           console.error("Error during authentication process:", error);
