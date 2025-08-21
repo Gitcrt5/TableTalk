@@ -17,28 +17,70 @@ import {
 const requireAuth = async (req: any, res: any, next: any) => {
   try {
     const authHeader = req.headers.authorization;
+    
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return res.status(401).json({ error: "No token provided" });
+      console.log("Authentication failed: No authorization header or invalid format");
+      return res.status(401).json({ error: "Authentication required" });
     }
 
     const token = authHeader.split(" ")[1];
+    if (!token) {
+      console.log("Authentication failed: No token in authorization header");
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
+    console.log("Starting token verification process...");
     const decodedToken = await verifyFirebaseToken(token);
+    
+    if (!decodedToken.uid) {
+      console.error("Authentication failed: No UID in decoded token");
+      return res.status(401).json({ error: "Invalid authentication token" });
+    }
+
+    if (!decodedToken.email) {
+      console.error("Authentication failed: No email in decoded token");
+      return res.status(401).json({ error: "Email required for authentication" });
+    }
+
+    console.log(`Looking up user with Firebase UID: ${decodedToken.uid}`);
     
     // Get or create user in our database
     let user = await storage.getUserByFirebaseUid(decodedToken.uid);
+    
     if (!user) {
-      user = await storage.createUser({
-        email: decodedToken.email!,
-        displayName: decodedToken.name || decodedToken.email!,
-        firebaseUid: decodedToken.uid,
-      });
+      console.log(`User not found, creating new user for: ${decodedToken.email}`);
+      
+      try {
+        user = await storage.createUser({
+          email: decodedToken.email,
+          displayName: decodedToken.name || decodedToken.email,
+          firebaseUid: decodedToken.uid,
+        });
+        
+        console.log(`Successfully created new user with ID: ${user.id}`);
+      } catch (createError) {
+        console.error("Failed to create user:", createError);
+        return res.status(500).json({ error: "Failed to create user account" });
+      }
+    } else {
+      console.log(`Found existing user with ID: ${user.id}`);
     }
 
     req.user = user;
     next();
-  } catch (error) {
-    console.error("Auth error:", error);
-    return res.status(401).json({ error: "Invalid token" });
+  } catch (error: any) {
+    console.error("Authentication error:", error);
+    
+    // Return appropriate error message based on error type
+    if (error?.message?.includes("expired")) {
+      return res.status(401).json({ error: "Session expired. Please sign in again." });
+    } else if (error?.message?.includes("revoked")) {
+      return res.status(401).json({ error: "Session invalid. Please sign in again." });
+    } else if (error?.message?.includes("Invalid token")) {
+      return res.status(401).json({ error: "Invalid authentication. Please sign in again." });
+    } else {
+      return res.status(401).json({ error: "Authentication failed. Please try again." });
+    }
   }
 };
 

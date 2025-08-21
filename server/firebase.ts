@@ -1,5 +1,5 @@
-// Simplified Firebase setup for MVP - using client-side auth only
-// For production, consider implementing Firebase Admin SDK with service account
+import { initializeApp, cert, getApps, App } from 'firebase-admin/app';
+import { getAuth } from 'firebase-admin/auth';
 
 export interface DecodedToken {
   uid: string;
@@ -7,31 +7,66 @@ export interface DecodedToken {
   name?: string;
 }
 
-// Placeholder for token verification - in MVP we'll rely on client-side auth
-export async function verifyFirebaseToken(token: string): Promise<DecodedToken> {
-  // For MVP, we'll validate tokens on the client side
-  // In production, implement proper server-side verification
-  if (!token) {
-    throw new Error("Invalid token");
-  }
-  
-  // Basic token structure validation
-  try {
-    const parts = token.split('.');
-    if (parts.length !== 3) {
-      throw new Error("Invalid token format");
-    }
+// Initialize Firebase Admin SDK
+let adminApp: App;
+try {
+  // Check if an app is already initialized
+  if (getApps().length === 0) {
+    const serviceAccountKey = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
     
-    // Decode the payload (this is not secure - only for MVP)
-    const payload = JSON.parse(atob(parts[1]));
+    if (!serviceAccountKey) {
+      throw new Error("FIREBASE_SERVICE_ACCOUNT_KEY environment variable is required");
+    }
+
+    const serviceAccount = JSON.parse(serviceAccountKey);
+    
+    adminApp = initializeApp({
+      credential: cert(serviceAccount),
+      projectId: serviceAccount.project_id,
+    });
+    
+    console.log("Firebase Admin SDK initialized successfully");
+  } else {
+    adminApp = getApps()[0];
+  }
+} catch (error) {
+  console.error("Failed to initialize Firebase Admin SDK:", error instanceof Error ? error.message : error);
+  throw new Error("Firebase Admin SDK initialization failed");
+}
+
+// Production-ready Firebase token verification using Admin SDK
+export async function verifyFirebaseToken(token: string): Promise<DecodedToken> {
+  if (!token) {
+    throw new Error("No token provided");
+  }
+
+  try {
+    console.log("Verifying Firebase token...");
+    
+    // Use Firebase Admin SDK to verify the ID token
+    const decodedToken = await getAuth(adminApp).verifyIdToken(token);
+    
+    console.log("Token verified successfully for user:", decodedToken.uid);
     
     return {
-      uid: payload.user_id || payload.sub,
-      email: payload.email,
-      name: payload.name
+      uid: decodedToken.uid,
+      email: decodedToken.email,
+      name: decodedToken.name || decodedToken.display_name,
     };
-  } catch (error) {
-    console.error("Error verifying Firebase token:", error);
-    throw new Error("Invalid token");
+  } catch (error: any) {
+    console.error("Firebase token verification failed:", error);
+    
+    // Provide specific error messages for different scenarios
+    if (error?.code === 'auth/id-token-expired') {
+      throw new Error("Token has expired");
+    } else if (error?.code === 'auth/id-token-revoked') {
+      throw new Error("Token has been revoked");
+    } else if (error?.code === 'auth/invalid-id-token') {
+      throw new Error("Invalid token format");
+    } else if (error?.code === 'auth/project-not-found') {
+      throw new Error("Firebase project not found");
+    } else {
+      throw new Error(`Token verification failed: ${error?.message || 'Unknown error'}`);
+    }
   }
 }
