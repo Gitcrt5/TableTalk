@@ -52,7 +52,7 @@
   --spacing: 0.25rem;
   
   /* Bridge-specific colors */
-  --bridge-green: hsl(160 84% 20%);
+  --bridge-green: hsl(160 84% 35%);
   --bridge-red: hsl(0 84% 55%);
   --bridge-blue: hsl(213 84% 55%);
 }
@@ -104,7 +104,7 @@
   --shadow-2xl: 0px 2px 0px 0px hsl(202.8169 89.1213% 53.1373% / 0.00);
   
   /* Bridge-specific colors for dark mode */
-  --bridge-green: hsl(160 84% 25%);
+  --bridge-green: hsl(160 84% 40%);
   --bridge-red: hsl(0 84% 60%);
   --bridge-blue: hsl(213 84% 60%);
 }
