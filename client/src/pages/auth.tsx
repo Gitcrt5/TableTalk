@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
 import { signInWithGoogle } from "@/lib/firebase";
 import { SuitSymbol } from "@/components/bridge/SuitSymbol";
+import logo from "@/assets/tabletalk-logo.svg";
 
 export default function Auth() {
   const { user, loading } = useAuth();
@@ -50,14 +51,11 @@ export default function Auth() {
       <Card className="w-full max-w-md mx-4">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
-            <div className="w-16 h-16 rounded-lg bg-bridge-green flex items-center justify-center">
-              <div className="text-white text-lg">
-                <SuitSymbol suit="S" className="text-white" />
-                <SuitSymbol suit="H" className="text-red-300" />
-                <SuitSymbol suit="D" className="text-red-300" />
-                <SuitSymbol suit="C" className="text-white" />
-              </div>
-            </div>
+            <img 
+              src={logo} 
+              alt="TableTalk Logo" 
+              className="w-16 h-16" 
+            />
           </div>
           <CardTitle className="text-2xl font-bold">Welcome to TableTalk</CardTitle>
           <p className="text-gray-600">Sign in to start analyzing your bridge games</p>
