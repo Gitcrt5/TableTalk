@@ -239,22 +239,7 @@ export default function CreateGame() {
                   </div>
                 )}
 
-                <Card className="bg-blue-50 border-blue-200">
-                  <CardContent className="p-4">
-                    <h4 className="font-medium text-blue-900 mb-2">Or Join Existing Event</h4>
-                    <p className="text-sm text-blue-700 mb-3">
-                      Create your game from a club event instead of uploading hand records.
-                    </p>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="border-blue-300 text-blue-700 hover:bg-blue-100"
-                      onClick={() => setLocation('/events')}
-                    >
-                      Browse Events
-                    </Button>
-                  </CardContent>
-                </Card>
+                
               </CardContent>
             </Card>
           </div>
