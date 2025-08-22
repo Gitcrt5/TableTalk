@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
 import { signInWithGoogle, signOutUser } from "@/lib/firebase";
 import { SuitSymbol } from "@/components/bridge/SuitSymbol";
+import logo from "@/assets/tabletalk-logo.svg";
 
 export const AppHeader = () => {
   const { user, firebaseUser, loading } = useAuth();
@@ -33,14 +34,11 @@ export const AppHeader = () => {
         <div className="flex items-center justify-between">
           <Link href="/">
             <div className="flex items-center gap-3 cursor-pointer">
-              <div className="w-10 h-10 rounded-lg bg-bridge-green flex items-center justify-center">
-                <div className="text-white text-xs">
-                  <SuitSymbol suit="S" className="text-white" />
-                  <SuitSymbol suit="H" className="text-red-300" />
-                  <SuitSymbol suit="D" className="text-red-300" />
-                  <SuitSymbol suit="C" className="text-white" />
-                </div>
-              </div>
+              <img 
+                src={logo} 
+                alt="TableTalk Logo" 
+                className="w-10 h-10" 
+              />
               <div>
                 <h1 className="text-xl font-bold text-gray-900">TableTalk</h1>
                 <p className="text-xs text-gray-500">Bridge Analysis Platform</p>

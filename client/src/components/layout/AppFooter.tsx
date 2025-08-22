@@ -1,5 +1,7 @@
 import { SuitSymbol } from "@/components/bridge/SuitSymbol";
 
+import logo from "@/assets/tabletalk-logo.svg";
+
 export const AppFooter = () => {
   return (
     <footer className="bg-white border-t border-gray-200 mt-12">
@@ -7,9 +9,11 @@ export const AppFooter = () => {
         <div className="grid md:grid-cols-4 gap-6">
           <div>
             <div className="flex items-center gap-2 mb-3">
-              <div className="w-8 h-8 rounded-lg bg-bridge-green flex items-center justify-center">
-                <div className="text-white text-sm font-bold">TT</div>
-              </div>
+              <img 
+                src={logo} 
+                alt="TableTalk Logo" 
+                className="w-8 h-8" 
+              />
               <span className="font-bold text-gray-900">TableTalk</span>
             </div>
             <p className="text-sm text-gray-600">
