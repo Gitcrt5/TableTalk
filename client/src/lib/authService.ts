@@ -11,7 +11,7 @@ import { auth } from "./firebase";
 // Configuration object - easily modify to enable/disable methods
 export const AUTH_CONFIG = {
   emailPassword: true, // Your current setup
-  google: false,       // Disabled in your Firebase console
+  google: true,        // Now enabled - make sure it's also enabled in Firebase Console
   passwordReset: true,
   registration: true
 };
