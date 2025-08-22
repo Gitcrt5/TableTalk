@@ -36,18 +36,11 @@ export default function Dashboard() {
             <h2 className="text-2xl font-bold text-gray-900">Dashboard</h2>
             <p className="text-gray-600">Quick access to your bridge games and analysis</p>
           </div>
-          <div className="flex gap-3">
-            <Link href="/create-game">
-              <Button className="bg-bridge-green hover:bg-green-700">
-                <span className="mr-2">+</span>Create Game
-              </Button>
-            </Link>
-            <Link href="/events">
-              <Button variant="outline">
-                <span className="mr-2">📅</span>Browse Events
-              </Button>
-            </Link>
-          </div>
+          <Link href="/create-game">
+            <Button className="bg-bridge-green hover:bg-green-700">
+              <span className="mr-2">+</span>Create Game
+            </Button>
+          </Link>
         </div>
 
         <div className="grid lg:grid-cols-3 gap-6 mb-6">
