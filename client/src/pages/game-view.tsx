@@ -47,7 +47,7 @@ export default function GameView() {
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Game Not Found</h1>
           <p className="text-gray-600 mb-4">The game you're looking for doesn't exist or you don't have permission to view it.</p>
           <Link href="/">
-            <Button className="bg-bridge-green hover:bg-green-700">
+            <Button className="bg-bridge-green hover:bg-green-700 text-white">
               Back to Dashboard
             </Button>
           </Link>
@@ -75,7 +75,7 @@ export default function GameView() {
               </Button>
             </Link>
             <Link href="/create-game">
-              <Button className="bg-bridge-green hover:bg-green-700">
+              <Button className="bg-bridge-green hover:bg-green-700 text-white">
                 <span className="mr-2">+</span>New Game
               </Button>
             </Link>
@@ -171,7 +171,7 @@ export default function GameView() {
                   
                   <div className="flex gap-2">
                     <Link href={`/boards/${board.id}`}>
-                      <Button size="sm" className="bg-bridge-green hover:bg-green-700">
+                      <Button size="sm" className="bg-bridge-green hover:bg-green-700 text-white">
                         Open
                       </Button>
                     </Link>

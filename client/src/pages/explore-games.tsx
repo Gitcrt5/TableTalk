@@ -84,7 +84,7 @@ export default function ExploreGames() {
                 
                 <div className="flex gap-2">
                   <Link href={`/games/${game.id}`}>
-                    <Button size="sm" className="bg-bridge-green hover:bg-green-700">
+                    <Button size="sm" className="bg-bridge-green hover:bg-green-700 text-white">
                       Open
                     </Button>
                   </Link>

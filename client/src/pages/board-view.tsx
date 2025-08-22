@@ -275,7 +275,7 @@ export default function BoardView() {
               <Button 
                 onClick={handleSaveBoard}
                 disabled={updateBoardMutation.isPending}
-                className="w-full bg-bridge-green hover:bg-green-700"
+                className="w-full bg-bridge-green hover:bg-green-700 text-white"
               >
                 {updateBoardMutation.isPending ? "Saving..." : "Save Board"}
               </Button>
@@ -338,7 +338,7 @@ export default function BoardView() {
                 <Button
                   onClick={handleAddComment}
                   disabled={!newComment.trim() || addCommentMutation.isPending}
-                  className="bg-bridge-green hover:bg-green-700"
+                  className="bg-bridge-green hover:bg-green-700 text-white"
                 >
                   {addCommentMutation.isPending ? "Posting..." : "Post Comment"}
                 </Button>

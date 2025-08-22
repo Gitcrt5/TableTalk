@@ -157,7 +157,7 @@ export default function GameBoards() {
                       <TableCell>
                         <div className="flex items-center gap-2">
                           <Link href={`/boards/${board.id}`}>
-                            <Button size="sm" className="bg-bridge-green hover:bg-green-700">
+                            <Button size="sm" className="bg-bridge-green hover:bg-green-700 text-white">
                               Open
                             </Button>
                           </Link>
