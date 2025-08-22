@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
-import { auth, handleRedirectResult, onAuthStateChanged } from "./firebase";
+import { auth, onAuthStateChanged } from "./firebase";
 import { User as FirebaseUser } from "firebase/auth";
 import { User } from "@shared/schema";
 
@@ -39,10 +39,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   useEffect(() => {
     console.log("AuthProvider useEffect starting...");
-    // No need to handle redirect result for popup-based auth
-    console.log("Using popup-based authentication (no redirect handling needed)");
-
-    // Set up auth state listener
     console.log("Setting up auth state listener...");
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       console.log("Auth state changed. Firebase user:", firebaseUser ? firebaseUser.uid : "null");

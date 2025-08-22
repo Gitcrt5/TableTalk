@@ -1,5 +1,5 @@
 import { initializeApp } from "firebase/app";
-import { getAuth, signInWithRedirect, getRedirectResult, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "firebase/auth";
+import { getAuth } from "firebase/auth";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -21,25 +21,5 @@ const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 console.log("Firebase app initialized successfully");
 
-const provider = new GoogleAuthProvider();
-// Add required OAuth scopes and parameters
-provider.addScope('email');
-provider.addScope('profile');
-provider.setCustomParameters({
-  prompt: 'select_account'
-});
-
-export const signInWithGoogle = () => {
-  console.log("signInWithGoogle called - initiating popup");
-  return signInWithPopup(auth, provider);
-};
-
-export const handleRedirectResult = () => {
-  return getRedirectResult(auth);
-};
-
-export const signOutUser = () => {
-  return signOut(auth);
-};
-
-export { onAuthStateChanged };
+// Remove all Google-specific code - handled in authService
+export { onAuthStateChanged } from "firebase/auth";

@@ -1,19 +1,18 @@
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
-import { signInWithGoogle, signOutUser } from "@/lib/firebase";
-import { SuitSymbol } from "@/components/bridge/SuitSymbol";
+import { authService } from "@/lib/authService";
 import logo from "@/assets/tabletalk-logo.svg";
 
 export const AppHeader = () => {
   const { user, firebaseUser, loading } = useAuth();
 
   const handleSignIn = () => {
-    signInWithGoogle();
+    authService.signInWithGoogle();
   };
 
   const handleSignOut = () => {
-    signOutUser();
+    authService.signOut();
   };
 
   if (loading) {
