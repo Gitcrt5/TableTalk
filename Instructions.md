@@ -215,123 +215,303 @@ If issues arise:
 
 ---
 
-## NEW: Authentication Abstraction Options (Response to User Question)
+## CRITICAL UPDATE: Firebase v12 Compatibility Research
 
-### User Question: "Can Firebase be used for login and authentication without the frontend knowing or specifying what Firebase will be used?"
+### User Question: "Is there a way to use a newer frontend interface that uses the current Firebase version?"
 
-**Answer: YES** - Firebase provides several abstraction approaches that can handle authentication configuration changes without requiring code modifications.
+**MAJOR DISCOVERY: FirebaseUI is NOT compatible with Firebase v12!**
 
-## Option C: Firebase Auth Abstraction (NEW - HIGHLY RECOMMENDED)
+## Firebase v12 Compatibility Issues Found
 
-This approach dynamically adapts to your Firebase project configuration without hardcoding specific authentication methods.
+### ❌ **FirebaseUI Problems (Option C1 - NOT RECOMMENDED)**
 
-### Approach C1: FirebaseUI Web (Official Google Solution)
+**Critical Issues:**
+- `react-firebaseui` requires Firebase v9 **compat** version, NOT v12 modular SDK
+- Your project uses Firebase v12 modular SDK (`firebase@12.1.0`)
+- Dependency conflict prevents installation (`ERESOLVE unable to resolve dependency tree`)
+- **FirebaseUI is essentially deprecated** for modern Firebase implementations
 
-**What it is:**
-- Official Google library that provides pre-built authentication UI
-- **Automatically shows only enabled authentication methods** from your Firebase console
-- No code changes needed when you enable/disable authentication methods in Firebase
-
-**Key Benefits:**
-✅ **Zero frontend authentication method configuration**
-✅ **Dynamic UI based on Firebase console settings**  
-✅ **Automatic updates when Firebase config changes**
-✅ **Professional, tested UI components**
-✅ **Handles all Firebase authentication flows automatically**
-
-**Required Package:**
+**Why This Failed:**
 ```bash
 npm install react-firebaseui
-npm install firebase@^9.0.0  # Already installed
+# ERROR: Could not resolve dependency:
+# peer firebase@"^9.1.3" from react-firebaseui@6.0.0
+# Found: firebase@12.1.0 (your current version)
 ```
 
-**Implementation:**
-1. **Replace entire authentication logic** with FirebaseUI component
-2. **Configure which methods to support** (not which to show - that's dynamic)
-3. **FirebaseUI automatically detects** enabled methods from Firebase project
-4. **UI automatically updates** when you change Firebase console settings
+### ✅ **Better Modern Solutions for Firebase v12**
 
-**Files to Modify:**
-- `client/src/lib/firebase.ts` - Replace with FirebaseUI initialization
-- `client/src/pages/auth.tsx` - Replace with FirebaseUI component
-- **That's it** - backend and database remain unchanged
+## NEW Option D: Modern Firebase v12 Custom Implementation (RECOMMENDED)
 
-### Approach C2: Authentication Service Abstraction Layer
+### User Question Answer: **YES** - Multiple better approaches exist!
 
-**What it is:**
-- Custom service that detects available authentication methods at runtime
-- Dynamically builds UI based on Firebase project capabilities
+**Modern Abstraction Approaches:**
 
-**Implementation involves:**
-1. Service layer that queries Firebase for available auth methods
-2. Dynamic UI generation based on detected methods
-3. Generic authentication handlers
+### **D1: Configuration-Driven Authentication (BEST for your case)**
+- Single config object drives all authentication UI/logic
+- Environment variables or Firebase console settings control methods
+- Uses Firebase v12 modular SDK directly
+- **No additional packages needed**
 
-### Approach C3: Configuration-Driven Authentication
+### **D2: Dynamic Provider Detection**  
+- Code detects available auth methods from Firebase configuration
+- Automatically builds UI based on enabled methods
+- Uses modern React patterns with Firebase v12
 
-**What it is:**
-- Single configuration object that drives all authentication UI/logic
-- Environment variables control which methods to show
-- Code supports all methods, configuration determines visibility
+### **D3: Firebase v12 + shadcn/ui Custom Components**
+- Leverages your existing shadcn/ui setup  
+- Modern, customizable authentication forms
+- Full control over UX while maintaining abstraction
 
-## Detailed Implementation: Option C1 (FirebaseUI)
+## Detailed Implementation: Option D1 (Configuration-Driven - RECOMMENDED)
 
-### Phase 1: Install FirebaseUI
-```bash
-npm install react-firebaseui
-```
+### Implementation Overview
+Create a configuration-driven authentication system that:
+1. **Uses Firebase v12 modular SDK** (no compatibility issues)
+2. **Dynamically shows auth methods** based on configuration
+3. **Leverages existing shadcn/ui components** (already in your project)
+4. **Requires no additional packages** (everything needed is installed)
 
-### Phase 2: Replace Firebase Configuration
-**Modify `client/src/lib/firebase.ts`:**
-```javascript
-import { initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
+### Phase 1: Create Authentication Service
+**Create `client/src/lib/authService.ts`:**
+```typescript
+import { 
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  GoogleAuthProvider,
+  signInWithPopup,
+  sendPasswordResetEmail,
+  signOut
+} from "firebase/auth";
+import { auth } from "./firebase";
 
-// Standard Firebase config (keep existing)
-const firebaseConfig = { /* existing config */ };
-const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
-
-// Remove all specific provider code - FirebaseUI handles this
-```
-
-### Phase 3: Replace Authentication UI
-**Modify `client/src/pages/auth.tsx`:**
-```javascript
-import StyledFirebaseAuth from 'react-firebaseui/StyledFirebaseAuth';
-import firebase from 'firebase/compat/app';
-import 'firebase/compat/auth';
-import { auth } from '@/lib/firebase';
-
-const uiConfig = {
-  signInFlow: 'popup',
-  signInOptions: [
-    firebase.auth.EmailAuthProvider.PROVIDER_ID,
-    firebase.auth.GoogleAuthProvider.PROVIDER_ID,
-    firebase.auth.FacebookAuthProvider.PROVIDER_ID,
-    // Add all methods you might want to support
-    // FirebaseUI only shows enabled ones from Firebase console
-  ],
-  callbacks: {
-    signInSuccessWithAuthResult: () => false, // Avoid redirect
-  }
+// Configuration object - easily modify to enable/disable methods
+export const AUTH_CONFIG = {
+  emailPassword: true, // Your current setup
+  google: false,       // Disabled in your Firebase console
+  passwordReset: true,
+  registration: true
 };
+
+export const authService = {
+  // Email/Password methods
+  signInWithEmail: (email: string, password: string) => 
+    signInWithEmailAndPassword(auth, email, password),
+  
+  signUpWithEmail: (email: string, password: string) => 
+    createUserWithEmailAndPassword(auth, email, password),
+  
+  resetPassword: (email: string) => 
+    sendPasswordResetEmail(auth, email),
+  
+  // Google OAuth (when enabled)
+  signInWithGoogle: () => {
+    const provider = new GoogleAuthProvider();
+    return signInWithPopup(auth, provider);
+  },
+  
+  // Universal sign out
+  signOut: () => signOut(auth)
+};
+```
+
+### Phase 2: Create Dynamic Authentication Forms
+**Modify `client/src/pages/auth.tsx`:**
+```typescript
+import { useState, useEffect } from "react";
+import { useLocation } from "wouter";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { useAuth } from "@/lib/auth";
+import { authService, AUTH_CONFIG } from "@/lib/authService";
+import logo from "@/assets/tabletalk-logo.svg";
 
 export default function Auth() {
   const { user, loading } = useAuth();
+  const [, setLocation] = useLocation();
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [authLoading, setAuthLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  if (loading) return <LoadingState />;
-  if (user) return <Redirect to="/" />;
+  useEffect(() => {
+    if (user && !loading) {
+      setLocation("/");
+    }
+  }, [user, loading, setLocation]);
+
+  const handleEmailAuth = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthLoading(true);
+    setError("");
+
+    try {
+      if (isSignUp) {
+        if (password !== confirmPassword) {
+          throw new Error("Passwords don't match");
+        }
+        await authService.signUpWithEmail(email, password);
+      } else {
+        await authService.signInWithEmail(email, password);
+      }
+    } catch (error: any) {
+      setError(error.message);
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const handleGoogleAuth = async () => {
+    if (!AUTH_CONFIG.google) return;
+    
+    setAuthLoading(true);
+    try {
+      await authService.signInWithGoogle();
+    } catch (error: any) {
+      setError(error.message);
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const handlePasswordReset = async () => {
+    if (!email) {
+      setError("Enter your email first");
+      return;
+    }
+    
+    try {
+      await authService.resetPassword(email);
+      setError("Password reset email sent!");
+    } catch (error: any) {
+      setError(error.message);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-bridge-green mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center">
       <Card className="w-full max-w-md mx-4">
         <CardHeader className="text-center">
+          <div className="flex justify-center mb-4">
+            <img src={logo} alt="TableTalk Logo" className="w-16 h-16" />
+          </div>
           <CardTitle className="text-2xl font-bold">Welcome to TableTalk</CardTitle>
-          <p className="text-gray-600">Sign in to start analyzing your bridge games</p>
+          <p className="text-gray-600">
+            {isSignUp ? "Create your account" : "Sign in to start analyzing your bridge games"}
+          </p>
         </CardHeader>
-        <CardContent>
-          <StyledFirebaseAuth uiConfig={uiConfig} firebaseAuth={auth} />
+        <CardContent className="space-y-4">
+          {AUTH_CONFIG.emailPassword && (
+            <form onSubmit={handleEmailAuth} className="space-y-4">
+              <Input
+                type="email"
+                placeholder="Email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                data-testid="input-email"
+              />
+              <Input
+                type="password"
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                data-testid="input-password"
+              />
+              
+              {isSignUp && AUTH_CONFIG.registration && (
+                <Input
+                  type="password"
+                  placeholder="Confirm Password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                  data-testid="input-confirm-password"
+                />
+              )}
+
+              <Button 
+                type="submit" 
+                className="w-full" 
+                disabled={authLoading}
+                data-testid="button-submit"
+              >
+                {authLoading ? "Loading..." : (isSignUp ? "Sign Up" : "Sign In")}
+              </Button>
+            </form>
+          )}
+
+          {AUTH_CONFIG.google && (
+            <>
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-gray-50 px-2 text-gray-500">Or</span>
+                </div>
+              </div>
+
+              <Button
+                onClick={handleGoogleAuth}
+                variant="outline"
+                className="w-full"
+                disabled={authLoading}
+                data-testid="button-google"
+              >
+                Continue with Google
+              </Button>
+            </>
+          )}
+
+          {error && (
+            <p className={`text-sm text-center ${error.includes("sent") ? "text-green-600" : "text-red-600"}`}>
+              {error}
+            </p>
+          )}
+
+          <div className="text-center space-y-2">
+            {AUTH_CONFIG.registration && (
+              <button
+                type="button"
+                onClick={() => setIsSignUp(!isSignUp)}
+                className="text-sm text-gray-600 hover:text-gray-900"
+                data-testid="button-toggle-signup"
+              >
+                {isSignUp ? "Already have an account? Sign in" : "Need an account? Sign up"}
+              </button>
+            )}
+
+            {AUTH_CONFIG.passwordReset && !isSignUp && (
+              <button
+                type="button"
+                onClick={handlePasswordReset}
+                className="block w-full text-sm text-gray-600 hover:text-gray-900"
+                data-testid="button-reset-password"
+              >
+                Forgot password?
+              </button>
+            )}
+          </div>
+
+          <p className="text-xs text-gray-500 text-center mt-4">
+            By signing in, you agree to our Terms of Service and Privacy Policy
+          </p>
         </CardContent>
       </Card>
     </div>
@@ -339,47 +519,88 @@ export default function Auth() {
 }
 ```
 
-### Phase 4: Backend Compatibility Check
-- ✅ **Current backend already compatible** - FirebaseUI produces standard Firebase tokens
-- ✅ **No backend changes required**
-- ✅ **Database schema already compatible**
+### Phase 3: Update Firebase Configuration (Simplify)
+**Modify `client/src/lib/firebase.ts`:**
+```typescript
+import { initializeApp } from "firebase/app";
+import { getAuth } from "firebase/auth";
 
-## Comparison: Manual vs Abstraction Approaches
+const firebaseConfig = {
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: `${import.meta.env.VITE_FIREBASE_PROJECT_ID}.firebaseapp.com`,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: `${import.meta.env.VITE_FIREBASE_PROJECT_ID}.firebasestorage.app`,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+};
 
-| Feature | Option A: Manual Email/Password | Option C1: FirebaseUI Abstraction |
-|---------|--------------------------------|-----------------------------------|
-| **Configuration Changes** | Requires code updates | Automatic, no code changes |
-| **Firebase Method Changes** | Need to modify imports/UI | Automatic detection |
-| **Development Time** | 2-3 hours | 30-60 minutes |
-| **Maintenance** | High - code changes for each method | Low - configuration driven |
-| **UI Quality** | Custom implementation needed | Professional, tested components |
-| **Method Support** | One method at a time | All Firebase methods supported |
-| **User Experience** | Custom design control | Standardized Firebase UX |
-| **Future Flexibility** | Manual updates required | Automatic adaptation |
+console.log("Firebase config:", {
+  apiKey: firebaseConfig.apiKey ? "***PROVIDED***" : "MISSING",
+  authDomain: firebaseConfig.authDomain,
+  projectId: firebaseConfig.projectId,
+  storageBucket: firebaseConfig.storageBucket,
+  appId: firebaseConfig.appId ? "***PROVIDED***" : "MISSING"
+});
 
-## Updated Recommendation: Option C1 (FirebaseUI)
+const app = initializeApp(firebaseConfig);
+export const auth = getAuth(app);
+console.log("Firebase app initialized successfully");
 
-### Why FirebaseUI is Now the Top Choice:
+// Remove all Google-specific code - handled in authService
+export { onAuthStateChanged } from "firebase/auth";
+```
 
-1. **Answers Your Question Perfectly**: Frontend doesn't specify authentication methods
-2. **Firebase Console Drives UI**: Change Firebase settings → UI updates automatically  
-3. **Immediate Fix**: Works with your current email/password Firebase setup
-4. **Future Proof**: Add Google OAuth later by just enabling in Firebase console
-5. **Minimal Code Changes**: Replace authentication UI with single component
-6. **Professional Quality**: Google-maintained, accessible, secure
+## Key Advantages of This Approach
 
-### Timeline: 30-60 minutes
-- Remove existing Google OAuth code: 10 minutes
-- Install and configure FirebaseUI: 15 minutes
-- Test with current Firebase setup: 15 minutes
-- Polish and verify: 15 minutes
+### ✅ **Configuration-Driven Abstraction**
+- Change `AUTH_CONFIG` object → UI updates automatically
+- No code changes needed to enable/disable authentication methods
+- Environment variables can override config for different deployments
 
-## Implementation Priority Recommendation:
+### ✅ **Firebase v12 Native**
+- Uses latest Firebase modular SDK (no compatibility issues)
+- Better performance through tree-shaking
+- Future-proof with latest Firebase features
 
-1. **First Choice: Option C1 (FirebaseUI)** - Perfect solution to your abstraction question
-2. **Second Choice: Option A (Manual Email/Password)** - If you want full UI control
-3. **Third Choice: Option B (Multi-method Manual)** - If you need custom UI with multiple methods
+### ✅ **Leverages Existing Stack**
+- Uses your existing shadcn/ui components
+- Integrates with existing `useAuth` hook
+- No new dependencies required
+
+### ✅ **Professional UX**
+- Form validation with proper error handling
+- Loading states and user feedback
+- Responsive design with your existing styling
+- Accessibility attributes (data-testid) for testing
+
+## Comparison: All Options Updated
+
+| Feature | Option A: Manual | Option D1: Config-Driven | FirebaseUI (Broken) |
+|---------|------------------|--------------------------|---------------------|
+| **Firebase v12 Compatible** | ✅ Yes | ✅ Yes | ❌ No - Requires v9 |
+| **Dynamic Configuration** | ❌ Manual coding | ✅ Config object | ✅ Firebase console |
+| **Package Dependencies** | ✅ None needed | ✅ None needed | ❌ Incompatible |
+| **Custom UI Control** | ✅ Full control | ✅ Full control | ❌ Limited |
+| **Development Time** | 2-3 hours | 1-2 hours | N/A - Broken |
+| **Maintenance** | High | Low | N/A - Broken |
+| **Existing Stack Integration** | Good | Perfect | N/A - Broken |
+
+## NEW FINAL RECOMMENDATION: Option D1
+
+### Why Option D1 is Now the Best Choice:
+
+1. **Perfect Abstraction**: Change config object → UI updates automatically
+2. **Firebase v12 Native**: No compatibility issues, uses modern SDK
+3. **Zero New Dependencies**: Uses your existing shadcn/ui + React setup  
+4. **Immediate Fix**: Works with your current email/password Firebase setup
+5. **Future Flexibility**: Enable Google OAuth by changing one config value + Firebase console
+6. **Professional Quality**: Custom UI with proper UX patterns
+
+### Updated Timeline: 1-2 hours
+- Create authentication service: 30 minutes
+- Update auth page with dynamic forms: 45-60 minutes
+- Simplify Firebase config: 15 minutes
+- Testing and polish: 15-30 minutes
 
 ---
 
-**Ready for implementation. FirebaseUI approach directly addresses your question about Firebase abstraction and provides the most maintainable solution.**
+**UPDATED FINAL RECOMMENDATION: Option D1 (Configuration-Driven) provides the perfect abstraction you requested while using modern Firebase v12 and your existing tech stack.**
