@@ -117,7 +117,7 @@ export default function RecentGamesDashboard({
                 <button
                   key={g.id}
                   onClick={() => window.location.href = `/games/${g.id}`}
-                  className="text-left w-full rounded-2xl border p-4 bg-card hover:bg-muted/40 transition"
+                  className="text-left w-full rounded-2xl border p-4 bg-card hover:bg-muted/50 hover:shadow-sm transition-all duration-200"
                   data-testid={`row-game-${g.id}`}
                 >
                   <div className="flex items-start justify-between gap-3">
@@ -151,7 +151,7 @@ export default function RecentGamesDashboard({
               <button
                 key={g.id}
                 onClick={() => window.location.href = `/games/${g.id}`}
-                className="text-left rounded-2xl border p-4 bg-card hover:bg-muted/40 transition"
+                className="text-left rounded-2xl border p-4 bg-card hover:bg-muted/50 hover:shadow-sm transition-all duration-200"
                 data-testid={`card-game-${g.id}`}
               >
                 <div className="flex items-start justify-between gap-3">
