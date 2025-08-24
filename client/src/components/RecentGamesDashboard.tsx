@@ -112,32 +112,36 @@ export default function RecentGamesDashboard({
           {rows.length === 0 ? (
             <EmptyState />
           ) : (
-            <div className="rounded-2xl border hidden md:block overflow-hidden">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-[35%]">Name</TableHead>
-                    <TableHead className="w-[20%]">Date</TableHead>
-                    <TableHead className="w-[25%]">Partner</TableHead>
-                    <TableHead>Club</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {rows.map(g => (
-                    <TableRow
-                      key={g.id}
-                      className="hover:bg-muted/50 cursor-pointer"
-                      onClick={() => window.location.href = `/games/${g.id}`}
-                      data-testid={`row-game-${g.id}`}
-                    >
-                      <TableCell className="font-medium">{g.name}</TableCell>
-                      <TableCell className="text-muted-foreground">{formatDate(g.createdAt)}</TableCell>
-                      <TableCell>{g.partner?.displayName || g.partner?.email || "—"}</TableCell>
-                      <TableCell>{g.event?.clubName || "—"}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+            <div className="hidden md:block grid gap-3">
+              {rows.map(g => (
+                <button
+                  key={g.id}
+                  onClick={() => window.location.href = `/games/${g.id}`}
+                  className="text-left w-full rounded-2xl border p-4 bg-card hover:bg-muted/40 transition"
+                  data-testid={`row-game-${g.id}`}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <div className="font-medium leading-tight mb-2">{g.name}</div>
+                      <div className="text-sm text-muted-foreground flex items-center gap-4">
+                        <span className="inline-flex items-center gap-1.5">
+                          <CalendarDays className="h-4 w-4" /> 
+                          {formatDate(g.createdAt)}
+                        </span>
+                        <span className="inline-flex items-center gap-1.5">
+                          <Users className="h-4 w-4" /> 
+                          {g.partner?.displayName || g.partner?.email || "—"}
+                        </span>
+                        <span className="inline-flex items-center gap-1.5">
+                          <MapPin className="h-4 w-4" /> 
+                          {g.event?.clubName || "—"}
+                        </span>
+                      </div>
+                    </div>
+                    <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                  </div>
+                </button>
+              ))}
             </div>
           )}
 
