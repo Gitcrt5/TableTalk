@@ -88,11 +88,35 @@ const requireAuth = async (req: any, res: any, next: any) => {
 // In production, you'd check specific user roles or permissions
 const requireAdmin = async (req: any, res: any, next: any) => {
   try {
-    await requireAuth(req, res, () => {});
+    const authHeader = req.headers.authorization;
     
-    if (!req.user) {
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return res.status(401).json({ error: "Authentication required" });
     }
+
+    const token = authHeader.split(" ")[1];
+    if (!token) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
+    const decodedToken = await verifyFirebaseToken(token);
+    
+    if (!decodedToken.uid || !decodedToken.email) {
+      return res.status(401).json({ error: "Invalid authentication token" });
+    }
+
+    // Get user from database
+    let user = await storage.getUserByFirebaseUid(decodedToken.uid);
+    
+    if (!user) {
+      user = await storage.createUser({
+        email: decodedToken.email,
+        displayName: decodedToken.name || decodedToken.email,
+        firebaseUid: decodedToken.uid,
+      });
+    }
+
+    req.user = user;
     
     // For now, we'll allow any authenticated user to access admin features
     // In production, you would check for specific admin roles:
