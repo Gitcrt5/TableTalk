@@ -44,7 +44,7 @@ function Router() {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <AppHeader />
-      
+
       <main className="flex-1">
         <Switch>
           <Route path="/" component={() => <ProtectedRoute component={Dashboard} />} />
