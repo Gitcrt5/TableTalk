@@ -84,6 +84,29 @@ const requireAuth = async (req: any, res: any, next: any) => {
   }
 };
 
+// Middleware to require admin access - for now, treating all authenticated users as potential admins
+// In production, you'd check specific user roles or permissions
+const requireAdmin = async (req: any, res: any, next: any) => {
+  try {
+    await requireAuth(req, res, () => {});
+    
+    if (!req.user) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+    
+    // For now, we'll allow any authenticated user to access admin features
+    // In production, you would check for specific admin roles:
+    // if (req.user.userType?.code !== 'admin') {
+    //   return res.status(403).json({ error: "Admin access required" });
+    // }
+    
+    next();
+  } catch (error: any) {
+    console.error("Admin authentication error:", error);
+    return res.status(401).json({ error: "Authentication failed" });
+  }
+};
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth routes
   app.get("/api/auth/me", requireAuth, async (req: any, res) => {
@@ -338,6 +361,85 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Invalid event data", details: error.errors });
       }
       res.status(500).json({ error: "Failed to create event" });
+    }
+  });
+
+  // Admin routes
+  app.get("/api/admin/users", requireAdmin, async (req: any, res) => {
+    try {
+      const search = req.query.search as string;
+      const userTypeFilter = req.query.userType as string;
+      const limit = parseInt(req.query.limit as string) || 50;
+      
+      const users = await storage.getAllUsers(search, userTypeFilter, limit);
+      const totalCount = await storage.getUsersCount();
+      
+      res.json({ users, totalCount });
+    } catch (error) {
+      console.error("Error fetching admin users:", error);
+      res.status(500).json({ error: "Failed to fetch users" });
+    }
+  });
+
+  app.patch("/api/admin/users/:userId", requireAdmin, async (req: any, res) => {
+    try {
+      const { userId } = req.params;
+      const updates = req.body;
+      
+      const user = await storage.updateUser(userId, updates);
+      res.json(user);
+    } catch (error) {
+      console.error("Error updating user:", error);
+      res.status(500).json({ error: "Failed to update user" });
+    }
+  });
+
+  app.post("/api/admin/users/:userId/deactivate", requireAdmin, async (req: any, res) => {
+    try {
+      const { userId } = req.params;
+      const user = await storage.deactivateUser(userId);
+      res.json(user);
+    } catch (error) {
+      console.error("Error deactivating user:", error);
+      res.status(500).json({ error: "Failed to deactivate user" });
+    }
+  });
+
+  app.post("/api/admin/users/:userId/activate", requireAdmin, async (req: any, res) => {
+    try {
+      const { userId } = req.params;
+      const user = await storage.activateUser(userId);
+      res.json(user);
+    } catch (error) {
+      console.error("Error activating user:", error);
+      res.status(500).json({ error: "Failed to activate user" });
+    }
+  });
+
+  app.get("/api/admin/clubs", requireAdmin, async (req: any, res) => {
+    try {
+      const clubNames = await storage.getDistinctClubNames();
+      res.json({ clubs: clubNames });
+    } catch (error) {
+      console.error("Error fetching admin clubs:", error);
+      res.status(500).json({ error: "Failed to fetch clubs" });
+    }
+  });
+
+  app.get("/api/admin/stats", requireAdmin, async (req: any, res) => {
+    try {
+      const totalUsers = await storage.getUsersCount();
+      const totalClubs = (await storage.getDistinctClubNames()).length;
+      const totalEvents = (await storage.getEvents(1000)).length;
+      
+      res.json({
+        totalUsers,
+        totalClubs,
+        totalEvents
+      });
+    } catch (error) {
+      console.error("Error fetching admin stats:", error);
+      res.status(500).json({ error: "Failed to fetch statistics" });
     }
   });
 

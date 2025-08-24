@@ -52,6 +52,7 @@ export const AppHeader = () => {
               <Link href="/events" className="text-gray-600 hover:text-bridge-green transition-colors">Events</Link>
               <Link href="/partnerships" className="text-gray-600 hover:text-bridge-green transition-colors">Partnerships</Link>
               <Link href="/explore" className="text-gray-600 hover:text-bridge-green transition-colors">Discover</Link>
+              <Link href="/admin" className="text-gray-600 hover:text-blue-600 transition-colors font-medium">Admin</Link>
             </nav>
           )}
 

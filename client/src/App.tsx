@@ -17,6 +17,7 @@ import GameView from "@/pages/game-view";
 import Events from "@/pages/events";
 import Partnerships from "@/pages/partnerships";
 import CreateGame from "@/pages/create-game";
+import Admin from "@/pages/admin";
 import Auth from "@/pages/auth";
 import NotFound from "@/pages/not-found";
 
@@ -57,6 +58,7 @@ function Router() {
           <Route path="/games/:gameId" component={() => <ProtectedRoute component={GameView} />} />
           <Route path="/games/:gameId/boards" component={() => <ProtectedRoute component={GameBoards} />} />
           <Route path="/boards/:boardId" component={() => <ProtectedRoute component={BoardView} />} />
+          <Route path="/admin" component={() => <ProtectedRoute component={Admin} />} />
           <Route path="/auth" component={Auth} />
           <Route component={NotFound} />
         </Switch>

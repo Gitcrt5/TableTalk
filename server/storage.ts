@@ -19,7 +19,7 @@ import {
   type InsertEvent,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, and, or, ilike, count } from "drizzle-orm";
+import { eq, desc, and, or, ilike, count, isNotNull, ne } from "drizzle-orm";
 
 export interface IStorage {
   // Users
@@ -60,6 +60,13 @@ export interface IStorage {
   searchEvents(query: string, clubName?: string): Promise<Event[]>;
   createEvent(event: InsertEvent): Promise<Event>;
   updateEvent(id: string, updates: Partial<Event>): Promise<Event>;
+
+  // Admin
+  getAllUsers(search?: string, userTypeFilter?: string, limit?: number): Promise<User[]>;
+  getUsersCount(): Promise<number>;
+  getDistinctClubNames(): Promise<string[]>;
+  deactivateUser(id: string): Promise<User>;
+  activateUser(id: string): Promise<User>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -286,6 +293,74 @@ export class DatabaseStorage implements IStorage {
       .where(eq(events.id, id))
       .returning();
     return event;
+  }
+
+  // Admin methods
+  async getAllUsers(search?: string, userTypeFilter?: string, limit = 50): Promise<User[]> {
+    const conditions = [];
+    
+    if (search) {
+      conditions.push(
+        or(
+          ilike(users.email, `%${search}%`),
+          ilike(users.displayName, `%${search}%`),
+          ilike(users.firstName, `%${search}%`),
+          ilike(users.lastName, `%${search}%`)
+        )
+      );
+    }
+    
+    if (userTypeFilter) {
+      conditions.push(eq(users.userTypeId, userTypeFilter));
+    }
+
+    if (conditions.length > 0) {
+      return await db
+        .select()
+        .from(users)
+        .where(and(...conditions))
+        .orderBy(desc(users.createdAt))
+        .limit(limit);
+    } else {
+      return await db
+        .select()
+        .from(users)
+        .orderBy(desc(users.createdAt))
+        .limit(limit);
+    }
+  }
+
+  async getUsersCount(): Promise<number> {
+    const [result] = await db.select({ count: count() }).from(users);
+    return result.count;
+  }
+
+  async getDistinctClubNames(): Promise<string[]> {
+    const results = await db
+      .selectDistinct({ clubName: events.clubName })
+      .from(events)
+      .where(and(isNotNull(events.clubName), ne(events.clubName, '')))
+      .orderBy(events.clubName);
+    
+    return results.map(r => r.clubName);
+  }
+
+  async deactivateUser(id: string): Promise<User> {
+    const [user] = await db
+      .update(users)
+      .set({ isActive: false, updatedAt: new Date() })
+      .where(eq(users.id, id))
+      .returning();
+    return user;
+  }
+
+  async activateUser(id: string): Promise<User> {
+    const [user] = await db
+      .update(users)
+      .set({ isActive: true, updatedAt: new Date() })
+      .where(eq(users.id, id))
+      .returning();
+    return user;
   }
 }
 
