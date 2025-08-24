@@ -144,33 +144,33 @@ export default function RecentGamesDashboard({
           {/* Mobile cards */}
           <div className="md:hidden grid gap-3">
             {rows.map(g => (
-              <Link key={g.id} href={`/games/${g.id}`}>
-                <button
-                  className="text-left w-full rounded-2xl border p-4 bg-card hover:bg-muted/40 transition"
-                  data-testid={`card-game-${g.id}`}
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <div className="font-medium leading-tight">{g.name}</div>
-                      <div className="mt-1 text-xs text-muted-foreground flex items-center gap-2">
-                        <span className="inline-flex items-center gap-1">
-                          <CalendarDays className="h-3.5 w-3.5" /> 
-                          {formatDate(g.createdAt)}
-                        </span>
-                        <span className="inline-flex items-center gap-1">
-                          <Users className="h-3.5 w-3.5" /> 
-                          {g.partner?.displayName || g.partner?.email || "—"}
-                        </span>
-                        <span className="inline-flex items-center gap-1">
-                          <MapPin className="h-3.5 w-3.5" /> 
-                          {g.event?.clubName || "—"}
-                        </span>
-                      </div>
+              <button
+                key={g.id}
+                onClick={() => window.location.href = `/games/${g.id}`}
+                className="text-left rounded-2xl border p-4 bg-card hover:bg-muted/40 transition"
+                data-testid={`card-game-${g.id}`}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <div className="font-medium leading-tight">{g.name}</div>
+                    <div className="mt-1 text-xs text-muted-foreground flex items-center gap-2">
+                      <span className="inline-flex items-center gap-1">
+                        <CalendarDays className="h-3.5 w-3.5" /> 
+                        {formatDate(g.createdAt)}
+                      </span>
+                      <span className="inline-flex items-center gap-1">
+                        <Users className="h-3.5 w-3.5" /> 
+                        {g.partner?.displayName || g.partner?.email || "—"}
+                      </span>
+                      <span className="inline-flex items-center gap-1">
+                        <MapPin className="h-3.5 w-3.5" /> 
+                        {g.event?.clubName || "—"}
+                      </span>
                     </div>
-                    <ChevronRight className="h-5 w-5 text-muted-foreground" />
                   </div>
-                </button>
-              </Link>
+                  <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                </div>
+              </button>
             ))}
           </div>
         </CardContent>
