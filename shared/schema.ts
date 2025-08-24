@@ -4,13 +4,28 @@ import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+// User types reference table as specified in PRD
+export const userTypes = pgTable("user_types", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  code: text("code").notNull().unique(),
+  label: text("label").notNull(),
+  description: text("description"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   email: text("email").notNull().unique(),
-  displayName: text("display_name").notNull(),
   firebaseUid: text("firebase_uid").notNull().unique(),
-  isAdmin: boolean("is_admin").notNull().default(false),
+  firstName: text("first_name"),
+  lastName: text("last_name"),
+  displayName: text("display_name"),
+  userTypeId: varchar("user_type_id").references(() => userTypes.id),
+  isActive: boolean("is_active").notNull().default(true),
+  lastLogin: timestamp("last_login"),
+  preferences: jsonb("preferences").default(sql`'{}'`),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
 export const games = pgTable("games", {
@@ -78,7 +93,15 @@ export const events = pgTable("events", {
 });
 
 // Relations
-export const usersRelations = relations(users, ({ many }) => ({
+export const userTypesRelations = relations(userTypes, ({ many }) => ({
+  users: many(users),
+}));
+
+export const usersRelations = relations(users, ({ one, many }) => ({
+  userType: one(userTypes, {
+    fields: [users.userTypeId],
+    references: [userTypes.id],
+  }),
   createdGames: many(games, { relationName: "createdGames" }),
   partnerGames: many(games, { relationName: "partnerGames" }),
   comments: many(comments),
@@ -146,9 +169,15 @@ export const eventsRelations = relations(events, ({ one, many }) => ({
 }));
 
 // Insert schemas
+export const insertUserTypeSchema = createInsertSchema(userTypes).omit({
+  id: true,
+  createdAt: true,
+});
+
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
   createdAt: true,
+  updatedAt: true,
 });
 
 export const insertGameSchema = createInsertSchema(games).omit({
@@ -180,6 +209,8 @@ export const insertEventSchema = createInsertSchema(events).omit({
 });
 
 // Types
+export type UserType = typeof userTypes.$inferSelect;
+export type InsertUserType = z.infer<typeof insertUserTypeSchema>;
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type Game = typeof games.$inferSelect;

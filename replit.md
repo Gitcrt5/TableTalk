@@ -78,3 +78,9 @@ Preferred communication style: Simple, everyday language.
 - **PBN Parser**: Custom implementation for bridge deal file format
 - **Bridge Notation**: Support for standard bridge terminology and symbols
 - **Hand Analysis**: Tools for calculating high card points and deal evaluation
+
+## Specifictions
+
+Refer to the file:
+"attached_assets/20250819 PRD 1.0_1755672507929.md"
+When making any changes to the databse or app logic to ensure that changes take account of future directions.
