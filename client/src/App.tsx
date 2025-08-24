@@ -13,6 +13,7 @@ import MyGames from "@/pages/my-games";
 import ExploreGames from "@/pages/explore-games";
 import BoardView from "@/pages/board-view";
 import GameBoards from "@/pages/game-boards";
+import GameView from "@/pages/game-view";
 import Events from "@/pages/events";
 import Partnerships from "@/pages/partnerships";
 import CreateGame from "@/pages/create-game";
@@ -53,6 +54,7 @@ function Router() {
           <Route path="/events" component={Events} />
           <Route path="/partnerships" component={() => <ProtectedRoute component={Partnerships} />} />
           <Route path="/create-game" component={() => <ProtectedRoute component={CreateGame} />} />
+          <Route path="/games/:gameId" component={() => <ProtectedRoute component={GameView} />} />
           <Route path="/games/:gameId/boards" component={() => <ProtectedRoute component={GameBoards} />} />
           <Route path="/boards/:boardId" component={() => <ProtectedRoute component={BoardView} />} />
           <Route path="/auth" component={Auth} />
