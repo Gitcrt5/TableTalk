@@ -92,6 +92,25 @@ export const events = pgTable("events", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+export const auditLogs = pgTable("audit_logs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  action: text("action").notNull(),
+  resourceType: text("resource_type").notNull(),
+  resourceId: varchar("resource_id"),
+  details: jsonb("details").default(sql`'{}'`),
+  timestamp: timestamp("timestamp").defaultNow().notNull(),
+});
+
+export const featureFlags = pgTable("feature_flags", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull().unique(),
+  description: text("description"),
+  isEnabled: boolean("is_enabled").notNull().default(false),
+  targetUserTypes: jsonb("target_user_types").default(sql`'[]'`), // Array of user type IDs
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 // Relations
 export const userTypesRelations = relations(userTypes, ({ many }) => ({
   users: many(users),
@@ -108,6 +127,7 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   partnerships1: many(partnerships, { relationName: "player1Partnerships" }),
   partnerships2: many(partnerships, { relationName: "player2Partnerships" }),
   createdEvents: many(events),
+  auditLogs: many(auditLogs),
 }));
 
 export const gamesRelations = relations(games, ({ one, many }) => ({
@@ -168,6 +188,18 @@ export const eventsRelations = relations(events, ({ one, many }) => ({
   games: many(games),
 }));
 
+export const auditLogsRelations = relations(auditLogs, ({ one }) => ({
+  user: one(users, {
+    fields: [auditLogs.userId],
+    references: [users.id],
+  }),
+}));
+
+export const featureFlagsRelations = relations(featureFlags, ({ many }) => ({
+  // Feature flags don't have direct relations to other tables
+  // but could be extended in the future
+}));
+
 // Insert schemas
 export const insertUserTypeSchema = createInsertSchema(userTypes).omit({
   id: true,
@@ -208,6 +240,16 @@ export const insertEventSchema = createInsertSchema(events).omit({
   createdAt: true,
 });
 
+export const insertAuditLogSchema = createInsertSchema(auditLogs).omit({
+  id: true,
+  timestamp: true,
+});
+
+export const insertFeatureFlagSchema = createInsertSchema(featureFlags).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Types
 export type UserType = typeof userTypes.$inferSelect;
 export type InsertUserType = z.infer<typeof insertUserTypeSchema>;
@@ -223,6 +265,10 @@ export type Partnership = typeof partnerships.$inferSelect;
 export type InsertPartnership = z.infer<typeof insertPartnershipSchema>;
 export type Event = typeof events.$inferSelect;
 export type InsertEvent = z.infer<typeof insertEventSchema>;
+export type AuditLog = typeof auditLogs.$inferSelect;
+export type InsertAuditLog = z.infer<typeof insertAuditLogSchema>;
+export type FeatureFlag = typeof featureFlags.$inferSelect;
+export type InsertFeatureFlag = z.infer<typeof insertFeatureFlagSchema>;
 
 // Bridge-specific types
 export type Suit = "S" | "H" | "D" | "C";
