@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -13,6 +13,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { FileUpload } from "@/components/ui/file-upload";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
+import type { Partnership } from "@shared/schema";
 
 const gameSchema = z.object({
   name: z.string().min(1, "Game name is required"),
@@ -24,7 +25,7 @@ const gameSchema = z.object({
 type GameFormData = z.infer<typeof gameSchema>;
 
 export default function CreateGame() {
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
@@ -41,6 +42,12 @@ export default function CreateGame() {
       description: "",
       visibility: "public",
     },
+  });
+
+  // Fetch user's partnerships for partner selection
+  const { data: partnerships = [], isLoading: partnershipsLoading } = useQuery<Partnership[]>({
+    queryKey: ['/api/partnerships'],
+    enabled: !!token,
   });
 
   const createGameMutation = useMutation({
@@ -177,7 +184,23 @@ export default function CreateGame() {
                         </FormControl>
                         <SelectContent>
                           <SelectItem value="none">No partner</SelectItem>
-                          {/* TODO: Load partners from API */}
+                          {partnershipsLoading ? (
+                            <SelectItem value="" disabled>Loading partners...</SelectItem>
+                          ) : partnerships.length > 0 ? (
+                            partnerships.map((partnership: Partnership) => {
+                              // Get the partner's ID (the other player in the partnership)
+                              const isCurrentUserPlayer1 = partnership.player1Id === user?.id;
+                              const partnerId = isCurrentUserPlayer1 ? partnership.player2Id : partnership.player1Id;
+                              
+                              return (
+                                <SelectItem key={partnership.id} value={partnerId}>
+                                  Partnership Partner ({partnership.gamesCount} games together)
+                                </SelectItem>
+                              );
+                            })
+                          ) : (
+                            <SelectItem value="" disabled>No partnerships found</SelectItem>
+                          )}
                         </SelectContent>
                       </Select>
                       <FormMessage />
