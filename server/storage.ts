@@ -5,6 +5,7 @@ import {
   comments,
   partnerships,
   events,
+  userTypes,
   type User,
   type Game,
   type Board,
@@ -82,8 +83,22 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUserByFirebaseUid(firebaseUid: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.firebaseUid, firebaseUid));
-    return user || undefined;
+    const result = await db
+      .select()
+      .from(users)
+      .leftJoin(userTypes, eq(users.userTypeId, userTypes.id))
+      .where(eq(users.firebaseUid, firebaseUid))
+      .limit(1);
+
+    if (result.length === 0) {
+      return undefined;
+    }
+
+    const [row] = result;
+    return {
+      ...row.users,
+      userType: row.user_types
+    } as any;
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
