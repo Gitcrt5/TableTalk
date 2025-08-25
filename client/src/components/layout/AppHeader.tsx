@@ -2,8 +2,15 @@ import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
 import { authService } from "@/lib/authService";
-import { SidebarTrigger } from "@/components/ui/sidebar";
 import logo from "@/assets/tabletalk-logo.svg";
+import { LogOut, User } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 
 export const AppHeader = () => {
   const { user, firebaseUser, loading } = useAuth();
@@ -14,6 +21,11 @@ export const AppHeader = () => {
 
   const handleSignOut = () => {
     authService.signOut();
+  };
+
+  // Define logout function to be used in DropdownMenuItem
+  const logout = () => {
+    handleSignOut();
   };
 
   if (loading) {
@@ -33,7 +45,8 @@ export const AppHeader = () => {
       <div className="px-4 py-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            {user && <SidebarTrigger data-testid="button-menu" />}
+            {/* SidebarTrigger is now a separate component on the left */}
+            <SidebarTrigger className="-ml-1 md:hidden" />
             <Link href="/" data-testid="link-home">
               <div className="flex items-center gap-3 cursor-pointer">
                 <img 
