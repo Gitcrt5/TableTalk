@@ -8,6 +8,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarSeparator,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import {
   Home,
@@ -55,16 +56,23 @@ const navigationItems = [
 export const AppSidebar = () => {
   const { user } = useAuth();
   const [location] = useLocation();
+  const { setOpenMobile, isMobile } = useSidebar();
 
   // Don't render sidebar if user is not logged in
   if (!user) {
     return null;
   }
 
+  const handleNavClick = () => {
+    if (isMobile) {
+      setOpenMobile(false);
+    }
+  };
+
   return (
     <Sidebar side="left" variant="inset">
       <SidebarHeader className="border-b border-sidebar-border">
-        <Link href="/">
+        <Link href="/" onClick={handleNavClick}>
           <div className="flex items-center gap-3 px-2 py-2 cursor-pointer" data-testid="link-home">
             <img
               src={logo}
@@ -88,7 +96,7 @@ export const AppSidebar = () => {
                 isActive={location === item.url}
                 data-testid={`nav-${item.title.toLowerCase().replace(' ', '-')}`}
               >
-                <Link href={item.url}>
+                <Link href={item.url} onClick={handleNavClick}>
                   <item.icon className="w-4 h-4" />
                   <span>{item.title}</span>
                 </Link>
