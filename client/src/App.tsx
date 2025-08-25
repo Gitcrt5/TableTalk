@@ -6,6 +6,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/lib/auth";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { AppFooter } from "@/components/layout/AppFooter";
+import { AppSidebar } from "@/components/layout/AppSidebar";
+import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 
 // Pages
 import Dashboard from "@/pages/dashboard";
@@ -44,28 +46,34 @@ function ProtectedRoute({ component: Component }: { component: React.ComponentTy
 
 function Router() {
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      <AppHeader />
+    <SidebarProvider>
+      <div className="min-h-screen bg-gray-50 flex">
+        <AppSidebar />
+        
+        <SidebarInset className="flex flex-col">
+          <AppHeader />
 
-      <main className="flex-1">
-        <Switch>
-          <Route path="/" component={() => <ProtectedRoute component={Dashboard} />} />
-          <Route path="/my-games" component={() => <ProtectedRoute component={MyGames} />} />
-          <Route path="/explore" component={ExploreGames} />
-          <Route path="/events" component={Events} />
-          <Route path="/partnerships" component={() => <ProtectedRoute component={Partnerships} />} />
-          <Route path="/create-game" component={() => <ProtectedRoute component={CreateGame} />} />
-          <Route path="/games/:gameId" component={() => <ProtectedRoute component={GameView} />} />
-          <Route path="/games/:gameId/boards" component={() => <ProtectedRoute component={GameBoards} />} />
-          <Route path="/boards/:boardId" component={() => <ProtectedRoute component={BoardView} />} />
-          <Route path="/admin" component={() => <ProtectedRoute component={Admin} />} />
-          <Route path="/auth" component={Auth} />
-          <Route component={NotFound} />
-        </Switch>
-      </main>
+          <main className="flex-1">
+            <Switch>
+              <Route path="/" component={() => <ProtectedRoute component={Dashboard} />} />
+              <Route path="/my-games" component={() => <ProtectedRoute component={MyGames} />} />
+              <Route path="/explore" component={ExploreGames} />
+              <Route path="/events" component={Events} />
+              <Route path="/partnerships" component={() => <ProtectedRoute component={Partnerships} />} />
+              <Route path="/create-game" component={() => <ProtectedRoute component={CreateGame} />} />
+              <Route path="/games/:gameId" component={() => <ProtectedRoute component={GameView} />} />
+              <Route path="/games/:gameId/boards" component={() => <ProtectedRoute component={GameBoards} />} />
+              <Route path="/boards/:boardId" component={() => <ProtectedRoute component={BoardView} />} />
+              <Route path="/admin" component={() => <ProtectedRoute component={Admin} />} />
+              <Route path="/auth" component={Auth} />
+              <Route component={NotFound} />
+            </Switch>
+          </main>
 
-      <AppFooter />
-    </div>
+          <AppFooter />
+        </SidebarInset>
+      </div>
+    </SidebarProvider>
   );
 }
 
