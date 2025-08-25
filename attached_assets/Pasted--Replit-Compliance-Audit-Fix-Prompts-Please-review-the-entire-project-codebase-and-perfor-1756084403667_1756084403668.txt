@@ -1,0 +1,62 @@
+## **Replit Compliance Audit + Fix Prompts**
+
+Please review the entire project codebase and perform a **compliance audit** against the architecture and guardrails below. **Only provide the report** at this time — do **not** make any changes until instructed.
+
+Your response must include the following two outputs:
+
+---
+
+### PART 1: Compliance Summary
+
+Output a **simple bullet list**, grouped into two sections:
+
+#### Conforms to Architecture
+
+* \[Bullet points referencing specific files, logic, patterns, or behaviors that match the expected architecture]
+
+#### Violates Architecture
+
+* \[Bullet points describing any violations, misconfigurations, or security concerns]
+* Where applicable, reference filenames, function names, and line numbers
+* Focus on: architecture violations, security risks, Supabase misuse, environment variable exposure, or direct SQL execution
+
+---
+
+### PART 2: Repair Prompts
+
+Based on the issues found, output a **series of fix prompts** that the user can paste back into Replit to repair the project.
+
+Format like this:
+
+#### Fix Group 1: \[Succinct title, e.g. "Frontend calls database directly"]
+
+* **Prompt to fix**: \[Pasteable Replit prompt]
+
+#### Fix Group 2: \[e.g. "Alternate login methods identified in the code"]
+
+* **Prompt to fix**: \[Pasteable Replit prompt]
+
+...
+
+Please:
+
+* Group related issues into a single fix prompt
+* Separate unrelated fixes into their own sections
+* Order prompts by priority: **security and architecture first**, cleanup last
+* Do not repeat the same fix in multiple groups — consolidate cleanly
+
+---
+
+### Architecture Guardrails
+
+- The **frontend must never access database directly** — including for auth or session data.
+- All database usage (auth, database, file storage) must occur **only in the backend**
+- The frontend must communicate **only with the backend** via API routes
+- All keys, SMTP credentials, and other environment secrets must **never be exposed in frontend code `.env` files**.
+- Project must have a clear and consistent **client/server directory split** (e.g., `/src` for frontend, `/server` for backend).
+- Advise of any environment variables used in the app that have not yet been defined in the secrets tool
+- Firebase is to be used for user signup, logon, authorisation. There must be no fallback or alternate methods in the code.
+- The database schema must match that laid out in the PRD "attached_assets/20250819 PRD 1.0_1755672507929.md".
+- The app logic must support future possible enhancements as laid out in "attached_assets/20250819 PRD 1.0_1755672507929.md" such that significant re-coding of the app will not be required when features are added
+- All links, buttons etc must have a valid target page
+- There must be no stubs or incomplete implementations of pages or features
