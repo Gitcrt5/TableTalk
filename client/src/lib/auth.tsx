@@ -33,7 +33,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [token, setToken] = useState<string | null>(null);
+  const [token, setToken] = useState<string | null>(() => {
+    return localStorage.getItem('firebase-token');
+  });
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
@@ -43,6 +45,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         try {
           const idToken = await firebaseUser.getIdToken();
           setToken(idToken);
+          localStorage.setItem('firebase-token', idToken);
 
           // Fetch user data from our backend
           const response = await fetch("/api/auth/me", {
@@ -64,6 +67,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       } else {
         setUser(null);
         setToken(null);
+        localStorage.removeItem('firebase-token');
       }
       
       setLoading(false);
