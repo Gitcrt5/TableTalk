@@ -84,8 +84,7 @@ const requireAuth = async (req: any, res: any, next: any) => {
   }
 };
 
-// Middleware to require admin access - for now, treating all authenticated users as potential admins
-// In production, you'd check specific user roles or permissions
+// Middleware to require admin access - enforces admin role authorization
 const requireAdmin = async (req: any, res: any, next: any) => {
   try {
     const authHeader = req.headers.authorization;
@@ -118,16 +117,27 @@ const requireAdmin = async (req: any, res: any, next: any) => {
 
     req.user = user;
     
-    // For now, we'll allow any authenticated user to access admin features
-    // In production, you would check for specific admin roles:
-    // if (req.user.userType?.code !== 'admin') {
-    //   return res.status(403).json({ error: "Admin access required" });
-    // }
+    // Enforce admin role requirement
+    if (!req.user.userType || req.user.userType.code !== 'admin') {
+      console.log(`Access denied for user ${req.user.id}: not an admin user (userType: ${req.user.userType?.code || 'none'})`);
+      return res.status(403).json({ error: "Admin access required. You do not have sufficient permissions to access this resource." });
+    }
     
+    console.log(`Admin access granted for user ${req.user.id} (${req.user.email})`);
     next();
   } catch (error: any) {
     console.error("Admin authentication error:", error);
-    return res.status(401).json({ error: "Authentication failed" });
+    
+    // Provide specific error messages for different failure scenarios
+    if (error?.message?.includes("expired")) {
+      return res.status(401).json({ error: "Session expired. Please sign in again." });
+    } else if (error?.message?.includes("revoked")) {
+      return res.status(401).json({ error: "Session invalid. Please sign in again." });
+    } else if (error?.message?.includes("Invalid token")) {
+      return res.status(401).json({ error: "Invalid authentication. Please sign in again." });
+    } else {
+      return res.status(401).json({ error: "Authentication failed. Please try again." });
+    }
   }
 };
 
