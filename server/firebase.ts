@@ -41,12 +41,8 @@ export async function verifyFirebaseToken(token: string): Promise<DecodedToken> 
   }
 
   try {
-    console.log("Verifying Firebase token...");
-    
     // Use Firebase Admin SDK to verify the ID token
     const decodedToken = await getAuth(adminApp).verifyIdToken(token);
-    
-    console.log("Token verified successfully for user:", decodedToken.uid);
     
     return {
       uid: decodedToken.uid,

@@ -35,21 +35,14 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [loading, setLoading] = useState(true);
   const [token, setToken] = useState<string | null>(null);
 
-  console.log("AuthProvider initialized");
-
   useEffect(() => {
-    console.log("AuthProvider useEffect starting...");
-    console.log("Setting up auth state listener...");
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      console.log("Auth state changed. Firebase user:", firebaseUser ? firebaseUser.uid : "null");
       setFirebaseUser(firebaseUser);
       
       if (firebaseUser) {
         try {
-          console.log("Firebase user authenticated:", firebaseUser.uid);
           const idToken = await firebaseUser.getIdToken();
           setToken(idToken);
-          console.log("Got Firebase token, sending to backend...");
 
           // Fetch user data from our backend
           const response = await fetch("/api/auth/me", {
@@ -58,19 +51,15 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
             },
           });
 
-          console.log("Backend response status:", response.status);
-
           if (response.ok) {
             const userData = await response.json();
-            console.log("Successfully authenticated user:", userData);
             setUser(userData);
           } else {
             const errorData = await response.json();
-            console.error("CRITICAL: Backend authentication failed:", response.status, errorData);
-            console.error("This means Firebase token verification failed on server");
+            console.error("Authentication failed:", response.status, errorData);
           }
         } catch (error) {
-          console.error("Error during authentication process:", error);
+          console.error("Authentication error:", error);
         }
       } else {
         setUser(null);

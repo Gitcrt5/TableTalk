@@ -19,51 +19,38 @@ const requireAuth = async (req: any, res: any, next: any) => {
     const authHeader = req.headers.authorization;
     
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      console.log("Authentication failed: No authorization header or invalid format");
       return res.status(401).json({ error: "Authentication required" });
     }
 
     const token = authHeader.split(" ")[1];
     if (!token) {
-      console.log("Authentication failed: No token in authorization header");
       return res.status(401).json({ error: "Authentication required" });
     }
 
-    console.log("Starting token verification process...");
     const decodedToken = await verifyFirebaseToken(token);
     
     if (!decodedToken.uid) {
-      console.error("Authentication failed: No UID in decoded token");
       return res.status(401).json({ error: "Invalid authentication token" });
     }
 
     if (!decodedToken.email) {
-      console.error("Authentication failed: No email in decoded token");
       return res.status(401).json({ error: "Email required for authentication" });
     }
 
-    console.log(`Looking up user with Firebase UID: ${decodedToken.uid}`);
-    
     // Get or create user in our database
     let user = await storage.getUserByFirebaseUid(decodedToken.uid);
     
     if (!user) {
-      console.log(`User not found, creating new user for: ${decodedToken.email}`);
-      
       try {
         user = await storage.createUser({
           email: decodedToken.email,
           displayName: decodedToken.name || decodedToken.email,
           firebaseUid: decodedToken.uid,
         });
-        
-        console.log(`Successfully created new user with ID: ${user.id}`);
       } catch (createError) {
         console.error("Failed to create user:", createError);
         return res.status(500).json({ error: "Failed to create user account" });
       }
-    } else {
-      console.log(`Found existing user with ID: ${user.id}`);
     }
 
     req.user = user;
@@ -119,11 +106,9 @@ const requireAdmin = async (req: any, res: any, next: any) => {
     
     // Enforce admin role requirement
     if (!req.user.userType || req.user.userType.code !== 'admin') {
-      console.log(`Access denied for user ${req.user.id}: not an admin user (userType: ${req.user.userType?.code || 'none'})`);
       return res.status(403).json({ error: "Admin access required. You do not have sufficient permissions to access this resource." });
     }
     
-    console.log(`Admin access granted for user ${req.user.id} (${req.user.email})`);
     next();
   } catch (error: any) {
     console.error("Admin authentication error:", error);
