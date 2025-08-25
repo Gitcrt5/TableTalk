@@ -10,7 +10,7 @@ interface VerticalIconBarProps {
 export const VerticalIconBar = ({ className }: VerticalIconBarProps) => {
   return (
     <div className={cn(
-      "fixed left-0 top-16 z-50 flex flex-col bg-background border-r border-border shadow-sm",
+      "fixed left-0 top-16 z-40 flex flex-col bg-background border-r border-border shadow-sm",
       "w-12 h-[calc(100vh-4rem)]",
       "hidden md:flex", // Only show on desktop
       className
