@@ -47,7 +47,7 @@ function ProtectedRoute({ component: Component }: { component: React.ComponentTy
 
 function Router() {
   return (
-    <SidebarProvider>
+    <SidebarProvider defaultOpen={false}>
       <AppSidebar />
       <VerticalIconBar />
       <div className="flex flex-1 flex-col min-h-screen md:ml-12">
