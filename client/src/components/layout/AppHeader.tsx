@@ -10,11 +10,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { SidebarTrigger, useSidebar } from "@/components/ui/sidebar";
 
 export const AppHeader = () => {
   const { user, firebaseUser, loading } = useAuth();
-  const { open: sidebarOpen } = useSidebar();
 
   const handleSignIn = () => {
     authService.signInWithGoogle();
@@ -22,11 +20,6 @@ export const AppHeader = () => {
 
   const handleSignOut = () => {
     authService.signOut();
-  };
-
-  // Define logout function to be used in DropdownMenuItem
-  const logout = () => {
-    handleSignOut();
   };
 
   if (loading) {
@@ -46,23 +39,19 @@ export const AppHeader = () => {
       <div className="px-4 py-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            {/* SidebarTrigger is now a separate component on the left */}
-            <SidebarTrigger className="-ml-1 md:hidden" />
-            {!sidebarOpen && (
-              <Link href="/" data-testid="link-home">
-                <div className="flex items-center gap-3 cursor-pointer">
-                  <img 
-                    src={logo} 
-                    alt="TableTalk Logo" 
-                    className="w-10 h-10" 
-                  />
-                  <div>
-                    <h1 className="text-xl font-bold text-gray-900">TableTalk</h1>
-                    <p className="text-xs text-gray-500">Bridge Analysis Platform</p>
-                  </div>
+            <Link href="/" data-testid="link-home">
+              <div className="flex items-center gap-3 cursor-pointer">
+                <img 
+                  src={logo} 
+                  alt="TableTalk Logo" 
+                  className="w-10 h-10" 
+                />
+                <div>
+                  <h1 className="text-xl font-bold text-gray-900">TableTalk</h1>
+                  <p className="text-xs text-gray-500">Bridge Analysis Platform</p>
                 </div>
-              </Link>
-            )}
+              </div>
+            </Link>
           </div>
 
           <div className="flex items-center gap-3">

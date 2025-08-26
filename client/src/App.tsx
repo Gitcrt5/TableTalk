@@ -6,9 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/lib/auth";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { AppFooter } from "@/components/layout/AppFooter";
-import { AppSidebar } from "@/components/layout/AppSidebar";
-import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
-import { VerticalIconBar } from "@/components/layout/VerticalIconBar";
+import { ResponsiveNavigation } from "@/components/layout/ResponsiveNavigation";
 
 // Pages
 import Dashboard from "@/pages/dashboard";
@@ -47,13 +45,12 @@ function ProtectedRoute({ component: Component }: { component: React.ComponentTy
 
 function Router() {
   return (
-    <SidebarProvider defaultOpen={false}>
-      <AppSidebar />
-      <VerticalIconBar />
+    <div className="flex h-screen">
+      <ResponsiveNavigation />
       <div className="flex flex-1 flex-col min-h-screen">
         <AppHeader />
 
-        <main className="flex-1">
+        <main className="flex-1 mb-16 md:mb-0">
           <Switch>
             <Route path="/" component={() => <ProtectedRoute component={Dashboard} />} />
             <Route path="/my-games" component={() => <ProtectedRoute component={MyGames} />} />
@@ -72,7 +69,7 @@ function Router() {
 
         <AppFooter />
       </div>
-    </SidebarProvider>
+    </div>
   );
 }
 
