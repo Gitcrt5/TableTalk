@@ -50,7 +50,7 @@ function Router() {
     <SidebarProvider defaultOpen={false}>
       <AppSidebar />
       <VerticalIconBar />
-      <div className="flex flex-1 flex-col min-h-screen md:ml-12">
+      <div className="flex flex-1 flex-col min-h-screen">
         <AppHeader />
 
         <main className="flex-1">
