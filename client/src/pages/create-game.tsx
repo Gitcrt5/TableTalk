@@ -185,7 +185,7 @@ export default function CreateGame() {
                         <SelectContent>
                           <SelectItem value="none">No partner</SelectItem>
                           {partnershipsLoading ? (
-                            <SelectItem value="" disabled>Loading partners...</SelectItem>
+                            <SelectItem value="loading" disabled>Loading partners...</SelectItem>
                           ) : partnerships.length > 0 ? (
                             partnerships.map((partnership: Partnership) => {
                               // Get the partner's ID (the other player in the partnership)
@@ -199,7 +199,7 @@ export default function CreateGame() {
                               );
                             })
                           ) : (
-                            <SelectItem value="" disabled>No partnerships found</SelectItem>
+                            <SelectItem value="no-partnerships" disabled>No partnerships found</SelectItem>
                           )}
                         </SelectContent>
                       </Select>
