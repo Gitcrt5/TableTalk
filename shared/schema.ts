@@ -36,6 +36,8 @@ export const games = pgTable("games", {
   partnerId: varchar("partner_id").references(() => users.id),
   visibility: text("visibility").notNull().default("public"), // public, private, club
   eventId: varchar("event_id").references(() => events.id),
+  gameDate: timestamp("game_date").notNull(),
+  clubName: text("club_name"),
   pbnData: jsonb("pbn_data"), // Parsed PBN file data
   totalBoards: integer("total_boards").notNull().default(0),
   createdAt: timestamp("created_at").defaultNow().notNull(),

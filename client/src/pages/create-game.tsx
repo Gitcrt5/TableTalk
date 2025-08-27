@@ -20,6 +20,8 @@ const gameSchema = z.object({
   description: z.string().optional(),
   partnerId: z.string().optional(),
   visibility: z.enum(["public", "private", "club"]),
+  gameDate: z.string().min(1, "Game date is required"),
+  clubName: z.string().optional(),
 });
 
 type GameFormData = z.infer<typeof gameSchema>;
@@ -41,6 +43,8 @@ export default function CreateGame() {
       name: "",
       description: "",
       visibility: "public",
+      gameDate: new Date().toISOString().split('T')[0], // Default to current date
+      clubName: "",
     },
   });
 
@@ -49,6 +53,13 @@ export default function CreateGame() {
     queryKey: ['/api/partnerships'],
     enabled: !!token,
   });
+
+  // Fetch available clubs
+  const { data: clubsData, isLoading: clubsLoading } = useQuery<{clubs: string[]}>({
+    queryKey: ['/api/admin/clubs'],
+    enabled: !!token,
+  });
+  const clubs = clubsData?.clubs || [];
 
   const createGameMutation = useMutation({
     mutationFn: async (data: GameFormData & { pbnContent?: string }) => {
@@ -116,10 +127,14 @@ export default function CreateGame() {
   };
 
   const onSubmit = (data: GameFormData) => {
-    createGameMutation.mutate({
+    const submissionData = {
       ...data,
+      gameDate: new Date(data.gameDate).toISOString(),
+      clubName: data.clubName === 'none' ? undefined : data.clubName,
+      partnerId: data.partnerId === 'none' ? undefined : data.partnerId,
       pbnContent: pbnContent || undefined,
-    });
+    };
+    createGameMutation.mutate(submissionData);
   };
 
   return (
@@ -145,7 +160,7 @@ export default function CreateGame() {
                     <FormItem>
                       <FormLabel>Game Name</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter game name..." {...field} />
+                        <Input placeholder="Enter game name..." {...field} data-testid="input-game-name" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -163,6 +178,7 @@ export default function CreateGame() {
                           placeholder="Describe your game or add notes..."
                           rows={3}
                           {...field}
+                          data-testid="textarea-description"
                         />
                       </FormControl>
                       <FormMessage />
@@ -178,7 +194,7 @@ export default function CreateGame() {
                       <FormLabel>Partner (Optional)</FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
-                          <SelectTrigger>
+                          <SelectTrigger data-testid="select-partner">
                             <SelectValue placeholder="Select partner..." />
                           </SelectTrigger>
                         </FormControl>
@@ -210,13 +226,63 @@ export default function CreateGame() {
 
                 <FormField
                   control={form.control}
+                  name="gameDate"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Game Date</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="date"
+                          {...field}
+                          data-testid="input-game-date"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="clubName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Club (Optional)</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger data-testid="select-club">
+                            <SelectValue placeholder="Select club..." />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="none">No club</SelectItem>
+                          {clubsLoading ? (
+                            <SelectItem value="loading-clubs" disabled>Loading clubs...</SelectItem>
+                          ) : clubs.length > 0 ? (
+                            clubs.map((club: string) => (
+                              <SelectItem key={club} value={club}>
+                                {club}
+                              </SelectItem>
+                            ))
+                          ) : (
+                            <SelectItem value="no-clubs" disabled>No clubs found</SelectItem>
+                          )}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
                   name="visibility"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Visibility</FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
-                          <SelectTrigger>
+                          <SelectTrigger data-testid="select-visibility">
                             <SelectValue />
                           </SelectTrigger>
                         </FormControl>
@@ -277,6 +343,7 @@ export default function CreateGame() {
                 type="button"
                 variant="outline"
                 onClick={() => setLocation('/')}
+                data-testid="button-cancel"
               >
                 Cancel
               </Button>
@@ -284,6 +351,7 @@ export default function CreateGame() {
                 type="submit"
                 disabled={createGameMutation.isPending}
                 className="bg-bridge-green hover:bg-green-700 text-white"
+                data-testid="button-create-game"
               >
                 {createGameMutation.isPending ? "Creating..." : "Create Game"}
               </Button>
