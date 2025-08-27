@@ -350,7 +350,7 @@ export default function CreateGame() {
               <Button
                 type="submit"
                 disabled={createGameMutation.isPending}
-                className="bg-bridge-green hover:bg-green-700 text-white"
+                className="!bg-green-600 hover:!bg-green-700 !text-white"
                 data-testid="button-create-game"
               >
                 {createGameMutation.isPending ? "Creating..." : "Create Game"}
