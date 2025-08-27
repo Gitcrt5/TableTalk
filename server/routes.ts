@@ -187,6 +187,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const validatedData = insertGameSchema.parse({
         ...req.body,
         creatorId: req.user.id,
+        gameDate: req.body.gameDate ? new Date(req.body.gameDate) : undefined,
       });
 
       const game = await storage.createGame(validatedData);
