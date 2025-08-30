@@ -6,18 +6,42 @@ import {
   partnerships,
   events,
   userTypes,
+  clubs,
+  favouriteClubs,
+  eventDeals,
+  gameParticipants,
+  eventResults,
+  eventStandings,
+  userPreferences,
+  featureFlags,
   type User,
   type Game,
   type Board,
   type Comment,
   type Partnership,
   type Event,
+  type Club,
+  type FavouriteClub,
+  type EventDeal,
+  type GameParticipant,
+  type EventResult,
+  type EventStanding,
+  type UserPreference,
+  type FeatureFlag,
   type InsertUser,
   type InsertGame,
   type InsertBoard,
   type InsertComment,
   type InsertPartnership,
   type InsertEvent,
+  type InsertClub,
+  type InsertFavouriteClub,
+  type InsertEventDeal,
+  type InsertGameParticipant,
+  type InsertEventResult,
+  type InsertEventStanding,
+  type InsertUserPreference,
+  type InsertFeatureFlag,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, or, ilike, count, isNotNull, ne } from "drizzle-orm";
@@ -29,6 +53,18 @@ export interface IStorage {
   getUserByFirebaseUid(firebaseUid: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: string, updates: Partial<User>): Promise<User>;
+
+  // Clubs
+  getClub(id: string): Promise<Club | undefined>;
+  getClubs(limit?: number): Promise<Club[]>;
+  searchClubs(query: string): Promise<Club[]>;
+  createClub(club: InsertClub): Promise<Club>;
+  updateClub(id: string, updates: Partial<Club>): Promise<Club>;
+  
+  // Favourite Clubs
+  getFavouriteClubsByUser(userId: string): Promise<Club[]>;
+  addFavouriteClub(userId: string, clubId: string): Promise<FavouriteClub>;
+  removeFavouriteClub(userId: string, clubId: string): Promise<void>;
 
   // Games
   getGame(id: string): Promise<Game | undefined>;
@@ -44,8 +80,20 @@ export interface IStorage {
   createBoard(board: InsertBoard): Promise<Board>;
   updateBoard(id: string, updates: Partial<Board>): Promise<Board>;
 
+  // Event Deals
+  getEventDeal(id: string): Promise<EventDeal | undefined>;
+  getEventDealsByEvent(eventId: string): Promise<EventDeal[]>;
+  createEventDeal(eventDeal: InsertEventDeal): Promise<EventDeal>;
+  updateEventDeal(id: string, updates: Partial<EventDeal>): Promise<EventDeal>;
+
+  // Game Participants
+  getGameParticipants(gameId: string): Promise<GameParticipant[]>;
+  createGameParticipant(participant: InsertGameParticipant): Promise<GameParticipant>;
+  updateGameParticipant(id: string, updates: Partial<GameParticipant>): Promise<GameParticipant>;
+
   // Comments
   getCommentsByBoard(boardId: string): Promise<Comment[]>;
+  getCommentsByEventDeal(eventDealId: string): Promise<Comment[]>;
   createComment(comment: InsertComment): Promise<Comment>;
   updateComment(id: string, updates: Partial<Comment>): Promise<Comment>;
   deleteComment(id: string): Promise<void>;
@@ -58,9 +106,26 @@ export interface IStorage {
   // Events
   getEvent(id: string): Promise<Event | undefined>;
   getEvents(limit?: number): Promise<Event[]>;
+  getEventsByClub(clubId: string): Promise<Event[]>;
   searchEvents(query: string, clubName?: string): Promise<Event[]>;
   createEvent(event: InsertEvent): Promise<Event>;
   updateEvent(id: string, updates: Partial<Event>): Promise<Event>;
+
+  // Event Results & Standings
+  getEventResults(eventId: string): Promise<EventResult[]>;
+  createEventResult(result: InsertEventResult): Promise<EventResult>;
+  getEventStandings(eventId: string): Promise<EventStanding[]>;
+  updateEventStandings(eventId: string, standings: InsertEventStanding[]): Promise<EventStanding[]>;
+
+  // User Preferences
+  getUserPreferences(userId: string): Promise<UserPreference[]>;
+  getUserPreference(userId: string, key: string): Promise<UserPreference | undefined>;
+  setUserPreference(userId: string, key: string, value: any): Promise<UserPreference>;
+
+  // Feature Flags
+  getFeatureFlags(): Promise<FeatureFlag[]>;
+  getFeatureFlag(flagName: string): Promise<FeatureFlag | undefined>;
+  isFeatureEnabled(flagName: string, userId?: string): Promise<boolean>;
 
   // Admin
   getAllUsers(search?: string, userTypeFilter?: string, limit?: number): Promise<User[]>;
@@ -113,6 +178,83 @@ export class DatabaseStorage implements IStorage {
       .where(eq(users.id, id))
       .returning();
     return user;
+  }
+
+  // Clubs
+  async getClub(id: string): Promise<Club | undefined> {
+    const [club] = await db.select().from(clubs).where(eq(clubs.id, id));
+    return club || undefined;
+  }
+
+  async getClubs(limit = 20): Promise<Club[]> {
+    return await db
+      .select()
+      .from(clubs)
+      .where(eq(clubs.isActive, true))
+      .orderBy(clubs.name)
+      .limit(limit);
+  }
+
+  async searchClubs(query: string): Promise<Club[]> {
+    return await db
+      .select()
+      .from(clubs)
+      .where(
+        and(
+          eq(clubs.isActive, true),
+          or(
+            ilike(clubs.name, `%${query}%`),
+            ilike(clubs.city, `%${query}%`),
+            ilike(clubs.state, `%${query}%`)
+          )
+        )
+      )
+      .orderBy(clubs.name);
+  }
+
+  async createClub(insertClub: InsertClub): Promise<Club> {
+    const [club] = await db.insert(clubs).values(insertClub).returning();
+    return club;
+  }
+
+  async updateClub(id: string, updates: Partial<Club>): Promise<Club> {
+    const [club] = await db
+      .update(clubs)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(clubs.id, id))
+      .returning();
+    return club;
+  }
+
+  // Favourite Clubs
+  async getFavouriteClubsByUser(userId: string): Promise<Club[]> {
+    const results = await db
+      .select({ club: clubs })
+      .from(favouriteClubs)
+      .innerJoin(clubs, eq(favouriteClubs.clubId, clubs.id))
+      .where(eq(favouriteClubs.userId, userId))
+      .orderBy(clubs.name);
+    
+    return results.map(r => r.club);
+  }
+
+  async addFavouriteClub(userId: string, clubId: string): Promise<FavouriteClub> {
+    const [favouriteClub] = await db
+      .insert(favouriteClubs)
+      .values({ userId, clubId })
+      .returning();
+    return favouriteClub;
+  }
+
+  async removeFavouriteClub(userId: string, clubId: string): Promise<void> {
+    await db
+      .delete(favouriteClubs)
+      .where(
+        and(
+          eq(favouriteClubs.userId, userId),
+          eq(favouriteClubs.clubId, clubId)
+        )
+      );
   }
 
   // Games
@@ -206,12 +348,71 @@ export class DatabaseStorage implements IStorage {
     return board;
   }
 
+  // Event Deals
+  async getEventDeal(id: string): Promise<EventDeal | undefined> {
+    const [eventDeal] = await db.select().from(eventDeals).where(eq(eventDeals.id, id));
+    return eventDeal || undefined;
+  }
+
+  async getEventDealsByEvent(eventId: string): Promise<EventDeal[]> {
+    return await db
+      .select()
+      .from(eventDeals)
+      .where(eq(eventDeals.eventId, eventId))
+      .orderBy(eventDeals.boardNumber);
+  }
+
+  async createEventDeal(insertEventDeal: InsertEventDeal): Promise<EventDeal> {
+    const [eventDeal] = await db.insert(eventDeals).values(insertEventDeal).returning();
+    return eventDeal;
+  }
+
+  async updateEventDeal(id: string, updates: Partial<EventDeal>): Promise<EventDeal> {
+    const [eventDeal] = await db
+      .update(eventDeals)
+      .set(updates)
+      .where(eq(eventDeals.id, id))
+      .returning();
+    return eventDeal;
+  }
+
+  // Game Participants
+  async getGameParticipants(gameId: string): Promise<GameParticipant[]> {
+    return await db
+      .select()
+      .from(gameParticipants)
+      .where(eq(gameParticipants.gameId, gameId))
+      .orderBy(gameParticipants.createdAt);
+  }
+
+  async createGameParticipant(insertParticipant: InsertGameParticipant): Promise<GameParticipant> {
+    const [participant] = await db.insert(gameParticipants).values(insertParticipant).returning();
+    return participant;
+  }
+
+  async updateGameParticipant(id: string, updates: Partial<GameParticipant>): Promise<GameParticipant> {
+    const [participant] = await db
+      .update(gameParticipants)
+      .set(updates)
+      .where(eq(gameParticipants.id, id))
+      .returning();
+    return participant;
+  }
+
   // Comments
   async getCommentsByBoard(boardId: string): Promise<Comment[]> {
     return await db
       .select()
       .from(comments)
       .where(eq(comments.boardId, boardId))
+      .orderBy(comments.createdAt);
+  }
+
+  async getCommentsByEventDeal(eventDealId: string): Promise<Comment[]> {
+    return await db
+      .select()
+      .from(comments)
+      .where(eq(comments.eventDealId, eventDealId))
       .orderBy(comments.createdAt);
   }
 
@@ -310,6 +511,138 @@ export class DatabaseStorage implements IStorage {
     return event;
   }
 
+  async getEventsByClub(clubId: string): Promise<Event[]> {
+    return await db
+      .select()
+      .from(events)
+      .where(eq(events.clubId, clubId))
+      .orderBy(desc(events.eventDate));
+  }
+
+  // Event Results & Standings
+  async getEventResults(eventId: string): Promise<EventResult[]> {
+    return await db
+      .select()
+      .from(eventResults)
+      .where(eq(eventResults.eventId, eventId))
+      .orderBy(eventResults.boardNumber);
+  }
+
+  async createEventResult(insertResult: InsertEventResult): Promise<EventResult> {
+    const [result] = await db.insert(eventResults).values(insertResult).returning();
+    return result;
+  }
+
+  async getEventStandings(eventId: string): Promise<EventStanding[]> {
+    return await db
+      .select()
+      .from(eventStandings)
+      .where(eq(eventStandings.eventId, eventId))
+      .orderBy(eventStandings.position);
+  }
+
+  async updateEventStandings(eventId: string, standings: InsertEventStanding[]): Promise<EventStanding[]> {
+    // Delete existing standings for this event
+    await db.delete(eventStandings).where(eq(eventStandings.eventId, eventId));
+    
+    // Insert new standings
+    if (standings.length > 0) {
+      return await db.insert(eventStandings).values(standings).returning();
+    }
+    return [];
+  }
+
+  // User Preferences
+  async getUserPreferences(userId: string): Promise<UserPreference[]> {
+    return await db
+      .select()
+      .from(userPreferences)
+      .where(eq(userPreferences.userId, userId))
+      .orderBy(userPreferences.preferenceKey);
+  }
+
+  async getUserPreference(userId: string, key: string): Promise<UserPreference | undefined> {
+    const [preference] = await db
+      .select()
+      .from(userPreferences)
+      .where(
+        and(
+          eq(userPreferences.userId, userId),
+          eq(userPreferences.preferenceKey, key)
+        )
+      );
+    return preference || undefined;
+  }
+
+  async setUserPreference(userId: string, key: string, value: any): Promise<UserPreference> {
+    // Try to update existing preference first
+    const [existing] = await db
+      .update(userPreferences)
+      .set({
+        preferenceValue: value,
+        updatedAt: new Date()
+      })
+      .where(
+        and(
+          eq(userPreferences.userId, userId),
+          eq(userPreferences.preferenceKey, key)
+        )
+      )
+      .returning();
+
+    if (existing) {
+      return existing;
+    }
+
+    // If no existing preference, create new one
+    const [preference] = await db
+      .insert(userPreferences)
+      .values({
+        userId,
+        preferenceKey: key,
+        preferenceValue: value
+      })
+      .returning();
+    return preference;
+  }
+
+  // Feature Flags
+  async getFeatureFlags(): Promise<FeatureFlag[]> {
+    return await db
+      .select()
+      .from(featureFlags)
+      .orderBy(featureFlags.flagName);
+  }
+
+  async getFeatureFlag(flagName: string): Promise<FeatureFlag | undefined> {
+    const [flag] = await db
+      .select()
+      .from(featureFlags)
+      .where(eq(featureFlags.flagName, flagName));
+    return flag || undefined;
+  }
+
+  async isFeatureEnabled(flagName: string, userId?: string): Promise<boolean> {
+    const flag = await this.getFeatureFlag(flagName);
+    if (!flag || !flag.isEnabled) {
+      return false;
+    }
+
+    // If no user targeting, it's enabled for everyone
+    if (!flag.targetUsers?.length && !flag.targetUserTypes?.length) {
+      return true;
+    }
+
+    // Check user-specific targeting
+    if (userId && flag.targetUsers?.includes(userId)) {
+      return true;
+    }
+
+    // For user type targeting, would need to check user's type
+    // This could be enhanced to check user types if needed
+    return false;
+  }
+
   // Admin methods
   async getAllUsers(search?: string, userTypeFilter?: string, limit = 50): Promise<User[]> {
     const conditions = [];
@@ -357,7 +690,7 @@ export class DatabaseStorage implements IStorage {
       .where(and(isNotNull(events.clubName), ne(events.clubName, '')))
       .orderBy(events.clubName);
     
-    return results.map(r => r.clubName);
+    return results.map(r => r.clubName).filter((name): name is string => name !== null);
   }
 
   async deactivateUser(id: string): Promise<User> {
