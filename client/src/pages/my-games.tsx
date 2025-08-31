@@ -46,7 +46,7 @@ export default function MyGames() {
           <p className="text-gray-600">Manage and review your bridge games</p>
         </div>
         <Link href="/create-game">
-          <Button className="bg-bridge-green hover:bg-green-700 text-white">
+          <Button variant="primary-green">
             <span className="mr-2">+</span>Create Game
           </Button>
         </Link>
@@ -113,7 +113,7 @@ export default function MyGames() {
                       <TableCell>
                         <div className="flex items-center gap-2">
                           <Link href={`/games/${game.id}`}>
-                            <Button size="sm" className="bg-bridge-green hover:bg-green-700 text-white">
+                            <Button size="sm" variant="primary-green">
                               Open
                             </Button>
                           </Link>
@@ -146,7 +146,7 @@ export default function MyGames() {
                 <>
                   <p>No games found. Create your first game to get started!</p>
                   <Link href="/create-game">
-                    <Button className="mt-4 bg-bridge-green hover:bg-green-700 text-white">
+                    <Button className="mt-4" variant="primary-green">
                       Create Game
                     </Button>
                   </Link>

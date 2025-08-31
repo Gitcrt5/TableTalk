@@ -35,7 +35,7 @@ export default function Partnerships() {
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle>My Partners</CardTitle>
-              <Button size="sm" className="bg-bridge-green hover:bg-green-700 text-white">
+              <Button size="sm" variant="primary-green">
                 <span className="mr-2">+</span>Add Partner
               </Button>
             </div>
@@ -62,7 +62,7 @@ export default function Partnerships() {
                       </div>
                     </div>
                     <div className="flex gap-2">
-                      <Button size="sm" className="bg-bridge-blue hover:bg-blue-700">
+                      <Button size="sm" variant="primary-blue">
                         Play Together
                       </Button>
                       <Button size="sm" variant="outline">
@@ -75,7 +75,7 @@ export default function Partnerships() {
             ) : (
               <div className="text-center py-8 text-gray-500">
                 <p>No partnerships yet. Connect with other players to get started!</p>
-                <Button className="mt-4 bg-bridge-green hover:bg-green-700 text-white">
+                <Button className="mt-4" variant="primary-green">
                   Find Partners
                 </Button>
               </div>
@@ -102,7 +102,7 @@ export default function Partnerships() {
                 <p className="text-sm text-gray-600 mb-3">
                   Connect with other bridge players in your area or skill level.
                 </p>
-                <Button className="bg-bridge-blue hover:bg-blue-700">
+                <Button variant="primary-blue">
                   Browse Players
                 </Button>
               </CardContent>

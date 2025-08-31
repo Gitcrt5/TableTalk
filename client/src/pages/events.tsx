@@ -30,7 +30,7 @@ export default function Events() {
           <h1 className="text-2xl font-bold text-gray-900">Club Events</h1>
           <p className="text-gray-600">Discover events and create games from official tournaments</p>
         </div>
-        <Button className="bg-bridge-green hover:bg-green-700 text-white">
+        <Button variant="primary-green">
           <span className="mr-2">+</span>Create Event
         </Button>
       </div>
@@ -100,7 +100,7 @@ export default function Events() {
                         View Details
                       </Button>
                     </Link>
-                    <Button size="sm" className="bg-bridge-blue hover:bg-blue-700">
+                    <Button size="sm" variant="primary-blue">
                       Create My Game
                     </Button>
                   </div>

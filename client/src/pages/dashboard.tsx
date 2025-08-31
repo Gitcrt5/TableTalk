@@ -35,7 +35,7 @@ export default function Dashboard() {
             <p className="text-gray-600">Quick access to your bridge games and analysis</p>
           </div>
           <Link href="/create-game">
-            <Button className="!bg-green-600 hover:!bg-green-700 !text-white" data-testid="button-create-game">
+            <Button variant="primary-green" data-testid="button-create-game">
               <span className="mr-2">+</span>Create Game
             </Button>
           </Link>
