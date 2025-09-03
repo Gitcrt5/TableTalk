@@ -1,606 +1,645 @@
-# Firebase Authentication Issue Analysis & Fix Plan
+# Supabase Migration Plan: Database Layer Migration while Keeping Firebase Auth
 
-## Problem Statement
-User is experiencing Firebase error `auth/operation-not-allowed` when trying to log in. User has configured Firebase to only allow email/password authentication and disabled Google authentication, but the application currently only supports Google OAuth.
+## Project Overview
 
-## Root Cause Analysis
+**Goal**: Migrate the database layer from Neon PostgreSQL + Drizzle ORM to Supabase Postgres while keeping Firebase Authentication intact.
 
-### Current Authentication System
-The application is **exclusively configured for Google OAuth authentication**:
+**Key Requirements**:
+- Use `@supabase/supabase-js` on server only
+- Keep Firebase Auth on client and server
+- No direct database drivers or ORMs (remove Drizzle)
+- Frontend must never access Supabase directly
+- All Supabase usage in backend only
+- Migrate existing data from current database
 
-1. **Frontend (`client/src/lib/firebase.ts`)**:
-   - Only imports Google OAuth functions: `GoogleAuthProvider`, `signInWithPopup`
-   - No email/password authentication functions imported or implemented
-   - `signInWithGoogle()` function uses `signInWithPopup(auth, provider)`
+---
 
-2. **UI (`client/src/pages/auth.tsx`)**:
-   - Only displays "Sign in with Google" button
-   - `handleSignIn()` function calls `signInWithGoogle()`
-   - No email/password login form exists
+## Current Architecture Analysis
 
-3. **Backend Authentication (Working Correctly)**:
-   - `server/firebase.ts` properly implements Firebase Admin SDK token verification
-   - `server/routes.ts` has proper authentication middleware
-   - Token verification works for any Firebase authentication method
+### Current Database Setup
+- **Database**: Neon PostgreSQL with connection via `DATABASE_URL`
+- **ORM**: Drizzle ORM (`drizzle-orm/neon-serverless`)
+- **Schema**: Comprehensive schema in `shared/schema.ts` with 19 tables
+- **Migration Tool**: Drizzle Kit
+- **Storage Layer**: Clean abstraction via `IStorage` interface in `server/storage.ts`
 
-4. **Database Schema (No Changes Needed)**:
-   - `users` table stores `firebaseUid` which works for any authentication method
-   - Schema is authentication-method agnostic
+### Current Authentication Setup
+- **Client**: Firebase Auth via `client/src/lib/firebase.ts` and `client/src/lib/auth.tsx`
+- **Server**: Firebase Admin SDK via `server/firebase.ts`
+- **Middleware**: `requireAuth` middleware in `server/routes.ts`
+- **Status**: ✅ Working correctly, will be preserved
 
-### The Mismatch
-- **User's Firebase Project Settings**: Email/password enabled, Google OAuth disabled
-- **Application Code**: Only Google OAuth implemented
-- **Result**: `auth/operation-not-allowed` error when Google OAuth is attempted
+### Dependencies Analysis
+
+#### Dependencies to Remove:
+```json
+{
+  "@neondatabase/serverless": "^0.10.4",
+  "drizzle-orm": "^0.39.1",
+  "drizzle-zod": "^0.7.0",
+  "drizzle-kit": "^0.30.4",
+  "connect-pg-simple": "^10.0.0"
+}
+```
+
+#### Dependencies to Add:
+```json
+{
+  "@supabase/supabase-js": "^2.39.0"
+}
+```
+
+#### Dependencies to Keep:
+- All Firebase dependencies (client and admin)
+- All frontend dependencies
+- All other backend dependencies
+
+---
 
 ## Files Requiring Changes
 
 ### Critical Files (Must Modify):
 
-1. **`client/src/lib/firebase.ts`**
-   - Add email/password authentication imports
-   - Implement `signInWithEmailAndPassword()` function
-   - Implement `createUserWithEmailAndPassword()` function
-   - Add password reset functionality
+1. **`server/db.ts`** - Replace Neon + Drizzle with Supabase client
+2. **`server/storage.ts`** - Replace all Drizzle queries with Supabase queries
+3. **`shared/schema.ts`** - Convert to Supabase schema or TypeScript types
+4. **`package.json`** - Update dependencies
 
-2. **`client/src/pages/auth.tsx`**
-   - Replace Google OAuth UI with email/password forms
-   - Add login form with email/password fields
-   - Add registration form functionality
-   - Add form validation and error handling
+### Files to Remove:
+1. **`drizzle.config.ts`** - No longer needed
+2. **`migrations/`** directory - Drizzle migrations not applicable
 
-### Supporting Files (May Need Updates):
-
-3. **`client/src/lib/auth.tsx`**
-   - May need minor updates to handle different authentication flows
-   - Current implementation should work with email/password tokens
-
-4. **Form Components** (If Not Existing):
-   - May need to create form components using shadcn/ui
-   - Input validation schemas
-
-## Environment Variables Status
-
-✅ **All Required Environment Variables Present**:
-- `FIREBASE_SERVICE_ACCOUNT_KEY` (exists)
-- `VITE_FIREBASE_API_KEY` (exists) 
-- `VITE_FIREBASE_PROJECT_ID` (exists)
-- `VITE_FIREBASE_APP_ID` (exists)
-
-## Database Impact Assessment
-
-### Current Database Schema Analysis
-- `users` table in `shared/schema.ts` is perfectly designed for the change
-- Fields: `id`, `email`, `displayName`, `firebaseUid`, `createdAt`
-- The `firebaseUid` field stores Firebase's user identifier regardless of authentication method
-- No schema changes required
-
-### Database Operations
-- `npm run db:push` available for schema updates (none needed)
-- No migration required as schema supports any authentication method
-- Existing user data will remain intact
-
-## Proposed Solutions
-
-### Option A: Replace Google OAuth with Email/Password (Recommended)
-**Pros:**
-- Matches user's Firebase configuration
-- Simpler implementation
-- Consistent with user's requirements
-
-**Cons:**
-- Removes Google OAuth option entirely
-
-**Implementation Steps:**
-1. Update Firebase imports to include email/password functions
-2. Create email/password authentication functions
-3. Replace Google OAuth UI with email/password forms
-4. Test authentication flow
-
-### Option B: Add Email/Password While Keeping Google OAuth
-**Pros:**
-- Provides multiple authentication options
-- Doesn't remove existing functionality
-
-**Cons:**
-- More complex implementation
-- User would need to re-enable Google OAuth in Firebase
-- May not align with user's current Firebase settings
-
-**Implementation Steps:**
-1. Add email/password functions alongside existing Google OAuth
-2. Create tabbed interface for both authentication methods
-3. Handle different authentication flows
-4. Test both authentication methods
-
-## Detailed Implementation Plan (Option A - Recommended)
-
-### Phase 1: Update Firebase Configuration
-1. **Modify `client/src/lib/firebase.ts`:**
-   - Add imports: `signInWithEmailAndPassword`, `createUserWithEmailAndPassword`, `sendPasswordResetEmail`
-   - Remove Google-specific imports: `GoogleAuthProvider`, `signInWithPopup`
-   - Implement `signInWithEmail(email, password)` function
-   - Implement `signUpWithEmail(email, password)` function
-   - Implement `resetPassword(email)` function
-   - Remove `signInWithGoogle()` function
-
-### Phase 2: Update Authentication UI
-2. **Modify `client/src/pages/auth.tsx`:**
-   - Remove Google OAuth button and handler
-   - Add email/password form with proper shadcn/ui components
-   - Implement form validation using `react-hook-form` and `zod`
-   - Add login/register toggle functionality
-   - Add password reset option
-   - Implement proper error handling and loading states
-
-### Phase 3: Form Validation Schema
-3. **Add validation schemas:**
-   - Email validation
-   - Password strength requirements
-   - Confirm password matching
-
-### Phase 4: Testing
-4. **Test authentication flow:**
-   - User registration with email/password
-   - User login with email/password
-   - Password reset functionality
-   - Backend token verification
-   - Database user creation/retrieval
-
-### Phase 5: UI/UX Improvements
-5. **Polish user experience:**
-   - Loading states during authentication
-   - Clear error messages
-   - Success feedback
-   - Responsive design
-
-## Alternative Approach: Firebase Configuration Fix
-
-### Investigation Needed
-Before implementing code changes, consider verifying:
-
-1. **Firebase Console Configuration:**
-   - Is email/password authentication properly enabled?
-   - Are there any additional restrictions or settings?
-   - Is the Firebase project correctly linked?
-
-2. **Environment Variables:**
-   - Are the Firebase configuration values correct for the right project?
-   - Is the service account key valid and properly formatted?
-
-## Risk Assessment
-
-### Low Risk Changes:
-- Adding email/password authentication functions
-- Updating UI forms
-- The backend authentication is already properly implemented
-
-### No Risk:
-- Database schema changes (none required)
-- Existing user data impact (none)
-- Backend authentication system (already working correctly)
-
-### Testing Required:
-- New email/password authentication flow
-- User registration process
-- Password reset functionality
-
-## Rollback Plan
-
-If issues arise:
-1. User can easily restore the Google OAuth implementation
-2. Database remains unchanged - no data loss risk
-3. Previous Google OAuth code can be restored from version control
-4. User can re-enable Google OAuth in Firebase console if needed
-
-## Timeline Estimate
-
-**Implementation Time: 2-3 hours**
-- Firebase function updates: 30 minutes
-- UI/form implementation: 1-2 hours  
-- Testing and refinement: 30-60 minutes
-
-## Next Steps
-
-1. **Confirm approach with user** - Option A (replace) vs Option B (add alongside)
-2. **Begin implementation** starting with Firebase configuration updates
-3. **Test thoroughly** with actual Firebase project settings
-4. **Provide user documentation** for the new authentication flow
-
-## Dependencies
-
-- No new package installations required
-- All necessary Firebase functions available in existing `firebase` package
-- Form components available via existing shadcn/ui setup
-- Validation available via existing `zod` and `react-hook-form` packages
+### Files to Keep Unchanged:
+1. **`server/firebase.ts`** - Firebase Admin SDK (✅ working)
+2. **`client/src/lib/firebase.ts`** - Firebase client config (✅ working)
+3. **`client/src/lib/auth.tsx`** - Auth provider (✅ working)
+4. **`server/routes.ts`** - API routes (minor updates only)
+5. **All client components and pages** - No changes needed
 
 ---
 
-## CRITICAL UPDATE: Firebase v12 Compatibility Research
+## Environment Variables Plan
 
-### User Question: "Is there a way to use a newer frontend interface that uses the current Firebase version?"
-
-**MAJOR DISCOVERY: FirebaseUI is NOT compatible with Firebase v12!**
-
-## Firebase v12 Compatibility Issues Found
-
-### ❌ **FirebaseUI Problems (Option C1 - NOT RECOMMENDED)**
-
-**Critical Issues:**
-- `react-firebaseui` requires Firebase v9 **compat** version, NOT v12 modular SDK
-- Your project uses Firebase v12 modular SDK (`firebase@12.1.0`)
-- Dependency conflict prevents installation (`ERESOLVE unable to resolve dependency tree`)
-- **FirebaseUI is essentially deprecated** for modern Firebase implementations
-
-**Why This Failed:**
+### Current Environment Variables:
 ```bash
-npm install react-firebaseui
-# ERROR: Could not resolve dependency:
-# peer firebase@"^9.1.3" from react-firebaseui@6.0.0
-# Found: firebase@12.1.0 (your current version)
+# Database
+DATABASE_URL=postgresql://...
+
+# Firebase (Keep these)
+FIREBASE_SERVICE_ACCOUNT_KEY={"type":"service_account",...}
+VITE_FIREBASE_API_KEY=...
+VITE_FIREBASE_PROJECT_ID=...
+VITE_FIREBASE_APP_ID=...
 ```
 
-### ✅ **Better Modern Solutions for Firebase v12**
+### New Environment Variables Needed:
+```bash
+# Supabase (Add these)
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
-## NEW Option D: Modern Firebase v12 Custom Implementation (RECOMMENDED)
-
-### User Question Answer: **YES** - Multiple better approaches exist!
-
-**Modern Abstraction Approaches:**
-
-### **D1: Configuration-Driven Authentication (BEST for your case)**
-- Single config object drives all authentication UI/logic
-- Environment variables or Firebase console settings control methods
-- Uses Firebase v12 modular SDK directly
-- **No additional packages needed**
-
-### **D2: Dynamic Provider Detection**  
-- Code detects available auth methods from Firebase configuration
-- Automatically builds UI based on enabled methods
-- Uses modern React patterns with Firebase v12
-
-### **D3: Firebase v12 + shadcn/ui Custom Components**
-- Leverages your existing shadcn/ui setup  
-- Modern, customizable authentication forms
-- Full control over UX while maintaining abstraction
-
-## Detailed Implementation: Option D1 (Configuration-Driven - RECOMMENDED)
-
-### Implementation Overview
-Create a configuration-driven authentication system that:
-1. **Uses Firebase v12 modular SDK** (no compatibility issues)
-2. **Dynamically shows auth methods** based on configuration
-3. **Leverages existing shadcn/ui components** (already in your project)
-4. **Requires no additional packages** (everything needed is installed)
-
-### Phase 1: Create Authentication Service
-**Create `client/src/lib/authService.ts`:**
-```typescript
-import { 
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  GoogleAuthProvider,
-  signInWithPopup,
-  sendPasswordResetEmail,
-  signOut
-} from "firebase/auth";
-import { auth } from "./firebase";
-
-// Configuration object - easily modify to enable/disable methods
-export const AUTH_CONFIG = {
-  emailPassword: true, // Your current setup
-  google: false,       // Disabled in your Firebase console
-  passwordReset: true,
-  registration: true
-};
-
-export const authService = {
-  // Email/Password methods
-  signInWithEmail: (email: string, password: string) => 
-    signInWithEmailAndPassword(auth, email, password),
-  
-  signUpWithEmail: (email: string, password: string) => 
-    createUserWithEmailAndPassword(auth, email, password),
-  
-  resetPassword: (email: string) => 
-    sendPasswordResetEmail(auth, email),
-  
-  // Google OAuth (when enabled)
-  signInWithGoogle: () => {
-    const provider = new GoogleAuthProvider();
-    return signInWithPopup(auth, provider);
-  },
-  
-  // Universal sign out
-  signOut: () => signOut(auth)
-};
+# Firebase (Keep all existing ones)
+FIREBASE_SERVICE_ACCOUNT_KEY={"type":"service_account",...}
+VITE_FIREBASE_API_KEY=...
+VITE_FIREBASE_PROJECT_ID=...
+VITE_FIREBASE_APP_ID=...
 ```
 
-### Phase 2: Create Dynamic Authentication Forms
-**Modify `client/src/pages/auth.tsx`:**
+### Variables to Remove:
+```bash
+DATABASE_URL=postgresql://...  # No longer needed
+```
+
+---
+
+## Database Schema Analysis
+
+### Current Schema Overview
+The current schema in `shared/schema.ts` includes:
+
+#### Core Tables:
+1. **users** - User profiles linked to Firebase UID
+2. **user_types** - User type reference data
+3. **clubs** - Bridge club information
+4. **favourite_clubs** - User-club relationships
+5. **games** - Bridge game sessions
+6. **boards** - Individual board data within games
+7. **events** - Bridge events and tournaments
+8. **event_deals** - Deal data for events
+9. **game_participants** - Player participation in games
+10. **partnerships** - Player partnerships
+11. **comments** - Board/deal analysis comments
+
+#### Supporting Tables:
+12. **user_preferences** - User settings
+13. **feature_flags** - Application feature toggles
+14. **audit_logs** - System audit trail
+15. **player_results** - Game performance data
+16. **event_results** - Event scoring data
+17. **event_registrations** - Event participation
+18. **event_standings** - Tournament standings
+19. **club_memberships** - Club membership data
+
+#### Enums:
+- game_type, visibility_type, event_status, event_kind
+- registration_type, pair_side_type, game_role, seat_type, comment_type
+
+### Schema Migration Strategy
+Convert Drizzle schema definitions to Supabase SQL schema while preserving:
+- All table structures and relationships
+- Foreign key constraints
+- Enum types
+- Default values and constraints
+- UUID generation functions
+
+---
+
+## Data Migration Plan
+
+### Phase 1: Export Current Data
+```sql
+-- Export all table data from current Neon database
+-- Script to be created for data extraction
+COPY (SELECT * FROM users) TO '/tmp/users.csv' WITH CSV HEADER;
+COPY (SELECT * FROM clubs) TO '/tmp/clubs.csv' WITH CSV HEADER;
+-- ... continue for all tables
+```
+
+### Phase 2: Create Supabase Schema
+```sql
+-- Create all enums
+CREATE TYPE game_type AS ENUM ('USER', 'CLUB');
+CREATE TYPE visibility_type AS ENUM ('private', 'link', 'public');
+-- ... continue for all enums
+
+-- Create all tables with proper constraints
+CREATE TABLE users (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  email TEXT NOT NULL,
+  display_name TEXT NOT NULL,
+  firebase_uid TEXT NOT NULL UNIQUE,
+  user_type_id UUID REFERENCES user_types(id),
+  created_at TIMESTAMP DEFAULT NOW() NOT NULL,
+  updated_at TIMESTAMP DEFAULT NOW() NOT NULL
+);
+-- ... continue for all tables
+```
+
+### Phase 3: Import Data to Supabase
+```sql
+-- Import data preserving relationships
+\COPY users FROM '/tmp/users.csv' WITH CSV HEADER;
+\COPY clubs FROM '/tmp/clubs.csv' WITH CSV HEADER;
+-- ... continue for all tables
+```
+
+### Phase 4: Verify Data Integrity
+- Check row counts match
+- Verify foreign key relationships
+- Test sample queries
+- Validate enum values
+
+---
+
+## Implementation Plan
+
+### Phase 1: Preparation (30 minutes)
+1. **Backup Current Database**
+   ```bash
+   pg_dump $DATABASE_URL > backup_$(date +%Y%m%d_%H%M%S).sql
+   ```
+
+2. **Create Supabase Project**
+   - Set up new Supabase project
+   - Configure authentication settings
+   - Note down project URL and service role key
+
+3. **Install Dependencies**
+   ```bash
+   npm uninstall @neondatabase/serverless drizzle-orm drizzle-zod drizzle-kit connect-pg-simple
+   npm install @supabase/supabase-js
+   ```
+
+### Phase 2: Database Schema Setup (45 minutes)
+1. **Create Supabase Schema**
+   - Convert `shared/schema.ts` to Supabase SQL
+   - Create all tables, enums, and constraints
+   - Set up RLS policies (Row Level Security)
+
+2. **Export Current Data**
+   - Create data export script
+   - Export all table data to CSV/JSON
+   - Verify export completeness
+
+3. **Import Data to Supabase**
+   - Import data maintaining referential integrity
+   - Verify data integrity and counts
+
+### Phase 3: Backend Migration (60 minutes)
+1. **Create Supabase Client** (`server/supabase.ts`)
+   ```typescript
+   import { createClient } from '@supabase/supabase-js';
+   
+   const supabaseUrl = process.env.SUPABASE_URL!;
+   const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+   
+   export const supabase = createClient(supabaseUrl, supabaseServiceRoleKey, {
+     auth: {
+       autoRefreshToken: false,
+       persistSession: false
+     }
+   });
+   ```
+
+2. **Replace Storage Implementation**
+   - Update `server/storage.ts` to use Supabase queries
+   - Replace all Drizzle operations with Supabase operations
+   - Maintain exact same interface (`IStorage`)
+
+3. **Update Database Connection**
+   - Replace `server/db.ts` with Supabase client
+   - Remove Drizzle initialization
+
+### Phase 4: Schema Type Definitions (30 minutes)
+1. **Update `shared/schema.ts`**
+   - Remove Drizzle table definitions
+   - Add TypeScript type definitions
+   - Keep Zod schemas for validation
+
+2. **Generate Types from Supabase**
+   ```bash
+   npx supabase gen types typescript --project-id="your-project-id" > shared/supabase-types.ts
+   ```
+
+### Phase 5: File Storage Migration (Optional - 30 minutes)
+1. **Update File Upload Component**
+   - Modify `client/src/components/ui/file-upload.tsx`
+   - Add backend API route for file uploads via Supabase Storage
+
+2. **Create File Storage API**
+   - Add routes for file upload/download
+   - Use Supabase Storage admin client
+   - Proxy all file operations through backend
+
+### Phase 6: Testing and Validation (45 minutes)
+1. **Test All API Endpoints**
+   - Verify CRUD operations work
+   - Test authentication flow
+   - Validate data integrity
+
+2. **Frontend Testing**
+   - Test all pages and components
+   - Verify data loading
+   - Test user interactions
+
+3. **Performance Testing**
+   - Compare query performance
+   - Check connection pooling
+   - Monitor response times
+
+---
+
+## Detailed Code Changes
+
+### 1. New Supabase Client (`server/supabase.ts`)
 ```typescript
-import { useState, useEffect } from "react";
-import { useLocation } from "wouter";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { useAuth } from "@/lib/auth";
-import { authService, AUTH_CONFIG } from "@/lib/authService";
-import logo from "@/assets/tabletalk-logo.svg";
+import { createClient } from '@supabase/supabase-js';
 
-export default function Auth() {
-  const { user, loading } = useAuth();
-  const [, setLocation] = useLocation();
-  const [isSignUp, setIsSignUp] = useState(false);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [authLoading, setAuthLoading] = useState(false);
-  const [error, setError] = useState("");
+if (!process.env.SUPABASE_URL) {
+  throw new Error('SUPABASE_URL must be set');
+}
 
-  useEffect(() => {
-    if (user && !loading) {
-      setLocation("/");
+if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+  throw new Error('SUPABASE_SERVICE_ROLE_KEY must be set');
+}
+
+export const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY,
+  {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false
     }
-  }, [user, loading, setLocation]);
+  }
+);
+```
 
-  const handleEmailAuth = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setAuthLoading(true);
-    setError("");
-
-    try {
-      if (isSignUp) {
-        if (password !== confirmPassword) {
-          throw new Error("Passwords don't match");
-        }
-        await authService.signUpWithEmail(email, password);
-      } else {
-        await authService.signInWithEmail(email, password);
-      }
-    } catch (error: any) {
-      setError(error.message);
-    } finally {
-      setAuthLoading(false);
-    }
-  };
-
-  const handleGoogleAuth = async () => {
-    if (!AUTH_CONFIG.google) return;
+### 2. Updated Storage Interface Implementation
+```typescript
+// server/storage.ts - Example user methods
+export class SupabaseStorage implements IStorage {
+  async getUser(id: string): Promise<User | undefined> {
+    const { data, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', id)
+      .single();
     
-    setAuthLoading(true);
-    try {
-      await authService.signInWithGoogle();
-    } catch (error: any) {
-      setError(error.message);
-    } finally {
-      setAuthLoading(false);
-    }
-  };
-
-  const handlePasswordReset = async () => {
-    if (!email) {
-      setError("Enter your email first");
-      return;
-    }
-    
-    try {
-      await authService.resetPassword(email);
-      setError("Password reset email sent!");
-    } catch (error: any) {
-      setError(error.message);
-    }
-  };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-bridge-green mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
-        </div>
-      </div>
-    );
+    if (error || !data) return undefined;
+    return data;
   }
 
-  return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <Card className="w-full max-w-md mx-4">
-        <CardHeader className="text-center">
-          <div className="flex justify-center mb-4">
-            <img src={logo} alt="TableTalk Logo" className="w-16 h-16" />
-          </div>
-          <CardTitle className="text-2xl font-bold">Welcome to TableTalk</CardTitle>
-          <p className="text-gray-600">
-            {isSignUp ? "Create your account" : "Sign in to start analyzing your bridge games"}
-          </p>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {AUTH_CONFIG.emailPassword && (
-            <form onSubmit={handleEmailAuth} className="space-y-4">
-              <Input
-                type="email"
-                placeholder="Email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                data-testid="input-email"
-              />
-              <Input
-                type="password"
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                data-testid="input-password"
-              />
-              
-              {isSignUp && AUTH_CONFIG.registration && (
-                <Input
-                  type="password"
-                  placeholder="Confirm Password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  required
-                  data-testid="input-confirm-password"
-                />
-              )}
+  async getUserByFirebaseUid(firebaseUid: string): Promise<User | undefined> {
+    const { data, error } = await supabase
+      .from('users')
+      .select(`
+        *,
+        user_types (*)
+      `)
+      .eq('firebase_uid', firebaseUid)
+      .single();
+    
+    if (error || !data) return undefined;
+    return data;
+  }
 
-              <Button 
-                type="submit" 
-                className="w-full" 
-                disabled={authLoading}
-                data-testid="button-submit"
-              >
-                {authLoading ? "Loading..." : (isSignUp ? "Sign Up" : "Sign In")}
-              </Button>
-            </form>
-          )}
+  async createUser(insertUser: InsertUser): Promise<User> {
+    const { data, error } = await supabase
+      .from('users')
+      .insert(insertUser)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data;
+  }
 
-          {AUTH_CONFIG.google && (
-            <>
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-gray-50 px-2 text-gray-500">Or</span>
-                </div>
-              </div>
-
-              <Button
-                onClick={handleGoogleAuth}
-                variant="outline"
-                className="w-full"
-                disabled={authLoading}
-                data-testid="button-google"
-              >
-                Continue with Google
-              </Button>
-            </>
-          )}
-
-          {error && (
-            <p className={`text-sm text-center ${error.includes("sent") ? "text-green-600" : "text-red-600"}`}>
-              {error}
-            </p>
-          )}
-
-          <div className="text-center space-y-2">
-            {AUTH_CONFIG.registration && (
-              <button
-                type="button"
-                onClick={() => setIsSignUp(!isSignUp)}
-                className="text-sm text-gray-600 hover:text-gray-900"
-                data-testid="button-toggle-signup"
-              >
-                {isSignUp ? "Already have an account? Sign in" : "Need an account? Sign up"}
-              </button>
-            )}
-
-            {AUTH_CONFIG.passwordReset && !isSignUp && (
-              <button
-                type="button"
-                onClick={handlePasswordReset}
-                className="block w-full text-sm text-gray-600 hover:text-gray-900"
-                data-testid="button-reset-password"
-              >
-                Forgot password?
-              </button>
-            )}
-          </div>
-
-          <p className="text-xs text-gray-500 text-center mt-4">
-            By signing in, you agree to our Terms of Service and Privacy Policy
-          </p>
-        </CardContent>
-      </Card>
-    </div>
-  );
+  // ... continue for all other methods
 }
 ```
 
-### Phase 3: Update Firebase Configuration (Simplify)
-**Modify `client/src/lib/firebase.ts`:**
+### 3. Updated Schema Types (`shared/schema.ts`)
 ```typescript
-import { initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
+// Remove all Drizzle imports and table definitions
+// Keep only TypeScript types and Zod schemas
 
-const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: `${import.meta.env.VITE_FIREBASE_PROJECT_ID}.firebaseapp.com`,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: `${import.meta.env.VITE_FIREBASE_PROJECT_ID}.firebasestorage.app`,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
-};
+export interface User {
+  id: string;
+  email: string;
+  displayName: string;
+  firebaseUid: string;
+  userTypeId?: string;
+  createdAt: string;
+  updatedAt: string;
+}
 
-console.log("Firebase config:", {
-  apiKey: firebaseConfig.apiKey ? "***PROVIDED***" : "MISSING",
-  authDomain: firebaseConfig.authDomain,
-  projectId: firebaseConfig.projectId,
-  storageBucket: firebaseConfig.storageBucket,
-  appId: firebaseConfig.appId ? "***PROVIDED***" : "MISSING"
+export interface Club {
+  id: string;
+  name: string;
+  description?: string;
+  country: string;
+  state: string;
+  city?: string;
+  website?: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// ... continue for all entities
+
+// Keep Zod schemas for validation
+import { z } from 'zod';
+
+export const insertUserSchema = z.object({
+  email: z.string().email(),
+  displayName: z.string().min(1),
+  firebaseUid: z.string().min(1),
+  userTypeId: z.string().uuid().optional(),
 });
 
-const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
-console.log("Firebase app initialized successfully");
-
-// Remove all Google-specific code - handled in authService
-export { onAuthStateChanged } from "firebase/auth";
+export type InsertUser = z.infer<typeof insertUserSchema>;
+// ... continue for all insert schemas
 ```
-
-## Key Advantages of This Approach
-
-### ✅ **Configuration-Driven Abstraction**
-- Change `AUTH_CONFIG` object → UI updates automatically
-- No code changes needed to enable/disable authentication methods
-- Environment variables can override config for different deployments
-
-### ✅ **Firebase v12 Native**
-- Uses latest Firebase modular SDK (no compatibility issues)
-- Better performance through tree-shaking
-- Future-proof with latest Firebase features
-
-### ✅ **Leverages Existing Stack**
-- Uses your existing shadcn/ui components
-- Integrates with existing `useAuth` hook
-- No new dependencies required
-
-### ✅ **Professional UX**
-- Form validation with proper error handling
-- Loading states and user feedback
-- Responsive design with your existing styling
-- Accessibility attributes (data-testid) for testing
-
-## Comparison: All Options Updated
-
-| Feature | Option A: Manual | Option D1: Config-Driven | FirebaseUI (Broken) |
-|---------|------------------|--------------------------|---------------------|
-| **Firebase v12 Compatible** | ✅ Yes | ✅ Yes | ❌ No - Requires v9 |
-| **Dynamic Configuration** | ❌ Manual coding | ✅ Config object | ✅ Firebase console |
-| **Package Dependencies** | ✅ None needed | ✅ None needed | ❌ Incompatible |
-| **Custom UI Control** | ✅ Full control | ✅ Full control | ❌ Limited |
-| **Development Time** | 2-3 hours | 1-2 hours | N/A - Broken |
-| **Maintenance** | High | Low | N/A - Broken |
-| **Existing Stack Integration** | Good | Perfect | N/A - Broken |
-
-## NEW FINAL RECOMMENDATION: Option D1
-
-### Why Option D1 is Now the Best Choice:
-
-1. **Perfect Abstraction**: Change config object → UI updates automatically
-2. **Firebase v12 Native**: No compatibility issues, uses modern SDK
-3. **Zero New Dependencies**: Uses your existing shadcn/ui + React setup  
-4. **Immediate Fix**: Works with your current email/password Firebase setup
-5. **Future Flexibility**: Enable Google OAuth by changing one config value + Firebase console
-6. **Professional Quality**: Custom UI with proper UX patterns
-
-### Updated Timeline: 1-2 hours
-- Create authentication service: 30 minutes
-- Update auth page with dynamic forms: 45-60 minutes
-- Simplify Firebase config: 15 minutes
-- Testing and polish: 15-30 minutes
 
 ---
 
-**UPDATED FINAL RECOMMENDATION: Option D1 (Configuration-Driven) provides the perfect abstraction you requested while using modern Firebase v12 and your existing tech stack.**
+## Row Level Security (RLS) Configuration
+
+### User Data Security
+```sql
+-- Enable RLS
+ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+
+-- Users can only read their own data
+CREATE POLICY "Users can read own data" ON users
+  FOR SELECT USING (firebase_uid = auth.uid());
+
+-- Service role can access all data (for backend operations)
+CREATE POLICY "Service role can access all user data" ON users
+  FOR ALL USING (auth.role() = 'service_role');
+```
+
+### Game Data Security
+```sql
+-- Games can be read by participants or if public
+CREATE POLICY "Games read policy" ON games
+  FOR SELECT USING (
+    visibility = 'public' OR 
+    creator_id = (SELECT id FROM users WHERE firebase_uid = auth.uid()) OR
+    partner_id = (SELECT id FROM users WHERE firebase_uid = auth.uid())
+  );
+```
+
+---
+
+## File Storage Migration (If Needed)
+
+### Backend File Upload Route
+```typescript
+// server/routes.ts - Add file upload route
+app.post('/api/upload', requireAuth, async (req, res) => {
+  try {
+    // Handle file upload via Supabase Storage
+    const { data, error } = await supabase.storage
+      .from('uploads')
+      .upload(`${req.user.id}/${Date.now()}_${filename}`, fileBuffer, {
+        contentType: file.mimetype
+      });
+
+    if (error) throw error;
+    
+    // Return file URL
+    const { data: { publicUrl } } = supabase.storage
+      .from('uploads')
+      .getPublicUrl(data.path);
+      
+    res.json({ url: publicUrl });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+```
+
+---
+
+## Risk Assessment
+
+### Low Risk:
+- Firebase authentication (unchanged)
+- Frontend components (unchanged)
+- API routes structure (minimal changes)
+
+### Medium Risk:
+- Data migration process
+- Storage layer replacement
+- Query performance differences
+
+### High Risk:
+- Data loss during migration
+- Schema mapping errors
+- Missing environment variables
+
+### Mitigation Strategies:
+1. **Complete database backup before migration**
+2. **Test migration on copy of production data**
+3. **Incremental deployment with rollback plan**
+4. **Comprehensive testing of all CRUD operations**
+
+---
+
+## Testing Checklist
+
+### Data Integrity:
+- [ ] All tables migrated with correct row counts
+- [ ] Foreign key relationships preserved
+- [ ] Enum values correctly mapped
+- [ ] UUID generation working
+
+### Authentication:
+- [ ] Firebase auth still working
+- [ ] User creation/lookup via Firebase UID
+- [ ] Protected routes functioning
+- [ ] Token verification working
+
+### CRUD Operations:
+- [ ] User management (create, read, update)
+- [ ] Game management (create, read, update)
+- [ ] Club management (create, read, update)
+- [ ] Comment system (create, read, update, delete)
+- [ ] Partnerships (create, read, update)
+- [ ] Events (create, read, update)
+
+### Performance:
+- [ ] Query response times acceptable
+- [ ] Concurrent user handling
+- [ ] Database connection pooling
+- [ ] Error handling and recovery
+
+---
+
+## Rollback Plan
+
+### If Migration Fails:
+1. **Restore Database Connection**
+   ```bash
+   npm install @neondatabase/serverless drizzle-orm drizzle-zod drizzle-kit
+   npm uninstall @supabase/supabase-js
+   ```
+
+2. **Restore Files**
+   - Restore `server/db.ts` from backup
+   - Restore `server/storage.ts` from backup
+   - Restore `drizzle.config.ts` from backup
+   - Restore `shared/schema.ts` from backup
+
+3. **Restore Environment Variables**
+   ```bash
+   DATABASE_URL=postgresql://original-neon-url
+   # Remove Supabase variables
+   ```
+
+4. **Test System**
+   - Verify all functionality restored
+   - Check data integrity
+   - Test authentication flow
+
+---
+
+## Timeline Estimate
+
+**Total Time: 4-5 hours**
+
+1. **Preparation**: 30 minutes
+2. **Schema Setup**: 45 minutes  
+3. **Data Migration**: 60 minutes
+4. **Backend Code Changes**: 60 minutes
+5. **Type Definitions**: 30 minutes
+6. **Testing & Validation**: 45 minutes
+7. **File Storage (Optional)**: 30 minutes
+8. **Documentation & Cleanup**: 15 minutes
+
+---
+
+## Post-Migration Validation
+
+### Data Verification Queries:
+```sql
+-- Check user counts
+SELECT COUNT(*) FROM users;
+
+-- Verify relationships
+SELECT COUNT(*) FROM games g 
+JOIN users u ON g.creator_id = u.id;
+
+-- Check enum values
+SELECT DISTINCT game_type FROM games;
+```
+
+### Performance Benchmarks:
+- Average query response time
+- Authentication flow timing
+- Page load performance
+- Concurrent user capacity
+
+---
+
+## Environment Variables Summary
+
+### Required New Secrets:
+```bash
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
+
+### Keep Existing:
+```bash
+FIREBASE_SERVICE_ACCOUNT_KEY={"type":"service_account",...}
+VITE_FIREBASE_API_KEY=...
+VITE_FIREBASE_PROJECT_ID=...
+VITE_FIREBASE_APP_ID=...
+```
+
+### Remove:
+```bash
+DATABASE_URL=postgresql://...
+```
+
+---
+
+## Next Steps
+
+1. **Review this plan** - Confirm approach and timeline
+2. **Set up Supabase project** - Create project and obtain credentials
+3. **Begin Phase 1** - Backup current database and install dependencies
+4. **Execute migration phases** - Follow detailed implementation plan
+5. **Test thoroughly** - Validate all functionality works correctly
+6. **Deploy to production** - Update environment variables and deploy
+
+---
+
+## Questions for Clarification
+
+1. **Data Migration Timing**: Should we migrate during off-peak hours?
+2. **Supabase Project**: Do you want me to create the Supabase project or will you provide credentials?
+3. **File Storage**: Are there any existing files that need to be migrated to Supabase Storage?
+4. **RLS Policies**: Do you want to implement Row Level Security for data access control?
+5. **Testing Environment**: Should we test on a staging environment first?
+
+---
+
+**Status**: Ready for implementation pending explicit confirmation to proceed with changes.
