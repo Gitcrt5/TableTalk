@@ -19,10 +19,10 @@ const buttonVariants = cva(
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
         // Bridge-specific variants
-        "primary-green": "bg-bridge-green text-white hover:bg-green-700",
-        "primary-blue": "bg-bridge-blue text-white hover:bg-blue-700",
-        "outline-green": "border border-bridge-green text-bridge-green bg-background hover:bg-bridge-green hover:text-white",
-        "outline-blue": "border border-bridge-blue text-bridge-blue bg-background hover:bg-bridge-blue hover:text-white",
+        "primary-green": "bg-green-600 text-white hover:bg-green-700 shadow-sm border border-green-600",
+        "primary-blue": "bg-blue-600 text-white hover:bg-blue-700 shadow-sm border border-blue-600",
+        "outline-green": "border-2 border-green-600 text-green-700 bg-background hover:bg-green-600 hover:text-white shadow-sm font-medium",
+        "outline-blue": "border-2 border-blue-600 text-blue-700 bg-background hover:bg-blue-600 hover:text-white shadow-sm font-medium",
       },
       size: {
         default: "h-10 px-4 py-2",
