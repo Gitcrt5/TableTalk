@@ -1,19 +1,4 @@
 import {
-  users,
-  games,
-  boards,
-  comments,
-  partnerships,
-  events,
-  userTypes,
-  clubs,
-  favouriteClubs,
-  eventDeals,
-  gameParticipants,
-  eventResults,
-  eventStandings,
-  userPreferences,
-  featureFlags,
   type User,
   type Game,
   type Board,
@@ -43,8 +28,7 @@ import {
   type InsertUserPreference,
   type InsertFeatureFlag,
 } from "@shared/schema";
-import { db } from "./db";
-import { eq, desc, and, or, ilike, count, isNotNull, ne } from "drizzle-orm";
+import { supabase } from "./supabase";
 
 export interface IStorage {
   // Users
@@ -124,592 +108,1208 @@ export interface IStorage {
 
   // Feature Flags
   getFeatureFlags(): Promise<FeatureFlag[]>;
-  getFeatureFlag(flagName: string): Promise<FeatureFlag | undefined>;
-  isFeatureEnabled(flagName: string, userId?: string): Promise<boolean>;
+  getFeatureFlag(name: string): Promise<FeatureFlag | undefined>;
+  isFeatureEnabled(name: string, userId?: string): Promise<boolean>;
 
-  // Admin
-  getAllUsers(search?: string, userTypeFilter?: string, limit?: number): Promise<User[]>;
+  // Admin functions
+  getAllUsers(): Promise<User[]>;
   getUsersCount(): Promise<number>;
   getDistinctClubNames(): Promise<string[]>;
   deactivateUser(id: string): Promise<User>;
   activateUser(id: string): Promise<User>;
 }
 
-export class DatabaseStorage implements IStorage {
+export class SupabaseStorage implements IStorage {
   // Users
   async getUser(id: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.id, id));
-    return user || undefined;
+    const { data, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', id)
+      .single();
+    
+    if (error || !data) return undefined;
+    return this.mapUserFromDb(data);
   }
 
   async getUserByEmail(email: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.email, email));
-    return user || undefined;
+    const { data, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('email', email)
+      .single();
+    
+    if (error || !data) return undefined;
+    return this.mapUserFromDb(data);
   }
 
   async getUserByFirebaseUid(firebaseUid: string): Promise<User | undefined> {
-    const result = await db
-      .select()
-      .from(users)
-      .leftJoin(userTypes, eq(users.userTypeId, userTypes.id))
-      .where(eq(users.firebaseUid, firebaseUid))
-      .limit(1);
-
-    if (result.length === 0) {
-      return undefined;
-    }
-
-    const [row] = result;
-    return {
-      ...row.users,
-      userType: row.user_types
-    } as any;
+    const { data, error } = await supabase
+      .from('users')
+      .select('*, user_types(*)')
+      .eq('firebase_uid', firebaseUid)
+      .single();
+    
+    if (error || !data) return undefined;
+    return this.mapUserFromDb(data);
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const [user] = await db.insert(users).values(insertUser).returning();
-    return user;
+    const userData = this.mapUserToDb(insertUser);
+    const { data, error } = await supabase
+      .from('users')
+      .insert(userData)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return this.mapUserFromDb(data);
   }
 
   async updateUser(id: string, updates: Partial<User>): Promise<User> {
-    const [user] = await db
-      .update(users)
-      .set(updates)
-      .where(eq(users.id, id))
-      .returning();
-    return user;
+    const updateData = this.mapUserToDb(updates);
+    updateData.updated_at = new Date().toISOString();
+    
+    const { data, error } = await supabase
+      .from('users')
+      .update(updateData)
+      .eq('id', id)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return this.mapUserFromDb(data);
   }
 
   // Clubs
   async getClub(id: string): Promise<Club | undefined> {
-    const [club] = await db.select().from(clubs).where(eq(clubs.id, id));
-    return club || undefined;
+    const { data, error } = await supabase
+      .from('clubs')
+      .select('*')
+      .eq('id', id)
+      .single();
+    
+    if (error || !data) return undefined;
+    return this.mapClubFromDb(data);
   }
 
   async getClubs(limit = 20): Promise<Club[]> {
-    return await db
-      .select()
-      .from(clubs)
-      .where(eq(clubs.isActive, true))
-      .orderBy(clubs.name)
+    const { data, error } = await supabase
+      .from('clubs')
+      .select('*')
+      .eq('is_active', true)
+      .order('name')
       .limit(limit);
+    
+    if (error) throw error;
+    return data.map(this.mapClubFromDb);
   }
 
   async searchClubs(query: string): Promise<Club[]> {
-    return await db
-      .select()
-      .from(clubs)
-      .where(
-        and(
-          eq(clubs.isActive, true),
-          or(
-            ilike(clubs.name, `%${query}%`),
-            ilike(clubs.city, `%${query}%`),
-            ilike(clubs.state, `%${query}%`)
-          )
-        )
-      )
-      .orderBy(clubs.name);
+    const { data, error } = await supabase
+      .from('clubs')
+      .select('*')
+      .eq('is_active', true)
+      .or(`name.ilike.%${query}%,city.ilike.%${query}%,state.ilike.%${query}%`)
+      .order('name');
+    
+    if (error) throw error;
+    return data.map(this.mapClubFromDb);
   }
 
   async createClub(insertClub: InsertClub): Promise<Club> {
-    const [club] = await db.insert(clubs).values(insertClub).returning();
-    return club;
+    const clubData = this.mapClubToDb(insertClub);
+    const { data, error } = await supabase
+      .from('clubs')
+      .insert(clubData)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return this.mapClubFromDb(data);
   }
 
   async updateClub(id: string, updates: Partial<Club>): Promise<Club> {
-    const [club] = await db
-      .update(clubs)
-      .set({ ...updates, updatedAt: new Date() })
-      .where(eq(clubs.id, id))
-      .returning();
-    return club;
+    const updateData = this.mapClubToDb(updates);
+    updateData.updated_at = new Date().toISOString();
+    
+    const { data, error } = await supabase
+      .from('clubs')
+      .update(updateData)
+      .eq('id', id)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return this.mapClubFromDb(data);
   }
 
   // Favourite Clubs
   async getFavouriteClubsByUser(userId: string): Promise<Club[]> {
-    const results = await db
-      .select({ club: clubs })
-      .from(favouriteClubs)
-      .innerJoin(clubs, eq(favouriteClubs.clubId, clubs.id))
-      .where(eq(favouriteClubs.userId, userId))
-      .orderBy(clubs.name);
+    const { data, error } = await supabase
+      .from('favourite_clubs')
+      .select('clubs(*)')
+      .eq('user_id', userId)
+      .order('clubs(name)');
     
-    return results.map(r => r.club);
+    if (error) throw error;
+    return data.map(item => this.mapClubFromDb(item.clubs));
   }
 
   async addFavouriteClub(userId: string, clubId: string): Promise<FavouriteClub> {
-    const [favouriteClub] = await db
-      .insert(favouriteClubs)
-      .values({ userId, clubId })
-      .returning();
-    return favouriteClub;
+    const { data, error } = await supabase
+      .from('favourite_clubs')
+      .insert({
+        user_id: userId,
+        club_id: clubId
+      })
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return this.mapFavouriteClubFromDb(data);
   }
 
   async removeFavouriteClub(userId: string, clubId: string): Promise<void> {
-    await db
-      .delete(favouriteClubs)
-      .where(
-        and(
-          eq(favouriteClubs.userId, userId),
-          eq(favouriteClubs.clubId, clubId)
-        )
-      );
+    const { error } = await supabase
+      .from('favourite_clubs')
+      .delete()
+      .eq('user_id', userId)
+      .eq('club_id', clubId);
+    
+    if (error) throw error;
   }
 
   // Games
   async getGame(id: string): Promise<Game | undefined> {
-    const [game] = await db.select().from(games).where(eq(games.id, id));
-    return game || undefined;
+    const { data, error } = await supabase
+      .from('games')
+      .select('*')
+      .eq('id', id)
+      .single();
+    
+    if (error || !data) return undefined;
+    return this.mapGameFromDb(data);
   }
 
   async getGamesByUser(userId: string): Promise<Game[]> {
-    return await db
-      .select()
-      .from(games)
-      .where(or(eq(games.creatorId, userId), eq(games.partnerId, userId)))
-      .orderBy(desc(games.updatedAt));
+    const { data, error } = await supabase
+      .from('games')
+      .select('*')
+      .or(`creator_id.eq.${userId},partner_id.eq.${userId}`)
+      .order('updated_at', { ascending: false });
+    
+    if (error) throw error;
+    return data.map(this.mapGameFromDb);
   }
 
   async getPublicGames(limit = 20): Promise<Game[]> {
-    return await db
-      .select()
-      .from(games)
-      .where(eq(games.visibility, "public"))
-      .orderBy(desc(games.updatedAt))
+    const { data, error } = await supabase
+      .from('games')
+      .select('*')
+      .eq('visibility', 'public')
+      .order('updated_at', { ascending: false })
       .limit(limit);
+    
+    if (error) throw error;
+    return data.map(this.mapGameFromDb);
   }
 
   async searchGames(query: string, userId?: string): Promise<Game[]> {
+    let queryBuilder = supabase
+      .from('games')
+      .select('*');
+    
     if (userId) {
-      return await db
-        .select()
-        .from(games)
-        .where(
-          and(
-            or(eq(games.creatorId, userId), eq(games.partnerId, userId)),
-            ilike(games.name, `%${query}%`)
-          )
-        )
-        .orderBy(desc(games.updatedAt));
+      queryBuilder = queryBuilder
+        .or(`creator_id.eq.${userId},partner_id.eq.${userId}`)
+        .ilike('name', `%${query}%`);
     } else {
-      return await db
-        .select()
-        .from(games)
-        .where(
-          and(
-            eq(games.visibility, "public"),
-            ilike(games.name, `%${query}%`)
-          )
-        )
-        .orderBy(desc(games.updatedAt));
+      queryBuilder = queryBuilder
+        .eq('visibility', 'public')
+        .ilike('name', `%${query}%`);
     }
+    
+    const { data, error } = await queryBuilder
+      .order('updated_at', { ascending: false });
+    
+    if (error) throw error;
+    return data.map(this.mapGameFromDb);
   }
 
   async createGame(insertGame: InsertGame): Promise<Game> {
-    const [game] = await db.insert(games).values(insertGame).returning();
-    return game;
+    const gameData = this.mapGameToDb(insertGame);
+    const { data, error } = await supabase
+      .from('games')
+      .insert(gameData)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return this.mapGameFromDb(data);
   }
 
   async updateGame(id: string, updates: Partial<Game>): Promise<Game> {
-    const [game] = await db
-      .update(games)
-      .set({ ...updates, updatedAt: new Date() })
-      .where(eq(games.id, id))
-      .returning();
-    return game;
+    const updateData = this.mapGameToDb(updates);
+    updateData.updated_at = new Date().toISOString();
+    
+    const { data, error } = await supabase
+      .from('games')
+      .update(updateData)
+      .eq('id', id)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return this.mapGameFromDb(data);
   }
 
   // Boards
   async getBoard(id: string): Promise<Board | undefined> {
-    const [board] = await db.select().from(boards).where(eq(boards.id, id));
-    return board || undefined;
+    const { data, error } = await supabase
+      .from('boards')
+      .select('*')
+      .eq('id', id)
+      .single();
+    
+    if (error || !data) return undefined;
+    return this.mapBoardFromDb(data);
   }
 
   async getBoardsByGame(gameId: string): Promise<Board[]> {
-    return await db
-      .select()
-      .from(boards)
-      .where(eq(boards.gameId, gameId))
-      .orderBy(boards.boardNumber);
+    const { data, error } = await supabase
+      .from('boards')
+      .select('*')
+      .eq('game_id', gameId)
+      .order('board_number');
+    
+    if (error) throw error;
+    return data.map(this.mapBoardFromDb);
   }
 
   async createBoard(insertBoard: InsertBoard): Promise<Board> {
-    const [board] = await db.insert(boards).values(insertBoard).returning();
-    return board;
+    const boardData = this.mapBoardToDb(insertBoard);
+    const { data, error } = await supabase
+      .from('boards')
+      .insert(boardData)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return this.mapBoardFromDb(data);
   }
 
   async updateBoard(id: string, updates: Partial<Board>): Promise<Board> {
-    const [board] = await db
-      .update(boards)
-      .set({ ...updates, updatedAt: new Date() })
-      .where(eq(boards.id, id))
-      .returning();
-    return board;
+    const updateData = this.mapBoardToDb(updates);
+    updateData.updated_at = new Date().toISOString();
+    
+    const { data, error } = await supabase
+      .from('boards')
+      .update(updateData)
+      .eq('id', id)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return this.mapBoardFromDb(data);
   }
 
   // Event Deals
   async getEventDeal(id: string): Promise<EventDeal | undefined> {
-    const [eventDeal] = await db.select().from(eventDeals).where(eq(eventDeals.id, id));
-    return eventDeal || undefined;
+    const { data, error } = await supabase
+      .from('event_deals')
+      .select('*')
+      .eq('id', id)
+      .single();
+    
+    if (error || !data) return undefined;
+    return this.mapEventDealFromDb(data);
   }
 
   async getEventDealsByEvent(eventId: string): Promise<EventDeal[]> {
-    return await db
-      .select()
-      .from(eventDeals)
-      .where(eq(eventDeals.eventId, eventId))
-      .orderBy(eventDeals.boardNumber);
+    const { data, error } = await supabase
+      .from('event_deals')
+      .select('*')
+      .eq('event_id', eventId)
+      .order('board_number');
+    
+    if (error) throw error;
+    return data.map(this.mapEventDealFromDb);
   }
 
   async createEventDeal(insertEventDeal: InsertEventDeal): Promise<EventDeal> {
-    const [eventDeal] = await db.insert(eventDeals).values(insertEventDeal).returning();
-    return eventDeal;
+    const eventDealData = this.mapEventDealToDb(insertEventDeal);
+    const { data, error } = await supabase
+      .from('event_deals')
+      .insert(eventDealData)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return this.mapEventDealFromDb(data);
   }
 
   async updateEventDeal(id: string, updates: Partial<EventDeal>): Promise<EventDeal> {
-    const [eventDeal] = await db
-      .update(eventDeals)
-      .set(updates)
-      .where(eq(eventDeals.id, id))
-      .returning();
-    return eventDeal;
+    const updateData = this.mapEventDealToDb(updates);
+    updateData.updated_at = new Date().toISOString();
+    
+    const { data, error } = await supabase
+      .from('event_deals')
+      .update(updateData)
+      .eq('id', id)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return this.mapEventDealFromDb(data);
   }
 
   // Game Participants
   async getGameParticipants(gameId: string): Promise<GameParticipant[]> {
-    return await db
-      .select()
-      .from(gameParticipants)
-      .where(eq(gameParticipants.gameId, gameId))
-      .orderBy(gameParticipants.createdAt);
+    const { data, error } = await supabase
+      .from('game_participants')
+      .select('*')
+      .eq('game_id', gameId)
+      .order('created_at');
+    
+    if (error) throw error;
+    return data.map(this.mapGameParticipantFromDb);
   }
 
   async createGameParticipant(insertParticipant: InsertGameParticipant): Promise<GameParticipant> {
-    const [participant] = await db.insert(gameParticipants).values(insertParticipant).returning();
-    return participant;
+    const participantData = this.mapGameParticipantToDb(insertParticipant);
+    const { data, error } = await supabase
+      .from('game_participants')
+      .insert(participantData)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return this.mapGameParticipantFromDb(data);
   }
 
   async updateGameParticipant(id: string, updates: Partial<GameParticipant>): Promise<GameParticipant> {
-    const [participant] = await db
-      .update(gameParticipants)
-      .set(updates)
-      .where(eq(gameParticipants.id, id))
-      .returning();
-    return participant;
+    const updateData = this.mapGameParticipantToDb(updates);
+    updateData.updated_at = new Date().toISOString();
+    
+    const { data, error } = await supabase
+      .from('game_participants')
+      .update(updateData)
+      .eq('id', id)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return this.mapGameParticipantFromDb(data);
   }
 
   // Comments
   async getCommentsByBoard(boardId: string): Promise<Comment[]> {
-    return await db
-      .select()
-      .from(comments)
-      .where(eq(comments.boardId, boardId))
-      .orderBy(comments.createdAt);
+    const { data, error } = await supabase
+      .from('comments')
+      .select('*')
+      .eq('board_id', boardId)
+      .order('created_at');
+    
+    if (error) throw error;
+    return data.map(this.mapCommentFromDb);
   }
 
   async getCommentsByEventDeal(eventDealId: string): Promise<Comment[]> {
-    return await db
-      .select()
-      .from(comments)
-      .where(eq(comments.eventDealId, eventDealId))
-      .orderBy(comments.createdAt);
+    const { data, error } = await supabase
+      .from('comments')
+      .select('*')
+      .eq('event_deal_id', eventDealId)
+      .order('created_at');
+    
+    if (error) throw error;
+    return data.map(this.mapCommentFromDb);
   }
 
   async createComment(insertComment: InsertComment): Promise<Comment> {
-    const [comment] = await db.insert(comments).values(insertComment).returning();
-    return comment;
+    const commentData = this.mapCommentToDb(insertComment);
+    const { data, error } = await supabase
+      .from('comments')
+      .insert(commentData)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return this.mapCommentFromDb(data);
   }
 
   async updateComment(id: string, updates: Partial<Comment>): Promise<Comment> {
-    const [comment] = await db
-      .update(comments)
-      .set({ ...updates, updatedAt: new Date() })
-      .where(eq(comments.id, id))
-      .returning();
-    return comment;
+    const updateData = this.mapCommentToDb(updates);
+    updateData.updated_at = new Date().toISOString();
+    
+    const { data, error } = await supabase
+      .from('comments')
+      .update(updateData)
+      .eq('id', id)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return this.mapCommentFromDb(data);
   }
 
   async deleteComment(id: string): Promise<void> {
-    await db.delete(comments).where(eq(comments.id, id));
+    const { error } = await supabase
+      .from('comments')
+      .delete()
+      .eq('id', id);
+    
+    if (error) throw error;
   }
 
   // Partnerships
   async getPartnershipsByUser(userId: string): Promise<Partnership[]> {
-    return await db
-      .select()
-      .from(partnerships)
-      .where(
-        and(
-          or(eq(partnerships.player1Id, userId), eq(partnerships.player2Id, userId)),
-          eq(partnerships.status, "active")
-        )
-      )
-      .orderBy(desc(partnerships.createdAt));
+    const { data, error } = await supabase
+      .from('partnerships')
+      .select('*')
+      .or(`player1_id.eq.${userId},player2_id.eq.${userId}`)
+      .eq('status', 'active')
+      .order('created_at', { ascending: false });
+    
+    if (error) throw error;
+    return data.map(this.mapPartnershipFromDb);
   }
 
   async createPartnership(insertPartnership: InsertPartnership): Promise<Partnership> {
-    const [partnership] = await db.insert(partnerships).values(insertPartnership).returning();
-    return partnership;
+    const partnershipData = this.mapPartnershipToDb(insertPartnership);
+    const { data, error } = await supabase
+      .from('partnerships')
+      .insert(partnershipData)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return this.mapPartnershipFromDb(data);
   }
 
   async updatePartnership(id: string, updates: Partial<Partnership>): Promise<Partnership> {
-    const [partnership] = await db
-      .update(partnerships)
-      .set(updates)
-      .where(eq(partnerships.id, id))
-      .returning();
-    return partnership;
+    const updateData = this.mapPartnershipToDb(updates);
+    updateData.updated_at = new Date().toISOString();
+    
+    const { data, error } = await supabase
+      .from('partnerships')
+      .update(updateData)
+      .eq('id', id)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return this.mapPartnershipFromDb(data);
   }
 
   // Events
   async getEvent(id: string): Promise<Event | undefined> {
-    const [event] = await db.select().from(events).where(eq(events.id, id));
-    return event || undefined;
+    const { data, error } = await supabase
+      .from('events')
+      .select('*')
+      .eq('id', id)
+      .single();
+    
+    if (error || !data) return undefined;
+    return this.mapEventFromDb(data);
   }
 
   async getEvents(limit = 20): Promise<Event[]> {
-    return await db
-      .select()
-      .from(events)
-      .orderBy(desc(events.eventDate))
+    const { data, error } = await supabase
+      .from('events')
+      .select('*')
+      .order('event_date', { ascending: false })
       .limit(limit);
-  }
-
-  async searchEvents(query: string, clubName?: string): Promise<Event[]> {
-    if (clubName) {
-      return await db
-        .select()
-        .from(events)
-        .where(
-          and(
-            ilike(events.name, `%${query}%`),
-            ilike(events.clubName, `%${clubName}%`)
-          )
-        )
-        .orderBy(desc(events.eventDate));
-    } else {
-      return await db
-        .select()
-        .from(events)
-        .where(ilike(events.name, `%${query}%`))
-        .orderBy(desc(events.eventDate));
-    }
-  }
-
-  async createEvent(insertEvent: InsertEvent): Promise<Event> {
-    const [event] = await db.insert(events).values(insertEvent).returning();
-    return event;
-  }
-
-  async updateEvent(id: string, updates: Partial<Event>): Promise<Event> {
-    const [event] = await db
-      .update(events)
-      .set(updates)
-      .where(eq(events.id, id))
-      .returning();
-    return event;
+    
+    if (error) throw error;
+    return data.map(this.mapEventFromDb);
   }
 
   async getEventsByClub(clubId: string): Promise<Event[]> {
-    return await db
+    const { data, error } = await supabase
+      .from('events')
+      .select('*')
+      .eq('club_id', clubId)
+      .order('event_date', { ascending: false });
+    
+    if (error) throw error;
+    return data.map(this.mapEventFromDb);
+  }
+
+  async searchEvents(query: string, clubName?: string): Promise<Event[]> {
+    let queryBuilder = supabase
+      .from('events')
+      .select('*');
+    
+    if (clubName) {
+      queryBuilder = queryBuilder
+        .ilike('name', `%${query}%`)
+        .ilike('club_name', `%${clubName}%`);
+    } else {
+      queryBuilder = queryBuilder
+        .ilike('name', `%${query}%`);
+    }
+    
+    const { data, error } = await queryBuilder
+      .order('event_date', { ascending: false });
+    
+    if (error) throw error;
+    return data.map(this.mapEventFromDb);
+  }
+
+  async createEvent(insertEvent: InsertEvent): Promise<Event> {
+    const eventData = this.mapEventToDb(insertEvent);
+    const { data, error } = await supabase
+      .from('events')
+      .insert(eventData)
       .select()
-      .from(events)
-      .where(eq(events.clubId, clubId))
-      .orderBy(desc(events.eventDate));
+      .single();
+    
+    if (error) throw error;
+    return this.mapEventFromDb(data);
+  }
+
+  async updateEvent(id: string, updates: Partial<Event>): Promise<Event> {
+    const updateData = this.mapEventToDb(updates);
+    updateData.updated_at = new Date().toISOString();
+    
+    const { data, error } = await supabase
+      .from('events')
+      .update(updateData)
+      .eq('id', id)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return this.mapEventFromDb(data);
   }
 
   // Event Results & Standings
   async getEventResults(eventId: string): Promise<EventResult[]> {
-    return await db
-      .select()
-      .from(eventResults)
-      .where(eq(eventResults.eventId, eventId))
-      .orderBy(eventResults.boardNumber);
+    const { data, error } = await supabase
+      .from('event_results')
+      .select('*')
+      .eq('event_id', eventId)
+      .order('rank');
+    
+    if (error) throw error;
+    return data.map(this.mapEventResultFromDb);
   }
 
   async createEventResult(insertResult: InsertEventResult): Promise<EventResult> {
-    const [result] = await db.insert(eventResults).values(insertResult).returning();
-    return result;
+    const resultData = this.mapEventResultToDb(insertResult);
+    const { data, error } = await supabase
+      .from('event_results')
+      .insert(resultData)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return this.mapEventResultFromDb(data);
   }
 
   async getEventStandings(eventId: string): Promise<EventStanding[]> {
-    return await db
-      .select()
-      .from(eventStandings)
-      .where(eq(eventStandings.eventId, eventId))
-      .orderBy(eventStandings.position);
+    const { data, error } = await supabase
+      .from('event_standings')
+      .select('*')
+      .eq('event_id', eventId)
+      .order('rank');
+    
+    if (error) throw error;
+    return data.map(this.mapEventStandingFromDb);
   }
 
   async updateEventStandings(eventId: string, standings: InsertEventStanding[]): Promise<EventStanding[]> {
     // Delete existing standings for this event
-    await db.delete(eventStandings).where(eq(eventStandings.eventId, eventId));
+    await supabase
+      .from('event_standings')
+      .delete()
+      .eq('event_id', eventId);
     
     // Insert new standings
-    if (standings.length > 0) {
-      return await db.insert(eventStandings).values(standings).returning();
-    }
-    return [];
+    const standingsData = standings.map(this.mapEventStandingToDb);
+    const { data, error } = await supabase
+      .from('event_standings')
+      .insert(standingsData)
+      .select();
+    
+    if (error) throw error;
+    return data.map(this.mapEventStandingFromDb);
   }
 
   // User Preferences
   async getUserPreferences(userId: string): Promise<UserPreference[]> {
-    return await db
-      .select()
-      .from(userPreferences)
-      .where(eq(userPreferences.userId, userId))
-      .orderBy(userPreferences.preferenceKey);
+    const { data, error } = await supabase
+      .from('user_preferences')
+      .select('*')
+      .eq('user_id', userId);
+    
+    if (error) throw error;
+    return data.map(this.mapUserPreferenceFromDb);
   }
 
   async getUserPreference(userId: string, key: string): Promise<UserPreference | undefined> {
-    const [preference] = await db
-      .select()
-      .from(userPreferences)
-      .where(
-        and(
-          eq(userPreferences.userId, userId),
-          eq(userPreferences.preferenceKey, key)
-        )
-      );
-    return preference || undefined;
+    const { data, error } = await supabase
+      .from('user_preferences')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('key', key)
+      .single();
+    
+    if (error || !data) return undefined;
+    return this.mapUserPreferenceFromDb(data);
   }
 
   async setUserPreference(userId: string, key: string, value: any): Promise<UserPreference> {
-    // Try to update existing preference first
-    const [existing] = await db
-      .update(userPreferences)
-      .set({
-        preferenceValue: value,
-        updatedAt: new Date()
-      })
-      .where(
-        and(
-          eq(userPreferences.userId, userId),
-          eq(userPreferences.preferenceKey, key)
-        )
-      )
-      .returning();
-
-    if (existing) {
-      return existing;
-    }
-
-    // If no existing preference, create new one
-    const [preference] = await db
-      .insert(userPreferences)
-      .values({
-        userId,
-        preferenceKey: key,
-        preferenceValue: value
-      })
-      .returning();
-    return preference;
+    const preferenceData = {
+      user_id: userId,
+      key,
+      value,
+      updated_at: new Date().toISOString()
+    };
+    
+    const { data, error } = await supabase
+      .from('user_preferences')
+      .upsert(preferenceData, { onConflict: 'user_id,key' })
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return this.mapUserPreferenceFromDb(data);
   }
 
   // Feature Flags
   async getFeatureFlags(): Promise<FeatureFlag[]> {
-    return await db
-      .select()
-      .from(featureFlags)
-      .orderBy(featureFlags.flagName);
-  }
-
-  async getFeatureFlag(flagName: string): Promise<FeatureFlag | undefined> {
-    const [flag] = await db
-      .select()
-      .from(featureFlags)
-      .where(eq(featureFlags.flagName, flagName));
-    return flag || undefined;
-  }
-
-  async isFeatureEnabled(flagName: string, userId?: string): Promise<boolean> {
-    const flag = await this.getFeatureFlag(flagName);
-    if (!flag || !flag.isEnabled) {
-      return false;
-    }
-
-    // If no user targeting, it's enabled for everyone
-    if (!flag.targetUsers?.length && !flag.targetUserTypes?.length) {
-      return true;
-    }
-
-    // Check user-specific targeting
-    if (userId && flag.targetUsers?.includes(userId)) {
-      return true;
-    }
-
-    // For user type targeting, would need to check user's type
-    // This could be enhanced to check user types if needed
-    return false;
-  }
-
-  // Admin methods
-  async getAllUsers(search?: string, userTypeFilter?: string, limit = 50): Promise<User[]> {
-    const conditions = [];
+    const { data, error } = await supabase
+      .from('feature_flags')
+      .select('*')
+      .order('name');
     
-    if (search) {
-      conditions.push(
-        or(
-          ilike(users.email, `%${search}%`),
-          ilike(users.displayName, `%${search}%`),
-          ilike(users.firstName, `%${search}%`),
-          ilike(users.lastName, `%${search}%`)
-        )
-      );
+    if (error) throw error;
+    return data.map(this.mapFeatureFlagFromDb);
+  }
+
+  async getFeatureFlag(name: string): Promise<FeatureFlag | undefined> {
+    const { data, error } = await supabase
+      .from('feature_flags')
+      .select('*')
+      .eq('name', name)
+      .single();
+    
+    if (error || !data) return undefined;
+    return this.mapFeatureFlagFromDb(data);
+  }
+
+  async isFeatureEnabled(name: string, userId?: string): Promise<boolean> {
+    const flag = await this.getFeatureFlag(name);
+    if (!flag) return false;
+    
+    if (!flag.isEnabled) return false;
+    
+    // Simple rollout percentage logic
+    if (flag.rolloutPercentage === 100) return true;
+    if (flag.rolloutPercentage === 0) return false;
+    
+    // Use userId for consistent rollout if provided
+    if (userId) {
+      const hash = userId.split('').reduce((a, b) => {
+        a = ((a << 5) - a) + b.charCodeAt(0);
+        return a & a;
+      }, 0);
+      return Math.abs(hash) % 100 < flag.rolloutPercentage;
     }
     
-    if (userTypeFilter) {
-      conditions.push(eq(users.userTypeId, userTypeFilter));
-    }
+    return Math.random() * 100 < flag.rolloutPercentage;
+  }
 
-    if (conditions.length > 0) {
-      return await db
-        .select()
-        .from(users)
-        .where(and(...conditions))
-        .orderBy(desc(users.createdAt))
-        .limit(limit);
-    } else {
-      return await db
-        .select()
-        .from(users)
-        .orderBy(desc(users.createdAt))
-        .limit(limit);
-    }
+  // Admin functions
+  async getAllUsers(): Promise<User[]> {
+    const { data, error } = await supabase
+      .from('users')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
+    if (error) throw error;
+    return data.map(this.mapUserFromDb);
   }
 
   async getUsersCount(): Promise<number> {
-    const [result] = await db.select({ count: count() }).from(users);
-    return result.count;
+    const { count, error } = await supabase
+      .from('users')
+      .select('*', { count: 'exact', head: true });
+    
+    if (error) throw error;
+    return count || 0;
   }
 
   async getDistinctClubNames(): Promise<string[]> {
-    const results = await db
-      .selectDistinct({ clubName: events.clubName })
-      .from(events)
-      .where(and(isNotNull(events.clubName), ne(events.clubName, '')))
-      .orderBy(events.clubName);
+    const { data, error } = await supabase
+      .from('clubs')
+      .select('name')
+      .eq('is_active', true)
+      .order('name');
     
-    return results.map(r => r.clubName).filter((name): name is string => name !== null);
+    if (error) throw error;
+    return data.map(club => club.name);
   }
 
   async deactivateUser(id: string): Promise<User> {
-    const [user] = await db
-      .update(users)
-      .set({ isActive: false, updatedAt: new Date() })
-      .where(eq(users.id, id))
-      .returning();
-    return user;
+    return this.updateUser(id, { isActive: false });
   }
 
   async activateUser(id: string): Promise<User> {
-    const [user] = await db
-      .update(users)
-      .set({ isActive: true, updatedAt: new Date() })
-      .where(eq(users.id, id))
-      .returning();
-    return user;
+    return this.updateUser(id, { isActive: true });
+  }
+
+  // Helper methods to map between camelCase and snake_case
+  private mapUserFromDb(data: any): User {
+    return {
+      id: data.id,
+      email: data.email,
+      firebaseUid: data.firebase_uid,
+      firstName: data.first_name,
+      lastName: data.last_name,
+      displayName: data.display_name,
+      homeClubId: data.home_club_id,
+      userTypeId: data.user_type_id,
+      isActive: data.is_active,
+      lastLogin: data.last_login,
+      preferences: data.preferences,
+      createdAt: data.created_at,
+      updatedAt: data.updated_at,
+    };
+  }
+
+  private mapUserToDb(data: Partial<User | InsertUser>): any {
+    const result: any = {};
+    if (data.email !== undefined) result.email = data.email;
+    if (data.firebaseUid !== undefined) result.firebase_uid = data.firebaseUid;
+    if (data.firstName !== undefined) result.first_name = data.firstName;
+    if (data.lastName !== undefined) result.last_name = data.lastName;
+    if (data.displayName !== undefined) result.display_name = data.displayName;
+    if (data.homeClubId !== undefined) result.home_club_id = data.homeClubId;
+    if (data.userTypeId !== undefined) result.user_type_id = data.userTypeId;
+    if (data.isActive !== undefined) result.is_active = data.isActive;
+    if (data.lastLogin !== undefined) result.last_login = data.lastLogin;
+    if (data.preferences !== undefined) result.preferences = data.preferences;
+    return result;
+  }
+
+  private mapClubFromDb(data: any): Club {
+    return {
+      id: data.id,
+      name: data.name,
+      description: data.description,
+      country: data.country,
+      state: data.state,
+      city: data.city,
+      website: data.website,
+      email: data.email,
+      phone: data.phone,
+      address: data.address,
+      isActive: data.is_active,
+      createdAt: data.created_at,
+      updatedAt: data.updated_at,
+    };
+  }
+
+  private mapClubToDb(data: Partial<Club | InsertClub>): any {
+    const result: any = {};
+    if (data.name !== undefined) result.name = data.name;
+    if (data.description !== undefined) result.description = data.description;
+    if (data.country !== undefined) result.country = data.country;
+    if (data.state !== undefined) result.state = data.state;
+    if (data.city !== undefined) result.city = data.city;
+    if (data.website !== undefined) result.website = data.website;
+    if (data.email !== undefined) result.email = data.email;
+    if (data.phone !== undefined) result.phone = data.phone;
+    if (data.address !== undefined) result.address = data.address;
+    if (data.isActive !== undefined) result.is_active = data.isActive;
+    return result;
+  }
+
+  private mapGameFromDb(data: any): Game {
+    return {
+      id: data.id,
+      name: data.name,
+      description: data.description,
+      creatorId: data.creator_id,
+      partnerId: data.partner_id,
+      ownerId: data.owner_id,
+      visibility: data.visibility,
+      eventId: data.event_id,
+      gameDate: data.game_date,
+      clubName: data.club_name,
+      pbnData: data.pbn_data,
+      totalBoards: data.total_boards,
+      type: data.type,
+      isPublished: data.is_published,
+      publishedAt: data.published_at,
+      sessionNotes: data.session_notes,
+      completedBoards: data.completed_boards,
+      pairNumbers: data.pair_numbers,
+      sessionMetadata: data.session_metadata,
+      createdAt: data.created_at,
+      updatedAt: data.updated_at,
+    };
+  }
+
+  private mapGameToDb(data: Partial<Game | InsertGame>): any {
+    const result: any = {};
+    if (data.name !== undefined) result.name = data.name;
+    if (data.description !== undefined) result.description = data.description;
+    if (data.creatorId !== undefined) result.creator_id = data.creatorId;
+    if (data.partnerId !== undefined) result.partner_id = data.partnerId;
+    if (data.ownerId !== undefined) result.owner_id = data.ownerId;
+    if (data.visibility !== undefined) result.visibility = data.visibility;
+    if (data.eventId !== undefined) result.event_id = data.eventId;
+    if (data.gameDate !== undefined) result.game_date = data.gameDate;
+    if (data.clubName !== undefined) result.club_name = data.clubName;
+    if (data.pbnData !== undefined) result.pbn_data = data.pbnData;
+    if (data.totalBoards !== undefined) result.total_boards = data.totalBoards;
+    if (data.type !== undefined) result.type = data.type;
+    if (data.isPublished !== undefined) result.is_published = data.isPublished;
+    if (data.publishedAt !== undefined) result.published_at = data.publishedAt;
+    if (data.sessionNotes !== undefined) result.session_notes = data.sessionNotes;
+    if (data.completedBoards !== undefined) result.completed_boards = data.completedBoards;
+    if (data.pairNumbers !== undefined) result.pair_numbers = data.pairNumbers;
+    if (data.sessionMetadata !== undefined) result.session_metadata = data.sessionMetadata;
+    return result;
+  }
+
+  private mapBoardFromDb(data: any): Board {
+    return {
+      id: data.id,
+      gameId: data.game_id,
+      boardNumber: data.board_number,
+      eventDealId: data.event_deal_id,
+      dealer: data.dealer,
+      vulnerability: data.vulnerability,
+      hands: data.hands,
+      northHand: data.north_hand,
+      eastHand: data.east_hand,
+      southHand: data.south_hand,
+      westHand: data.west_hand,
+      optimumInfo: data.optimum_info,
+      biddingSequence: data.bidding_sequence,
+      bidding: data.bidding,
+      contract: data.contract,
+      declarer: data.declarer,
+      result: data.result,
+      tricksTaken: data.tricks_taken,
+      leadCard: data.lead_card,
+      notes: data.notes,
+      analysisNotes: data.analysis_notes,
+      score: data.score,
+      boardMetadata: data.board_metadata,
+      createdAt: data.created_at,
+      updatedAt: data.updated_at,
+    };
+  }
+
+  private mapBoardToDb(data: Partial<Board | InsertBoard>): any {
+    const result: any = {};
+    if (data.gameId !== undefined) result.game_id = data.gameId;
+    if (data.boardNumber !== undefined) result.board_number = data.boardNumber;
+    if (data.eventDealId !== undefined) result.event_deal_id = data.eventDealId;
+    if (data.dealer !== undefined) result.dealer = data.dealer;
+    if (data.vulnerability !== undefined) result.vulnerability = data.vulnerability;
+    if (data.hands !== undefined) result.hands = data.hands;
+    if (data.northHand !== undefined) result.north_hand = data.northHand;
+    if (data.eastHand !== undefined) result.east_hand = data.eastHand;
+    if (data.southHand !== undefined) result.south_hand = data.southHand;
+    if (data.westHand !== undefined) result.west_hand = data.westHand;
+    if (data.optimumInfo !== undefined) result.optimum_info = data.optimumInfo;
+    if (data.biddingSequence !== undefined) result.bidding_sequence = data.biddingSequence;
+    if (data.bidding !== undefined) result.bidding = data.bidding;
+    if (data.contract !== undefined) result.contract = data.contract;
+    if (data.declarer !== undefined) result.declarer = data.declarer;
+    if (data.result !== undefined) result.result = data.result;
+    if (data.tricksTaken !== undefined) result.tricks_taken = data.tricksTaken;
+    if (data.leadCard !== undefined) result.lead_card = data.leadCard;
+    if (data.notes !== undefined) result.notes = data.notes;
+    if (data.analysisNotes !== undefined) result.analysis_notes = data.analysisNotes;
+    if (data.score !== undefined) result.score = data.score;
+    if (data.boardMetadata !== undefined) result.board_metadata = data.boardMetadata;
+    return result;
+  }
+
+  // Add remaining mapping methods for other entities
+  private mapEventFromDb(data: any): Event {
+    return {
+      id: data.id,
+      name: data.name,
+      description: data.description,
+      eventDate: data.event_date,
+      startTime: data.start_time,
+      endTime: data.end_time,
+      clubId: data.club_id,
+      clubName: data.club_name,
+      organizerId: data.organizer_id,
+      status: data.status,
+      kind: data.kind,
+      registrationType: data.registration_type,
+      maxParticipants: data.max_participants,
+      entryFee: data.entry_fee,
+      currency: data.currency,
+      location: data.location,
+      address: data.address,
+      website: data.website,
+      contactEmail: data.contact_email,
+      contactPhone: data.contact_phone,
+      specialInstructions: data.special_instructions,
+      isPublished: data.is_published,
+      publishedAt: data.published_at,
+      registrationDeadline: data.registration_deadline,
+      cancellationDeadline: data.cancellation_deadline,
+      refundPolicy: data.refund_policy,
+      totalBoards: data.total_boards,
+      scoringMethod: data.scoring_method,
+      movementType: data.movement_type,
+      sessionMetadata: data.session_metadata,
+      createdAt: data.created_at,
+      updatedAt: data.updated_at,
+    };
+  }
+
+  private mapEventToDb(data: Partial<Event | InsertEvent>): any {
+    const result: any = {};
+    if (data.name !== undefined) result.name = data.name;
+    if (data.description !== undefined) result.description = data.description;
+    if (data.eventDate !== undefined) result.event_date = data.eventDate;
+    if (data.startTime !== undefined) result.start_time = data.startTime;
+    if (data.endTime !== undefined) result.end_time = data.endTime;
+    if (data.clubId !== undefined) result.club_id = data.clubId;
+    if (data.clubName !== undefined) result.club_name = data.clubName;
+    if (data.organizerId !== undefined) result.organizer_id = data.organizerId;
+    if (data.status !== undefined) result.status = data.status;
+    if (data.kind !== undefined) result.kind = data.kind;
+    if (data.registrationType !== undefined) result.registration_type = data.registrationType;
+    if (data.maxParticipants !== undefined) result.max_participants = data.maxParticipants;
+    if (data.entryFee !== undefined) result.entry_fee = data.entryFee;
+    if (data.currency !== undefined) result.currency = data.currency;
+    if (data.location !== undefined) result.location = data.location;
+    if (data.address !== undefined) result.address = data.address;
+    if (data.website !== undefined) result.website = data.website;
+    if (data.contactEmail !== undefined) result.contact_email = data.contactEmail;
+    if (data.contactPhone !== undefined) result.contact_phone = data.contactPhone;
+    if (data.specialInstructions !== undefined) result.special_instructions = data.specialInstructions;
+    if (data.isPublished !== undefined) result.is_published = data.isPublished;
+    if (data.publishedAt !== undefined) result.published_at = data.publishedAt;
+    if (data.registrationDeadline !== undefined) result.registration_deadline = data.registrationDeadline;
+    if (data.cancellationDeadline !== undefined) result.cancellation_deadline = data.cancellationDeadline;
+    if (data.refundPolicy !== undefined) result.refund_policy = data.refundPolicy;
+    if (data.totalBoards !== undefined) result.total_boards = data.totalBoards;
+    if (data.scoringMethod !== undefined) result.scoring_method = data.scoringMethod;
+    if (data.movementType !== undefined) result.movement_type = data.movementType;
+    if (data.sessionMetadata !== undefined) result.session_metadata = data.sessionMetadata;
+    return result;
+  }
+
+  private mapEventDealFromDb(data: any): EventDeal {
+    return {
+      id: data.id,
+      eventId: data.event_id,
+      boardNumber: data.board_number,
+      dealer: data.dealer,
+      vulnerability: data.vulnerability,
+      northHand: data.north_hand,
+      eastHand: data.east_hand,
+      southHand: data.south_hand,
+      westHand: data.west_hand,
+      optimumInfo: data.optimum_info,
+      analysisNotes: data.analysis_notes,
+      difficultyRating: data.difficulty_rating,
+      createdAt: data.created_at,
+      updatedAt: data.updated_at,
+    };
+  }
+
+  private mapEventDealToDb(data: Partial<EventDeal | InsertEventDeal>): any {
+    const result: any = {};
+    if (data.eventId !== undefined) result.event_id = data.eventId;
+    if (data.boardNumber !== undefined) result.board_number = data.boardNumber;
+    if (data.dealer !== undefined) result.dealer = data.dealer;
+    if (data.vulnerability !== undefined) result.vulnerability = data.vulnerability;
+    if (data.northHand !== undefined) result.north_hand = data.northHand;
+    if (data.eastHand !== undefined) result.east_hand = data.eastHand;
+    if (data.southHand !== undefined) result.south_hand = data.southHand;
+    if (data.westHand !== undefined) result.west_hand = data.westHand;
+    if (data.optimumInfo !== undefined) result.optimum_info = data.optimumInfo;
+    if (data.analysisNotes !== undefined) result.analysis_notes = data.analysisNotes;
+    if (data.difficultyRating !== undefined) result.difficulty_rating = data.difficultyRating;
+    return result;
+  }
+
+  private mapGameParticipantFromDb(data: any): GameParticipant {
+    return {
+      id: data.id,
+      gameId: data.game_id,
+      userId: data.user_id,
+      role: data.role,
+      pairNumber: data.pair_number,
+      seatPreference: data.seat_preference,
+      notes: data.notes,
+      createdAt: data.created_at,
+      updatedAt: data.updated_at,
+    };
+  }
+
+  private mapGameParticipantToDb(data: Partial<GameParticipant | InsertGameParticipant>): any {
+    const result: any = {};
+    if (data.gameId !== undefined) result.game_id = data.gameId;
+    if (data.userId !== undefined) result.user_id = data.userId;
+    if (data.role !== undefined) result.role = data.role;
+    if (data.pairNumber !== undefined) result.pair_number = data.pairNumber;
+    if (data.seatPreference !== undefined) result.seat_preference = data.seatPreference;
+    if (data.notes !== undefined) result.notes = data.notes;
+    return result;
+  }
+
+  private mapCommentFromDb(data: any): Comment {
+    return {
+      id: data.id,
+      userId: data.user_id,
+      boardId: data.board_id,
+      eventDealId: data.event_deal_id,
+      parentId: data.parent_id,
+      content: data.content,
+      type: data.type,
+      isDeleted: data.is_deleted,
+      createdAt: data.created_at,
+      updatedAt: data.updated_at,
+    };
+  }
+
+  private mapCommentToDb(data: Partial<Comment | InsertComment>): any {
+    const result: any = {};
+    if (data.userId !== undefined) result.user_id = data.userId;
+    if (data.boardId !== undefined) result.board_id = data.boardId;
+    if (data.eventDealId !== undefined) result.event_deal_id = data.eventDealId;
+    if (data.parentId !== undefined) result.parent_id = data.parentId;
+    if (data.content !== undefined) result.content = data.content;
+    if (data.type !== undefined) result.type = data.type;
+    if (data.isDeleted !== undefined) result.is_deleted = data.isDeleted;
+    return result;
+  }
+
+  private mapPartnershipFromDb(data: any): Partnership {
+    return {
+      id: data.id,
+      player1Id: data.player1_id,
+      player2Id: data.player2_id,
+      partnershipName: data.partnership_name,
+      status: data.status,
+      startDate: data.start_date,
+      endDate: data.end_date,
+      notes: data.notes,
+      createdAt: data.created_at,
+      updatedAt: data.updated_at,
+    };
+  }
+
+  private mapPartnershipToDb(data: Partial<Partnership | InsertPartnership>): any {
+    const result: any = {};
+    if (data.player1Id !== undefined) result.player1_id = data.player1Id;
+    if (data.player2Id !== undefined) result.player2_id = data.player2Id;
+    if (data.partnershipName !== undefined) result.partnership_name = data.partnershipName;
+    if (data.status !== undefined) result.status = data.status;
+    if (data.startDate !== undefined) result.start_date = data.startDate;
+    if (data.endDate !== undefined) result.end_date = data.endDate;
+    if (data.notes !== undefined) result.notes = data.notes;
+    return result;
+  }
+
+  private mapFavouriteClubFromDb(data: any): FavouriteClub {
+    return {
+      userId: data.user_id,
+      clubId: data.club_id,
+      createdAt: data.created_at,
+    };
+  }
+
+  private mapEventResultFromDb(data: any): EventResult {
+    return {
+      id: data.id,
+      eventId: data.event_id,
+      userId: data.user_id,
+      pairNumber: data.pair_number,
+      side: data.side,
+      totalScore: data.total_score,
+      percentage: data.percentage,
+      rank: data.rank,
+      boardsPlayed: data.boards_played,
+      createdAt: data.created_at,
+      updatedAt: data.updated_at,
+    };
+  }
+
+  private mapEventResultToDb(data: Partial<EventResult | InsertEventResult>): any {
+    const result: any = {};
+    if (data.eventId !== undefined) result.event_id = data.eventId;
+    if (data.userId !== undefined) result.user_id = data.userId;
+    if (data.pairNumber !== undefined) result.pair_number = data.pairNumber;
+    if (data.side !== undefined) result.side = data.side;
+    if (data.totalScore !== undefined) result.total_score = data.totalScore;
+    if (data.percentage !== undefined) result.percentage = data.percentage;
+    if (data.rank !== undefined) result.rank = data.rank;
+    if (data.boardsPlayed !== undefined) result.boards_played = data.boardsPlayed;
+    return result;
+  }
+
+  private mapEventStandingFromDb(data: any): EventStanding {
+    return {
+      id: data.id,
+      eventId: data.event_id,
+      pairNumber: data.pair_number,
+      player1Id: data.player1_id,
+      player2Id: data.player2_id,
+      totalScore: data.total_score,
+      percentage: data.percentage,
+      rank: data.rank,
+      boardsPlayed: data.boards_played,
+      createdAt: data.created_at,
+      updatedAt: data.updated_at,
+    };
+  }
+
+  private mapEventStandingToDb(data: Partial<EventStanding | InsertEventStanding>): any {
+    const result: any = {};
+    if (data.eventId !== undefined) result.event_id = data.eventId;
+    if (data.pairNumber !== undefined) result.pair_number = data.pairNumber;
+    if (data.player1Id !== undefined) result.player1_id = data.player1Id;
+    if (data.player2Id !== undefined) result.player2_id = data.player2Id;
+    if (data.totalScore !== undefined) result.total_score = data.totalScore;
+    if (data.percentage !== undefined) result.percentage = data.percentage;
+    if (data.rank !== undefined) result.rank = data.rank;
+    if (data.boardsPlayed !== undefined) result.boards_played = data.boardsPlayed;
+    return result;
+  }
+
+  private mapUserPreferenceFromDb(data: any): UserPreference {
+    return {
+      id: data.id,
+      userId: data.user_id,
+      key: data.key,
+      value: data.value,
+      createdAt: data.created_at,
+      updatedAt: data.updated_at,
+    };
+  }
+
+  private mapFeatureFlagFromDb(data: any): FeatureFlag {
+    return {
+      id: data.id,
+      name: data.name,
+      description: data.description,
+      isEnabled: data.is_enabled,
+      conditions: data.conditions,
+      rolloutPercentage: data.rollout_percentage,
+      createdAt: data.created_at,
+      updatedAt: data.updated_at,
+    };
   }
 }
 
-export const storage = new DatabaseStorage();
+// Export storage instance
+export const storage: IStorage = new SupabaseStorage();
