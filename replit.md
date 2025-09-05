@@ -90,6 +90,8 @@ Preferred communication style: Simple, everyday language.
 
 ## Testing
 
+** Testing strategy is outlined in "TESTING_STRATEGY.md". This file should be updated as needed, and followed for testing purposes. **
+
 - Tests MUST cover the functionality being implemented.
 - NEVER ignore the output of the system or the tests - Logs and messages often contain CRITICAL information.
 - TEST OUTPUT MUST BE PRISTINE TO PASS
