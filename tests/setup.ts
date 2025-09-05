@@ -14,6 +14,9 @@ beforeAll(() => {
   process.env.FIREBASE_PROJECT_ID = 'test-project'
   process.env.SUPABASE_URL = 'https://test.supabase.co'
   process.env.SUPABASE_ANON_KEY = 'test-anon-key'
+  
+  // Mock global fetch to prevent actual HTTP requests
+  global.fetch = vi.fn()
 })
 
 // Mock Firebase Admin SDK

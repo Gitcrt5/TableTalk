@@ -9,7 +9,7 @@ export default defineConfig({
     environment: 'happy-dom',
     setupFiles: ['./tests/setup.ts'],
     include: ['**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-    exclude: ['node_modules', 'dist', '.git', '.cache'],
+    exclude: ['node_modules', 'dist', '.git', '.cache', 'tests/e2e/**/*'],
     coverage: {
       reporter: ['text', 'json', 'html'],
       exclude: [
