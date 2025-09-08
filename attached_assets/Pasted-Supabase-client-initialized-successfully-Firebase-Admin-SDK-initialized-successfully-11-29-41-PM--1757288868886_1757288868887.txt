@@ -1,0 +1,53 @@
+Supabase client initialized successfully
+Firebase Admin SDK initialized successfully
+11:29:41 PM [express] serving on port 5000
+Browserslist: browsers data (caniuse-lite) is 11 months old. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+11:29:52 PM [express] GET /api/auth/me 200 in 1243ms :: {"id":"ce5b6fcb-6389-48a4-9beb-d9317340822f",…
+11:29:53 PM [express] GET /api/games 200 in 316ms :: [{"id":"d7f57fc0-254d-4032-a5fe-f52a31f4fa58","n…
+11:30:42 PM [express] GET /api/auth/me 200 in 147ms :: {"id":"ce5b6fcb-6389-48a4-9beb-d9317340822f","…
+11:30:42 PM [express] GET /api/games 200 in 212ms :: [{"id":"d7f57fc0-254d-4032-a5fe-f52a31f4fa58","n…
+11:45:10 PM [express] GET /api/partnerships 401 in 1ms :: {"error":"Authentication required"}
+11:45:10 PM [express] GET /api/admin/clubs 401 in 0ms :: {"error":"Authentication required"}
+11:45:59 PM [express] POST /api/pbn/parse 200 in 635ms :: {"boards":[{"boardNumber":1,"dealer":"N","v…
+Error creating game: ZodError: [
+  {
+    "code": "invalid_type",
+    "expected": "string",
+    "received": "date",
+    "path": [
+      "gameDate"
+    ],
+    "message": "Expected string, received date"
+  }
+]
+    at get error [as error] (file:///home/runner/workspace/node_modules/zod/lib/index.mjs:587:31)
+    at ZodObject.parse (file:///home/runner/workspace/node_modules/zod/lib/index.mjs:663:22)
+    at <anonymous> (/home/runner/workspace/server/routes.ts:187:46)
+    at Layer.handle [as handle_request] (/home/runner/workspace/node_modules/express/lib/router/layer.js:95:5)
+    at next (/home/runner/workspace/node_modules/express/lib/router/route.js:149:13)
+    at requireAuth (/home/runner/workspace/server/routes.ts:57:5)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+  issues: [
+    {
+      code: 'invalid_type',
+      expected: 'string',
+      received: 'date',
+      path: [Array],
+      message: 'Expected string, received date'
+    }
+  ],
+  addIssue: [Function (anonymous)],
+  addIssues: [Function (anonymous)],
+  errors: [
+    {
+      code: 'invalid_type',
+      expected: 'string',
+      received: 'date',
+      path: [Array],
+      message: 'Expected string, received date'
+    }
+  ]
+}
+11:46:07 PM [express] POST /api/games 400 in 196ms :: {"error":"Invalid game data","details":[{"code"…
