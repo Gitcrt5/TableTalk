@@ -121,10 +121,10 @@ export default function GameView() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle>Recent Boards</CardTitle>
-            {boards.length > 6 && (
+            {boards.length > 0 && (
               <Link href={`/games/${gameId}/boards`}>
                 <Button variant="link" className="text-bridge-blue">
-                  View All
+                  Show Details
                 </Button>
               </Link>
             )}
@@ -138,7 +138,7 @@ export default function GameView() {
             </div>
           ) : boards.length > 0 ? (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {boards.slice(0, 6).map(board => (
+              {boards.map(board => (
                 <div key={board.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
                   <div className="flex items-center justify-between mb-2">
                     <h4 className="font-medium">Board {board.boardNumber}</h4>
