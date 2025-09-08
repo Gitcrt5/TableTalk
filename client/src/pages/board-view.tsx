@@ -143,7 +143,7 @@ export default function BoardView() {
       {/* Bridge Hand Layout */}
       <Card className="mb-6">
         <CardContent className="p-6">
-          <div className="grid grid-cols-3 gap-4 max-w-4xl mx-auto">
+          <div className="grid grid-cols-3 gap-2 max-w-4xl mx-auto">
             {/* North */}
             <div className="col-start-2 flex justify-center">
               <HandDisplay hand={hands.N} position="N" />

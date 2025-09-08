@@ -25,8 +25,8 @@ export const HandDisplay = ({ hand, position, isUser = false }: HandDisplayProps
   const hcp = calculateHCP(hand);
   
   return (
-    <div className={`rounded-lg border p-4 ${isUser ? 'border-2 border-bridge-blue bg-blue-50' : 'border-gray-200 bg-gray-50'}`}>
-      <div className="text-center mb-2">
+    <div className={`rounded-lg border p-3 ${isUser ? 'border-2 border-bridge-blue bg-blue-50' : 'border-gray-200 bg-gray-50'}`}>
+      <div className="text-center mb-1">
         <div className="font-medium">
           {position === "N" && "North"}
           {position === "E" && "East"}
@@ -36,7 +36,7 @@ export const HandDisplay = ({ hand, position, isUser = false }: HandDisplayProps
         </div>
         <div className="text-xs text-gray-500">HCP: {hcp}</div>
       </div>
-      <div className="space-y-1 text-sm font-mono">
+      <div className="space-y-0.5 text-sm font-mono">
         <div>
           <SuitSymbol suit="S" /> {hand.S || "—"}
         </div>
