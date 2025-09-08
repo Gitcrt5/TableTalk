@@ -92,23 +92,12 @@ export default function GameView() {
       </div>
 
       {/* Game Stats */}
-      <div className="grid sm:grid-cols-3 gap-6 mb-8">
+      <div className="grid sm:grid-cols-2 gap-6 mb-8">
         <Card>
           <CardContent className="p-6">
             <div className="text-center">
               <div className="text-2xl font-bold text-gray-900 mb-1">{game.totalBoards}</div>
-              <div className="text-sm text-gray-600">Total Boards</div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-gray-900 mb-1">
-                {boards.filter(board => board.contract).length}
-              </div>
-              <div className="text-sm text-gray-600">Boards Played</div>
+              <div className="text-sm text-gray-600">Boards</div>
             </div>
           </CardContent>
         </Card>
