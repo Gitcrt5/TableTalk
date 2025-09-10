@@ -10,7 +10,7 @@ import { useAuth } from "@/lib/auth";
 import { HandDisplay } from "@/components/bridge/HandDisplay";
 import { BiddingPad } from "@/components/bridge/BiddingPad";
 import { SuitSymbol } from "@/components/bridge/SuitSymbol";
-import { Board, Comment, Bid, BridgeHands, Direction } from "@shared/schema";
+import { Board, Comment, Bid, Hand, Seat } from "@shared/schema";
 
 export default function BoardView() {
   const { boardId } = useParams<{ boardId: string }>();
@@ -19,7 +19,7 @@ export default function BoardView() {
   
   const [biddingSequence, setBiddingSequence] = useState<Bid[]>([]);
   const [contract, setContract] = useState("");
-  const [declarer, setDeclarer] = useState<Direction>("S");
+  const [declarer, setDeclarer] = useState<Seat>("S");
   const [result, setResult] = useState<number | undefined>();
   const [leadCard, setLeadCard] = useState("");
   const [notes, setNotes] = useState("");
@@ -128,8 +128,8 @@ export default function BoardView() {
     );
   }
 
-  const hands = board.hands as BridgeHands;
-  const currentBidder: Direction = "S"; // This would be calculated based on dealer and bidding sequence
+  const hands = board.hands as any; // Using any for now since hands structure varies
+  const currentBidder: Seat = "S"; // This would be calculated based on dealer and bidding sequence
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
@@ -183,10 +183,10 @@ export default function BoardView() {
                   <div className="flex flex-wrap gap-2">
                     {biddingSequence.map((bid, index) => (
                       <span key={index} className="px-2 py-1 bg-white border rounded text-sm">
-                        {bid.call === "BID" ? (
+                        {bid.level && bid.suit ? (
                           <>
                             {bid.level}
-                            <SuitSymbol suit={bid.suit!} />
+                            <SuitSymbol suit={bid.suit} />
                           </>
                         ) : (
                           bid.call
@@ -227,7 +227,7 @@ export default function BoardView() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-2">Declarer</label>
-                  <Select value={declarer} onValueChange={(value) => setDeclarer(value as Direction)}>
+                  <Select value={declarer} onValueChange={(value) => setDeclarer(value as Seat)}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -297,15 +297,15 @@ export default function BoardView() {
                 <div className="flex items-start justify-between mb-2">
                   <div className="flex items-center gap-2">
                     <div className="w-6 h-6 rounded-full bg-bridge-green text-white text-xs flex items-center justify-center">
-                      {comment.authorId.charAt(0).toUpperCase()}
+                      {comment.userId.charAt(0).toUpperCase()}
                     </div>
                     <span className="font-medium">User</span>
                     <span className="text-xs text-gray-500">
                       {new Date(comment.createdAt).toLocaleDateString()}
                     </span>
-                    {comment.isPrivate && (
+                    {comment.type === 'analysis' && (
                       <span className="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded">
-                        Private
+                        Analysis
                       </span>
                     )}
                   </div>

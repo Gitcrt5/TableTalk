@@ -210,7 +210,7 @@ export default function CreateGame() {
                               
                               return (
                                 <SelectItem key={partnership.id} value={partnerId}>
-                                  Partnership Partner ({partnership.gamesCount} games together)
+                                  Partnership Partner
                                 </SelectItem>
                               );
                             })
